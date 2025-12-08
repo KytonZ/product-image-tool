@@ -1,4 +1,16 @@
-streamlit
-pillow
-opencv-python-headless
-numpy
+# 基础依赖
+streamlit>=1.28.0
+pillow>=10.0.0
+
+# 图像合成所需
+numpy>=1.24.0  # Pillow和OpenCV都需要
+zipfile36>=0.1.3  # 处理ZIP文件
+python-magic>=0.4.27  # 文件类型检测
+
+# 视频抽帧工具所需
+opencv-python>=4.8.0
+moviepy>=1.0.3
+
+# 可选：用于更好的视频处理性能
+imageio>=2.31.0
+imageio-ffmpeg>=0.4.9  # MoviePy需要这个来处理视频
