@@ -1206,62 +1206,65 @@ with tab1:
                                     # 显示图片
                                     st.image(img_url, use_column_width=True)
                                     
-                                    # 单个选择按钮（无预览按钮）
-                                    # 使用自定义小按钮样式，字体更小
-                                    button_container = st.container()
-                                    with button_container:
-                                        # 检查是否已选择当前图片
-                                        is_selected = st.session_state.unsplash_selected_bg and hasattr(st.session_state.unsplash_selected_bg, 'idx') and st.session_state.unsplash_selected_bg.idx == idx
+                                    # 单个选择按钮（与图片等宽 + 选中变绿 + 小字体）
+                                    # 检查是否已选择当前图片（增加容错判断，避免报错）
+                                    is_selected = False
+                                    if st.session_state.get('unsplash_selected_bg'):
+                                        selected_idx = getattr(st.session_state.unsplash_selected_bg, 'idx', -1)
+                                        # 要匹配当前页+当前索引（避免不同页索引重复导致误判）
+                                        current_unique_key = f"{current_page}_{idx}"
+                                        selected_unique_key = f"{st.session_state.unsplash_current_page}_{selected_idx}"
+                                        is_selected = (selected_unique_key == current_unique_key)
 
-                                        # 设置按钮样式和文字
-                                        button_label = "✅ 选择此背景图" if is_selected else "选择背景图"
-                                        button_bg = "#28a745" if is_selected else "#f0f2f6"
-                                        button_color = "white" if is_selected else "#333"
-                                        button_border = "#28a745" if is_selected else "#d1d5db"
+                                    # 设置按钮文字
+                                    button_label = "✅ 选择此背景图" if is_selected else "选择背景图"
 
-                                        # 按钮容器（与图片等宽）
-                                        st.markdown(f"""
-                                        <style>
-                                        /* 等宽按钮样式 */
-                                        .button-{current_page}-{idx} {{
-                                            width: 100% !important;
-                                            font-size: 0.75rem !important;
-                                            padding: 0.3rem 0 !important;
-                                            border-radius: 6px !important;
-                                            background-color: {button_bg} !important;
-                                            color: {button_color} !important;
-                                            border: 1px solid {button_border} !important;
-                                            transition: all 0.2s ease !important;
-                                        }}
-                                        .button-{current_page}-{idx}:hover {{
-                                            opacity: 0.9 !important;
-                                            transform: none !important;
-                                            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
-                                        }}
-                                        </style>
-                                        """, unsafe_allow_html=True)
+                                    # 核心：通过data-key定位按钮的CSS（必改！）
+                                    st.markdown(f"""
+                                    <style>
+                                    /* 定位当前按钮 + 全局样式重置 */
+                                    button[data-key="select_{current_page}_{idx}"] {{
+                                        width: 100% !important;          /* 与图片等宽 */
+                                        font-size: 0.65rem !important;   /* 更小字体（按需可改0.6rem） */
+                                        padding: 0.25rem 0 !important;   /* 更小内边距 */
+                                        border-radius: 6px !important;   /* 圆润边角 */
+                                        border: 1px solid #d1d5db !important;
+                                        transition: all 0.2s ease !important;
+                                        {'background-color: #28a745 !important; color: white !important; border-color: #28a745 !important;' if is_selected else 'background-color: #f0f2f6 !important; color: #333 !important;'}
+                                    }}
+                                    /* hover效果 */
+                                    button[data-key="select_{current_page}_{idx}"]:hover {{
+                                        opacity: 0.9 !important;
+                                        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+                                        transform: none !important;
+                                    }}
+                                    /* 去掉Streamlit默认的hover样式干扰 */
+                                    button[data-key="select_{current_page}_{idx}"]:not(:active):hover {{
+                                        border-color: {'#28a745 !important;' if is_selected else '#94a3b8 !important;'};
+                                    }}
+                                    </style>
+                                    """, unsafe_allow_html=True)
 
-                                        # 等宽按钮（与图片同宽）
-                                        if st.button(
-                                            button_label,
-                                            key=f"select_{current_page}_{idx}",
-                                            use_container_width=True,  # 强制与图片等宽
-                                            args=(idx,)
-                                        ):
-                                            with st.spinner("下载中..."):
-                                                img = unsplash_api.download_photo(img_url)
-                                                if img:
-                                                    class MockFile:
-                                                        def __init__(self, img, idx):
-                                                            self.name = f"unsplash_bg_{current_page}_{idx}.jpg"
-                                                            self.type = "image/jpeg"
-                                                            self.image = img
-                                                            self.idx = idx  # 记录索引用于状态判断
-            
-                                                    mock_file = MockFile(img, idx)
-                                                    st.session_state.unsplash_selected_bg = mock_file
-                                                    st.rerun()  # 刷新页面更新按钮状态
-
+                                    # 等宽按钮（移除无用的args参数）
+                                    if st.button(
+                                        button_label,
+                                        key=f"select_{current_page}_{idx}",
+                                        use_container_width=True,  # 强制与图片等宽
+                                    ):
+                                        with st.spinner("下载中..."):
+                                            img = unsplash_api.download_photo(img_url)
+                                            if img:
+                                                class MockFile:
+                                                    def __init__(self, img, idx):
+                                                        self.name = f"unsplash_bg_{current_page}_{idx}.jpg"
+                                                        self.type = "image/jpeg"
+                                                        self.image = img
+                                                        self.idx = idx  # 记录索引用于状态判断
+                                                        self.page = current_page  # 新增：记录所属页码，避免跨页误判
+                                                
+                                                mock_file = MockFile(img, idx)
+                                                st.session_state.unsplash_selected_bg = mock_file
+                                                st.rerun()  # 刷新页面更新按钮状态
                                     # 自定义按钮CSS（缩小字体和宽度）
                                     st.markdown("""
                                     <style>
