@@ -1241,7 +1241,7 @@ with tab1:
                                         is_selected = (selected_page == current_page) and (selected_idx == idx)
 
                                     # 设置按钮文字（移除✅ emoji）
-                                    button_label = "选择此背景图" if is_selected else "选择背景图"
+                                    button_label = "选择背景图" if is_selected else "选择背景图"
 
                                     # 核心：提升CSS优先级（必改！解决绿色不生效问题）
                                     st.markdown(f"""
