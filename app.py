@@ -410,9 +410,12 @@ class UnsplashAPI:
                 # 从API响应中获取总页数
                 total = data.get("total", 0)
                 total_pages = data.get("total_pages", 0)
+
                 # 如果API没有返回total_pages，我们计算一下
                 if total_pages == 0 and total > 0:
                     total_pages = (total + per_page - 1) // per_page
+                total_pages = min(total_pages, 1000)
+
                 return data.get("results", []), total_pages, total
             elif response.status_code == 401:
                 st.error("Unsplash API密钥无效，请检查您的密钥")
@@ -1065,53 +1068,6 @@ with tab1:
             st.markdown('<div class="search-container">', unsafe_allow_html=True)
             
             # 使用两列布局：搜索框和按钮
-            search_col1, search_col2 = st.columns([3, 2])
-            
-            with search_col1:
-                search_query = st.text_input(
-                    label="",  # 空标签
-                    value=st.session_state.unsplash_search_query,
-                    placeholder="例如：white background",
-                    help="输入英文关键词",
-                    label_visibility="collapsed",  # 隐藏标签
-                    key="unsplash_search_input"
-                )
-            
-            with search_col2:
-                # 搜索和翻页按钮在同一行
-                btn_col1, btn_col2, btn_col3 = st.columns(3)
-                with btn_col1:
-                    search_btn = st.button(
-                        "搜索", 
-                        type="primary", 
-                        key="search_unsplash",
-                        use_container_width=True
-                    )
-                
-                with btn_col2:
-                    # 上一页按钮 - 总是显示但可能禁用
-                    has_photos = len(st.session_state.get('unsplash_photos', [])) > 0
-                    current_page = st.session_state.get('unsplash_current_page', 1)
-                    prev_disabled = not has_photos or current_page <= 1
-    
-                    prev_label = "◀️ 上一页"
-                    if st.button(prev_label, key="unsplash_prev", use_container_width=True, disabled=prev_disabled):
-                        if current_page > 1:
-                            st.session_state.unsplash_current_page -= 1
-                            st.session_state.unsplash_search_trigger = True
-                            st.rerun()
-
-                with btn_col3:
-                    has_photos = len(st.session_state.get('unsplash_photos', [])) > 0
-                    current_page = st.session_state.get('unsplash_current_page', 1)
-                    total_pages = st.session_state.get('unsplash_total_pages', 0)
-                    next_disabled = not has_photos or current_page >= total_pages
-    
-                    next_label = "下一页 ▶️"
-                    if st.button(next_label, key="unsplash_next", use_container_width=True, disabled=next_disabled):
-                        st.session_state.unsplash_current_page += 1
-                        st.session_state.unsplash_search_trigger = True
-                        st.rerun()
 
             st.markdown('</div>', unsafe_allow_html=True)
             
@@ -1164,7 +1120,54 @@ with tab1:
                     
                     # 重置搜索触发标志
                     st.session_state.unsplash_search_trigger = False
+            search_col1, search_col2 = st.columns([3, 2])
             
+            with search_col1:
+                search_query = st.text_input(
+                    label="",  # 空标签
+                    value=st.session_state.unsplash_search_query,
+                    placeholder="例如：white background",
+                    help="输入英文关键词",
+                    label_visibility="collapsed",  # 隐藏标签
+                    key="unsplash_search_input"
+                )
+            
+            with search_col2:
+                # 搜索和翻页按钮在同一行
+                btn_col1, btn_col2, btn_col3 = st.columns(3)
+                with btn_col1:
+                    search_btn = st.button(
+                        "搜索", 
+                        type="primary", 
+                        key="search_unsplash",
+                        use_container_width=True
+                    )
+                
+                with btn_col2:
+                    # 上一页按钮 - 总是显示但可能禁用
+                    has_photos = len(st.session_state.get('unsplash_photos', [])) > 0
+                    current_page = st.session_state.get('unsplash_current_page', 1)
+                    prev_disabled = not has_photos or current_page <= 1
+    
+                    prev_label = "◀️ 上一页"
+                    if st.button(prev_label, key="unsplash_prev", use_container_width=True, disabled=prev_disabled):
+                        if current_page > 1:
+                            st.session_state.unsplash_current_page -= 1
+                            st.session_state.unsplash_search_trigger = True
+                            st.rerun()
+
+                with btn_col3:
+                    has_photos = len(st.session_state.get('unsplash_photos', [])) > 0
+                    current_page = st.session_state.get('unsplash_current_page', 1)
+                    total_pages = st.session_state.get('unsplash_total_pages', 0)
+                    next_disabled = not has_photos or (current_page >= total_pages) or (total_pages == 0)
+    
+                    next_label = "下一页 ▶️"
+                    if st.button(next_label, key="unsplash_next", use_container_width=True, disabled=next_disabled):
+                        st.session_state.unsplash_current_page += 1
+                        st.session_state.unsplash_search_trigger = True
+                        st.rerun()
+
             # 显示搜索结果
             if st.session_state.unsplash_photos:
                 # 显示当前页信息
