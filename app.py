@@ -1122,6 +1122,8 @@ with tab1:
                     st.session_state.unsplash_current_page = 1
                     st.session_state.unsplash_search_query = search_query
                     st.session_state.unsplash_search_trigger = True
+                    # 立即执行搜索
+                    need_search = True
             
             # 如果有搜索触发标志
             if st.session_state.get('unsplash_search_trigger', False):
@@ -1151,6 +1153,11 @@ with tab1:
                 # 显示当前页信息
                 total_pages = st.session_state.get('unsplash_total_pages', 1)
                 current_page = st.session_state.get('unsplash_current_page', 1)
+                # 只有在有图片时才显示页码信息
+                if len(st.session_state.unsplash_photos) > 0 and total_pages > 0:
+                    st.info(f"第 {current_page} / {total_pages} 页 - 关键词: {st.session_state.unsplash_search_query}")
+                elif len(st.session_state.unsplash_photos) > 0:
+                    st.info(f"关键词: {st.session_state.unsplash_search_query}")
                 if total_pages > 1:
                     st.info(f"第 {current_page} / {total_pages} 页 - 关键词: {st.session_state.unsplash_search_query}")
                 
