@@ -336,6 +336,42 @@ def get_custom_css():
             line-height: 1.6;
             color: #555;
         }
+        
+        /* Unsplash搜索区域样式 */
+        .unsplash-search-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        /* Unsplash按钮容器 - 对齐 */
+        .unsplash-button-container {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+        }
+        
+        .unsplash-button-container button {
+            flex: 1;
+            font-size: 12px;
+            padding: 4px 8px;
+            min-height: 30px;
+        }
+        
+        /* 图片网格样式 */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .grid-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
     </style>
     """
 
@@ -369,6 +405,10 @@ if 'unsplash_selected_bg' not in st.session_state:
     st.session_state.unsplash_selected_bg = None
 if 'unsplash_search_query' not in st.session_state:
     st.session_state.unsplash_search_query = "white background"
+if 'unsplash_total_pages' not in st.session_state:
+    st.session_state.unsplash_total_pages = 0
+if 'unsplash_current_page' not in st.session_state:
+    st.session_state.unsplash_current_page = 1
 
 # ==================== Unsplash API类 ====================
 class UnsplashAPI:
@@ -399,7 +439,11 @@ class UnsplashAPI:
         try:
             response = requests.get(url, headers=headers, params=params, timeout=10)
             if response.status_code == 200:
-                return response.json().get("results", [])
+                data = response.json()
+                # 计算总页数
+                total_pages = min(10, (data.get("total", 0) + per_page - 1) // per_page)
+                st.session_state.unsplash_total_pages = total_pages
+                return data.get("results", [])
             elif response.status_code == 401:
                 st.error("Unsplash API密钥无效，请检查您的密钥")
                 return []
@@ -421,7 +465,7 @@ class UnsplashAPI:
         return None
 
 # ==================== 核心函数定义 ====================
-def compose_image(bg_img, product_img, logo_img, template, product_size, product_position, output_size, output_format):
+def compose_image(bg_img, product_img, logo_img, product_size, product_position, output_size, output_format):
     """合成单张图片的核心函数"""
     # 1. 处理背景：调整到输出尺寸（智能裁剪铺满）
     bg = bg_img.convert("RGBA")
@@ -892,20 +936,7 @@ def generate_product_content(product_name, platform):
 with st.sidebar:
     st.markdown("### ⚙️ 合成设置")
     
-    # 将所有设置存储到session_state中
-    # 1. 模板选择
-    st.markdown('<div class="settings-title">选择合成模板</div>', unsafe_allow_html=True)
-    st.session_state.template = st.selectbox(
-        "选择合成模板",
-        ["标准模板", "电商海报", "社交媒体", "产品展示"],
-        help="选择适合您需求的合成模板",
-        label_visibility="collapsed",
-        key="template_select"
-    )
-    
-    st.markdown("---")
-    
-    # 2. Logo设置
+    # 1. Logo设置
     st.markdown('<div class="settings-title">🖼️ Logo设置</div>', unsafe_allow_html=True)
     st.session_state.logo_color = st.radio(
         "选择Logo颜色",
@@ -917,7 +948,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # 3. 产品图设置
+    # 2. 产品图设置
     st.markdown('<div class="settings-title">📐 产品图设置</div>', unsafe_allow_html=True)
     st.session_state.product_size = st.slider(
         "产品图最大边长", 
@@ -939,7 +970,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # 4. 输出设置
+    # 3. 输出设置
     st.markdown('<div class="settings-title">📦 输出设置</div>', unsafe_allow_html=True)
     
     col_size1, col_size2 = st.columns(2)
@@ -962,7 +993,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # 5. 预览设置
+    # 4. 预览设置
     st.markdown('<div class="settings-title">👀 预览设置</div>', unsafe_allow_html=True)
     st.session_state.preview_page_size = st.select_slider(
         "每页预览数量", 
@@ -974,7 +1005,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # 6. 处理按钮
+    # 5. 处理按钮
     process_button = st.button(
         "🚀 开始智能批量合成", 
         type="primary", 
@@ -1047,32 +1078,44 @@ with tab1:
                                 )
         
         else:  # Unsplash图库
-            # 移除了"Unsplash在线图库"标题
-            
-            # 使用新的容器确保对齐
-            st.markdown('<div class="search-container">', unsafe_allow_html=True)
-            
-            # 搜索区域 - 修复对齐问题
-            search_query = st.text_input(
-                label="",  # 空标签
-                value=st.session_state.unsplash_search_query,
-                placeholder="例如：white background",
-                help="输入英文关键词",
-                label_visibility="collapsed",  # 隐藏标签
-                key="unsplash_search_input",
-                args=(),
-            )
-            
-            # 搜索按钮 - 直接放在同一行
-            search_btn = st.button(
-                "搜索", 
-                type="primary", 
-                key="search_unsplash",
-                args=(),
-                kwargs={"class": "search-button"}
-            )
-            
-            st.markdown('</div>', unsafe_allow_html=True)
+            # 搜索区域
+            search_container = st.container()
+            with search_container:
+                # 使用三列布局放置搜索框、搜索按钮和翻页按钮
+                search_cols = st.columns([3, 1, 2])
+                
+                with search_cols[0]:
+                    search_query = st.text_input(
+                        "搜索关键词",
+                        value=st.session_state.unsplash_search_query,
+                        placeholder="例如：white background",
+                        help="输入英文关键词搜索图片",
+                        label_visibility="visible",
+                        key="unsplash_search_input"
+                    )
+                
+                with search_cols[1]:
+                    search_btn = st.button(
+                        "🔍 搜索", 
+                        type="primary", 
+                        key="search_unsplash",
+                        use_container_width=True
+                    )
+                
+                with search_cols[2]:
+                    # 翻页控件
+                    if st.session_state.unsplash_total_pages > 1:
+                        page_cols = st.columns(2)
+                        with page_cols[0]:
+                            if st.button("◀️ 上一页", key="unsplash_prev", use_container_width=True, 
+                                      disabled=st.session_state.unsplash_current_page <= 1):
+                                st.session_state.unsplash_current_page -= 1
+                                st.rerun()
+                        with page_cols[1]:
+                            if st.button("下一页 ▶️", key="unsplash_next", use_container_width=True,
+                                      disabled=st.session_state.unsplash_current_page >= st.session_state.unsplash_total_pages):
+                                st.session_state.unsplash_current_page += 1
+                                st.rerun()
             
             # 初始化Unsplash API
             unsplash_api = UnsplashAPI()
@@ -1086,86 +1129,83 @@ with tab1:
                     st.error("请先配置Unsplash API密钥")
                 else:
                     with st.spinner(f'正在搜索"{search_query}"...'):
-                        photos = unsplash_api.search_photos(search_query, per_page=15)
+                        # 重置到第一页
+                        st.session_state.unsplash_current_page = 1
+                        photos = unsplash_api.search_photos(search_query, page=1, per_page=12)
                         
                         if photos:
                             st.session_state.unsplash_photos = photos
                             st.session_state.unsplash_search_query = search_query
-                            st.session_state.unsplash_page = 0
-                            st.success(f"找到 {len(photos)} 张图片")
+                            st.success(f"找到图片，共{st.session_state.unsplash_total_pages}页")
                         else:
-                            st.error("搜索失败")
+                            st.error("搜索失败，请尝试其他关键词")
+            
+            # 自动加载当前页的图片（如果不是第一次访问）
+            if st.session_state.unsplash_search_query and st.session_state.unsplash_current_page > 0:
+                if not st.session_state.unsplash_photos or search_btn:
+                    # 如果没有图片数据或点击了搜索按钮，则加载图片
+                    with st.spinner(f'正在加载第{st.session_state.unsplash_current_page}页...'):
+                        photos = unsplash_api.search_photos(
+                            st.session_state.unsplash_search_query, 
+                            page=st.session_state.unsplash_current_page, 
+                            per_page=12
+                        )
+                        if photos:
+                            st.session_state.unsplash_photos = photos
             
             # 显示搜索结果
             if st.session_state.unsplash_photos:
-                st.markdown(f"**搜索结果：{st.session_state.unsplash_search_query}**")
+                # 显示当前页信息
+                if st.session_state.unsplash_total_pages > 0:
+                    st.info(f"第 {st.session_state.unsplash_current_page} / {st.session_state.unsplash_total_pages} 页 - 关键词: {st.session_state.unsplash_search_query}")
                 
                 photos = st.session_state.unsplash_photos
-                page_size = 15
-                total_pages = (len(photos) + page_size - 1) // page_size
                 
-                if 'unsplash_page' not in st.session_state:
-                    st.session_state.unsplash_page = 0
+                # 每排6个，显示2排（共12个）
+                rows = 2
+                cols_per_row = 6
                 
-                # 翻页控件 - 确保可见
-                if total_pages > 1:
-                    # 使用expander确保翻页控件始终可见
-                    with st.expander("翻页控制", expanded=False):
-                        page_cols = st.columns(3)
-                        with page_cols[0]:
-                            if st.button("上一页", key="unsplash_prev", use_container_width=True):
-                                if st.session_state.unsplash_page > 0:
-                                    st.session_state.unsplash_page -= 1
-                                    st.rerun()
-                        
-                        with page_cols[1]:
-                            st.write(f"第 {st.session_state.unsplash_page + 1} / {total_pages} 页")
-                        
-                        with page_cols[2]:
-                            if st.button("下一页", key="unsplash_next", use_container_width=True):
-                                if st.session_state.unsplash_page < total_pages - 1:
-                                    st.session_state.unsplash_page += 1
-                                    st.rerun()
-                
-                # 显示当前页图片
-                start_idx = st.session_state.unsplash_page * page_size
-                end_idx = min(start_idx + page_size, len(photos))
-                
-                # 5列网格显示
-                cols_per_row = 5
-                for i in range(start_idx, end_idx, cols_per_row):
-                    cols = st.columns(cols_per_row)
-                    for j in range(cols_per_row):
-                        idx = i + j
-                        if idx < end_idx:
-                            with cols[j]:
+                for row in range(rows):
+                    # 创建6列
+                    columns = st.columns(cols_per_row)
+                    
+                    for col in range(cols_per_row):
+                        idx = row * cols_per_row + col
+                        if idx < len(photos):
+                            with columns[col]:
                                 photo = photos[idx]
                                 img_url = photo.get("urls", {}).get("small")
                                 
                                 if img_url:
+                                    # 显示图片
                                     st.image(img_url, use_column_width=True)
-                                
-                                # 按钮容器
-                                btn_cols = st.columns(2)
-                                with btn_cols[0]:
-                                    if st.button("选择", key=f"select_{idx}", use_container_width=True):
-                                        with st.spinner("下载中..."):
-                                            img = unsplash_api.download_photo(img_url)
-                                            if img:
-                                                class MockFile:
-                                                    def __init__(self, img, idx):
-                                                        self.name = f"unsplash_bg_{idx}.jpg"
-                                                        self.type = "image/jpeg"
-                                                        self.image = img
-                                                        self.idx = idx
-                                                
-                                                mock_file = MockFile(img, idx)
-                                                st.session_state.unsplash_selected_bg = mock_file
-                                                st.success("已选择背景图")
-                                
-                                with btn_cols[1]:
-                                    if st.button("预览", key=f"preview_{idx}", use_container_width=True):
-                                        st.image(img_url, caption=f"背景图 #{idx+1}", use_column_width=True)
+                                    
+                                    # 创建紧凑的按钮容器
+                                    button_cols = st.columns(2)
+                                    
+                                    with button_cols[0]:
+                                        if st.button("选择", key=f"select_{st.session_state.unsplash_current_page}_{idx}", 
+                                                   use_container_width=True):
+                                            with st.spinner("下载中..."):
+                                                img = unsplash_api.download_photo(img_url)
+                                                if img:
+                                                    class MockFile:
+                                                        def __init__(self, img, idx):
+                                                            self.name = f"unsplash_bg_{st.session_state.unsplash_current_page}_{idx}.jpg"
+                                                            self.type = "image/jpeg"
+                                                            self.image = img
+                                                            self.idx = idx
+                                                    
+                                                    mock_file = MockFile(img, idx)
+                                                    st.session_state.unsplash_selected_bg = mock_file
+                                                    st.success("已选择背景图")
+                                    
+                                    with button_cols[1]:
+                                        if st.button("预览", key=f"preview_{st.session_state.unsplash_current_page}_{idx}", 
+                                                   use_container_width=True):
+                                            # 在底部显示大图预览
+                                            st.image(img_url, caption=f"预览 - 第{st.session_state.unsplash_current_page}页第{idx+1}张", 
+                                                   use_column_width=True)
     
     with col2:
         st.markdown("#### 产品图上传")
@@ -1759,7 +1799,6 @@ if process_button:
     
     # 从session_state获取设置值
     logo_color = st.session_state.get('logo_color', '黑色Logo')
-    template = st.session_state.get('template', '标准模板')
     product_size = st.session_state.get('product_size', 600)
     product_position = st.session_state.get('product_position', '居中')
     output_size = st.session_state.get('output_size', 800)
@@ -1810,7 +1849,7 @@ if process_button:
                 # 调用合成函数
                 result = compose_image(
                     bg_image, product_image, logo_to_use,
-                    template, product_size, product_position, output_size, output_format
+                    product_size, product_position, output_size, output_format
                 )
                 
                 # 保存结果
