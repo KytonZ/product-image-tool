@@ -1,17 +1,17 @@
-# app.py - 修复和优化版（添加视频抽帧工具）
+# app.py - 骏泰产品图智能合成工坊完整版
 import zipfile
 from io import BytesIO
 import streamlit as st
 import os
 import math
-from PIL import Image
+from PIL import Image, ImageDraw
 import tempfile
 import random
 import base64
 import cv2
 import numpy as np
 from moviepy.editor import VideoFileClip, AudioFileClip
-import glob
+import requests
 
 # 设置页面配置
 st.set_page_config(
@@ -193,24 +193,85 @@ def get_custom_css():
             font-size: 1rem;
         }
         
-        /* 视频信息卡片 */
-        .video-info-card {
-            background-color: #e8f4fd;
+        /* Unsplash图片样式 */
+        .unsplash-image-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 15px;
+            background: white;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .unsplash-image-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+            border-color: #2196F3;
+        }
+        
+        .unsplash-author {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            text-align: center;
+        }
+        
+        .unsplash-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+        }
+        
+        /* 选项卡样式 */
+        .bg-tab-container {
+            margin-top: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+        
+        /* 文案生成专用样式 */
+        .copy-area {
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
             border-radius: 8px;
             padding: 15px;
-            margin: 10px 0;
-            border-left: 4px solid #2196F3;
-        }
-        
-        .video-info-title {
-            font-weight: 600;
-            color: #2196F3;
-            margin-bottom: 5px;
-        }
-        
-        .video-info-text {
-            color: #555;
+            font-family: 'Courier New', monospace;
             font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+        
+        .copy-button {
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            color: #2196F3;
+            border-bottom: 2px solid #2196F3;
+            padding-bottom: 5px;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        
+        .highlight-box {
+            background-color: #e8f4fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
         }
     </style>
     """
@@ -233,6 +294,66 @@ if 'processed_video' not in st.session_state:
     st.session_state.processed_video = None
 if 'video_info' not in st.session_state:
     st.session_state.video_info = None
+if 'generated_titles' not in st.session_state:
+    st.session_state.generated_titles = None
+if 'generated_keywords' not in st.session_state:
+    st.session_state.generated_keywords = None
+if 'generated_attributes' not in st.session_state:
+    st.session_state.generated_attributes = None
+if 'unsplash_photos' not in st.session_state:
+    st.session_state.unsplash_photos = []
+if 'unsplash_selected_bg' not in st.session_state:
+    st.session_state.unsplash_selected_bg = None
+if 'unsplash_search_query' not in st.session_state:
+    st.session_state.unsplash_search_query = "white background"
+if 'unsplash_api_key' not in st.session_state:
+    st.session_state.unsplash_api_key = ""
+if 'unsplash_api_key_input' not in st.session_state:
+    st.session_state.unsplash_api_key_input = ""
+
+# ==================== Unsplash API类 ====================
+class UnsplashAPI:
+    def __init__(self, access_key=None):
+        self.access_key = access_key or st.secrets.get("UNSPLASH_ACCESS_KEY", "")
+        self.base_url = "https://api.unsplash.com"
+    
+    def search_photos(self, query, page=1, per_page=12):
+        """搜索Unsplash图片"""
+        if not self.access_key:
+            return []
+        
+        url = f"{self.base_url}/search/photos"
+        headers = {"Authorization": f"Client-ID {self.access_key}"}
+        params = {
+            "query": query,
+            "page": page,
+            "per_page": per_page,
+            "orientation": "squarish",  # 方形图片适合产品图
+        }
+        
+        try:
+            response = requests.get(url, headers=headers, params=params, timeout=10)
+            if response.status_code == 200:
+                return response.json().get("results", [])
+            elif response.status_code == 401:
+                st.error("Unsplash API密钥无效，请检查您的密钥")
+                return []
+            else:
+                st.error(f"Unsplash API错误: {response.status_code}")
+                return []
+        except Exception as e:
+            st.error(f"Unsplash API请求失败: {e}")
+            return []
+    
+    def download_photo(self, photo_url):
+        """下载图片"""
+        try:
+            response = requests.get(photo_url, timeout=10)
+            if response.status_code == 200:
+                return Image.open(BytesIO(response.content))
+        except Exception as e:
+            st.error(f"下载图片失败: {e}")
+        return None
 
 # ==================== 核心函数定义 ====================
 def compose_image(bg_img, product_img, logo_img, template, product_size, product_position, output_size, output_format):
@@ -480,6 +601,228 @@ def remove_random_frames(input_video_path, output_video_path, progress_bar=None,
     
     return output_video_path, video_info, frames_to_remove, saved_count
 
+def generate_product_content(product_name, platform):
+    """生成产品标题、关键词和属性词的核心函数"""
+    
+    # 产品词汇库
+    product_vocab = {
+        "MBBR Media": {
+            "variations": ["MBBR Media", "MBBR Biofilm Media", "Moving Bed Biofilm Reactor Media", "Plastic Bio Media"],
+            "materials": ["HDPE", "Polyethylene", "High-Density Polyethylene", "PP"],
+            "shapes": ["Carrier", "Cylinder", "Honeycomb", "Cross-Flow", "Ring-Type"],
+            "features": ["High Surface Area", "Biofilm Growth", "Wastewater Treatment", "Nitrogen Removal", "Anoxic Conditions"],
+            "applications": ["Wastewater Treatment Plant", "Sewage Treatment", "Industrial Effluent", "Municipal WWTP", "Aquaculture"]
+        },
+        "disc diffuser": {
+            "variations": ["Disc Diffuser", "Membrane Diffuser", "Fine Bubble Diffuser", "Aeration Disc"],
+            "materials": ["EPDM", "Silicone", "Polyurethane", "Rubber Membrane"],
+            "sizes": ["9 inch", "12 inch", "270mm", "350mm"],
+            "features": ["Fine Bubble", "Oxygen Transfer", "Energy Saving", "Anti-Clogging", "Uniform Aeration"],
+            "applications": ["Aeration Tank", "Activated Sludge", "SBR Reactor", "Aerobic Treatment"]
+        },
+        "drum filter": {
+            "variations": ["Drum Filter", "Rotary Drum Filter", "Microscreen Filter", "Drum Screen"],
+            "types": ["Solid-Liquid Separation", "Screening Equipment", "Mechanical Filtration"],
+            "materials": ["Stainless Steel 304", "Stainless Steel 316", "Polyester Screen", "Nylon Mesh"],
+            "features": ["Automatic Cleaning", "Continuous Operation", "Low Maintenance", "High Flow Rate"],
+            "applications": ["Aquaculture", "Wastewater Pretreatment", "Industrial Recycling", "Food Processing"]
+        },
+        "bio block": {
+            "variations": ["Bio Block", "Biological Filter Block", "Media Block", "Biofilm Carrier Block"],
+            "materials": ["Plastic Media", "PP", "PVC", "Composite Material"],
+            "shapes": ["Block", "Cube", "Rectangular", "Modular"],
+            "features": ["High Void Ratio", "Large Surface Area", "Easy Installation", "Stackable"],
+            "applications": ["Trickling Filter", "Biological Tower", "Biofilter System", "Water Recycling"]
+        },
+        "mbr": {
+            "variations": ["MBR", "Membrane Bioreactor", "Hollow Fiber MBR", "Flat Sheet MBR"],
+            "types": ["Submerged MBR", "External MBR", "Side-Stream MBR"],
+            "materials": ["PVDF", "PTFE", "Polyethersulfone", "Ceramic Membrane"],
+            "features": ["High Quality Effluent", "Small Footprint", "Low Sludge Production", "Automated Control"],
+            "applications": ["Water Reuse", "Wastewater Recycling", "Industrial Treatment", "Decentralized Treatment"]
+        },
+        "Screw press dewatering machine": {
+            "variations": ["Screw Press", "Dewatering Machine", "Sludge Dewatering Press", "Screw Press Dewaterer"],
+            "types": ["Single Screw", "Twin Screw", "Multi-Disc", "Shaftless Screw"],
+            "materials": ["Stainless Steel", "Carbon Steel", "Wear-Resistant Material"],
+            "features": ["High Dryness", "Low Energy", "Automatic Operation", "Easy Maintenance"],
+            "applications": ["Sludge Treatment", "Municipal Sludge", "Industrial Sludge", "Waste Management"]
+        },
+        "tube settler": {
+            "variations": ["Tube Settler", "Lamella Clarifier", "Inclined Plate Settler", "Sedimentation Tube"],
+            "materials": ["PVC", "PP", "Fiberglass", "Stainless Steel"],
+            "angles": ["60 Degree", "55 Degree", "Inclined Design"],
+            "features": ["High Efficiency", "Small Footprint", "Easy Installation", "Modular Design"],
+            "applications": ["Water Treatment Plant", "Clarification", "Sedimentation Tank", "Precipitation"]
+        },
+        "tube diffuser": {
+            "variations": ["Tube Diffuser", "Aeration Tube", "Fine Bubble Tube", "Membrane Tube Diffuser"],
+            "materials": ["EPDM", "Silicone", "Polyurethane", "Ceramic"],
+            "sizes": ["1 meter", "2 meter", "Custom Length", "Standard Diameter"],
+            "features": ["Uniform Aeration", "High Oxygen Transfer", "Energy Efficient", "Flexible Installation"],
+            "applications": ["Aeration Basin", "Oxidation Ditch", "Wastewater Aeration", "Aquaculture Pond"]
+        }
+    }
+    
+    # 通用词汇
+    generic_words = {
+        "quality": ["High Quality", "Durable", "Reliable", "Efficient", "Professional Grade"],
+        "certification": ["ISO Certified", "CE Certified", "SGS Tested", "FDA Approved", "RoHS Compliant"],
+        "performance": ["Excellent Performance", "Superior Efficiency", "Optimal Results", "Maximum Output"],
+        "design": ["Advanced Design", "Innovative Technology", "Modern Structure", "Ergonomic Design"],
+        "benefits": ["Cost Effective", "Energy Saving", "Environment Friendly", "Easy to Operate"]
+    }
+    
+    # 生成10个标题
+    titles = []
+    product_info = product_vocab.get(product_name, product_vocab["MBBR Media"])
+    
+    # 标题模板
+    title_templates = [
+        "{product} {feature} for {application} with {certification}",
+        "{product} {material} {feature} {application} {standard}",
+        "Professional {product} {design} for {application} {benefit}",
+        "High Performance {product} {feature} {material} {application}",
+        "{product} {feature} {application} {certification} {quality}",
+        "{product} {size} {material} {feature} for {application}",
+        "{product} {type} {feature} {application} with {benefit}",
+        "{product} {shape} {feature} {material} {application} {certification}",
+        "{product} {design} {feature} for {application} {quality}",
+        "{product} {material} {shape} {feature} {application} {standard}"
+    ]
+    
+    for i in range(50):
+        # 随机选择模板
+        template = random.choice(title_templates)
+        
+        # 填充模板
+        title = template.format(
+            product=random.choice(product_info["variations"]),
+            feature=random.choice(product_info["features"]),
+            application=random.choice(product_info["applications"]),
+            material=random.choice(product_info.get("materials", ["Premium Material"])),
+            size=random.choice(product_info.get("sizes", ["Standard Size"])),
+            type=random.choice(product_info.get("types", ["Professional Type"])),
+            shape=random.choice(product_info.get("shapes", ["Optimized Shape"])),
+            design=random.choice(generic_words["design"]),
+            certification=random.choice(generic_words["certification"]),
+            quality=random.choice(generic_words["quality"]),
+            benefit=random.choice(generic_words["benefits"]),
+            standard=random.choice(["Standard", "Model", "System", "Equipment"])
+        )
+        
+        # 应用标题格式规则
+        title_parts = title.split()
+        formatted_parts = []
+        
+        for idx, word in enumerate(title_parts):
+            # 检查是否是介词（小写）
+            prepositions = ["in", "for", "with", "by", "on", "at", "to", "of", "and", "or", "the", "a", "an"]
+            if word.lower() in prepositions and idx > 0:
+                formatted_parts.append(word.lower())
+            else:
+                # 首字母大写
+                formatted_parts.append(word.title())
+        
+        formatted_title = " ".join(formatted_parts)
+        
+        # 检查字符长度
+        if 85 <= len(formatted_title) <= 128:
+            titles.append(formatted_title)
+    
+    # 生成10个关键词
+    keywords = []
+    
+    # 短尾关键词
+    short_tail = [
+        product_name,
+        *product_info["variations"],
+        *[f"{product_name} {material}" for material in product_info.get("materials", [])[:3]],
+        *[f"{product_name} {size}" for size in product_info.get("sizes", [])[:2]],
+        *[f"{product_name} {feature}" for feature in product_info["features"][:3]]
+    ]
+    
+    # 长尾关键词
+    long_tail = []
+    for variation in product_info["variations"][:2]:
+        for feature in product_info["features"][:3]:
+            for application in product_info["applications"][:2]:
+                long_tail.append(f"{variation} {feature} {application}")
+                long_tail.append(f"{feature} {variation} for {application}")
+    
+    for material in product_info.get("materials", [])[:2]:
+        for feature in product_info["features"][:2]:
+            long_tail.append(f"{material} {product_name} {feature}")
+    
+    # 组合关键词
+    keywords = list(set(short_tail + long_tail))
+    
+    # 如果不够10个，添加通用组合
+    while len(keywords) < 10:
+        base = random.choice(product_info["variations"])
+        attr1 = random.choice(product_info["features"] + generic_words["quality"])
+        attr2 = random.choice(product_info["applications"] + ["System", "Equipment", "Machine"])
+        keywords.append(f"{base} {attr1} {attr2}")
+        keywords = list(set(keywords))
+    
+    keywords = keywords[:10]
+    
+    # 生成10个属性词
+    attributes = []
+    
+    # 材料属性
+    if "materials" in product_info:
+        attributes.append("Material Type:")
+        for material in product_info["materials"][:5]:
+            attributes.append(f"  - {material}")
+    
+    # 尺寸属性
+    if "sizes" in product_info:
+        attributes.append("\nSize Specification:")
+        for size in product_info["sizes"][:5]:
+            attributes.append(f"  - {size}")
+    elif "shapes" in product_info:
+        attributes.append("\nShape Design:")
+        for shape in product_info["shapes"][:5]:
+            attributes.append(f"  - {shape}")
+    
+    # 性能属性
+    attributes.append("\nPerformance Features:")
+    for feature in product_info["features"][:8]:
+        attributes.append(f"  - {feature}")
+    
+    # 应用属性
+    attributes.append("\nApplication Scenarios:")
+    for app in product_info["applications"][:8]:
+        attributes.append(f"  - {app}")
+    
+    # 质量属性
+    attributes.append("\nQuality Standards:")
+    for standard in generic_words["certification"][:5]:
+        attributes.append(f"  - {standard}")
+    
+    # 设计属性
+    attributes.append("\nDesign Characteristics:")
+    for design in generic_words["design"][:5]:
+        attributes.append(f"  - {design}")
+    
+    # 通用属性
+    attributes.append("\nGeneral Properties:")
+    general_props = [
+        "High Durability", "Corrosion Resistant", "UV Resistant", "Chemical Resistant",
+        "Temperature Resistant", "Abrasion Resistant", "Long Service Life", "Low Maintenance",
+        "Easy Installation", "Modular Design", "Customizable", "Bulk Available",
+        "OEM Service", "Fast Delivery", "Competitive Price", "Technical Support"
+    ]
+    
+    for prop in general_props[:10]:
+        attributes.append(f"  - {prop}")
+    
+    # 确保属性词数量
+    attribute_text = "\n".join(attributes)
+    
+    return titles, keywords, attribute_text
+
 # ==================== 侧边栏设置区域 ====================
 with st.sidebar:
     st.markdown("### ⚙️ 合成设置")
@@ -577,9 +920,9 @@ with st.sidebar:
     )
 
 # ==================== 主区域：标签页 ====================
-tab1, tab2, tab3, tab4 = st.tabs(["📤 上传图片", "🖼️ 预置背景库", "🔄 图片去重生成器", "🎬 视频抽帧工具"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📤 上传图片", "🖼️ 预置背景库", "🔄 图片去重生成器", "🎬 视频抽帧工具", "📝 AI文案生成"])
 
-# 标签页1：上传图片
+# 标签页1：上传图片（已集成Unsplash）
 with tab1:
     st.subheader("上传你的素材")
     
@@ -587,54 +930,236 @@ with tab1:
     col1, col2 = st.columns([1, 1], gap="large")
     
     with col1:
-        # 背景图上传
+        # 背景图上传区域 - 集成了Unsplash
         st.markdown("#### 背景图上传")
-        bg_files = st.file_uploader(
-            "拖拽或选择背景图片",
-            type=['png', 'jpg', 'jpeg'],
-            accept_multiple_files=True,
-            key="bg_upload",
-            help="支持JPG/PNG格式，可以一次选择多张图片",
-            label_visibility="collapsed"
+        
+        # 背景来源选择选项卡
+        bg_source = st.radio(
+            "选择背景来源",
+            ["上传图片", "Unsplash图库"],
+            horizontal=True,
+            key="bg_source_radio"
         )
         
-        if bg_files:
-            bg_count = len(bg_files)
-            st.markdown(f'<div class="status-success">✅ 已上传 <span class="file-count">{bg_count}</span> 张背景图</div>', unsafe_allow_html=True)
+        if bg_source == "上传图片":
+            # 传统的文件上传
+            bg_files = st.file_uploader(
+                "拖拽或选择背景图片",
+                type=['png', 'jpg', 'jpeg'],
+                accept_multiple_files=True,
+                key="bg_upload",
+                help="支持JPG/PNG格式，可以一次选择多张图片",
+                label_visibility="collapsed"
+            )
             
-            # 显示前几张预览
-            st.markdown("**预览（最多显示12张）**")
+            if bg_files:
+                bg_count = len(bg_files)
+                st.markdown(f'<div class="status-success">✅ 已上传 <span class="file-count">{bg_count}</span> 张背景图</div>', unsafe_allow_html=True)
+                
+                # 显示前几张预览
+                st.markdown("**预览（最多显示12张）**")
+                
+                # 计算每行列数
+                cols_per_row = min(4, bg_count) if bg_count > 0 else 4
+                preview_count = min(12, bg_count)
+                
+                # 创建网格布局
+                for i in range(0, preview_count, cols_per_row):
+                    cols = st.columns(cols_per_row)
+                    for j in range(cols_per_row):
+                        idx = i + j
+                        if idx < preview_count:
+                            with cols[j]:
+                                file = bg_files[idx]
+                                img = Image.open(file)
+                                # 保持原始比例，设置合适宽度
+                                display_width = 180
+                                ratio = display_width / img.width
+                                display_height = int(img.height * ratio)
+                                
+                                # 使用高质量的调整大小
+                                display_img = img.copy()
+                                display_img.thumbnail((display_width, display_height * 2), Image.Resampling.LANCZOS)
+                                
+                                st.image(
+                                    display_img, 
+                                    caption=file.name[:18] + "..." if len(file.name) > 18 else file.name,
+                                    width=display_width
+                                )
+        
+        else:  # Unsplash图库
+            st.markdown("### 🌐 Unsplash在线图库")
             
-            # 计算每行列数
-            cols_per_row = min(4, bg_count) if bg_count > 0 else 4
-            preview_count = min(12, bg_count)
+            # API密钥配置区域（可以折叠）
+            with st.expander("🔑 配置Unsplash API密钥", expanded=False):
+                st.info("""
+                **如何获取Unsplash API密钥：**
+                1. 访问 https://unsplash.com/developers
+                2. 注册开发者账号
+                3. 创建新应用
+                4. 复制Access Key到这里
+                """)
+                
+                # API密钥输入
+                api_key_input = st.text_input(
+                    "输入你的Unsplash Access Key",
+                    type="password",
+                    value=st.session_state.unsplash_api_key_input,
+                    help="输入你的Unsplash API密钥",
+                    key="unsplash_api_input"
+                )
+                
+                if api_key_input:
+                    st.session_state.unsplash_api_key_input = api_key_input
+                    st.session_state.unsplash_api_key = api_key_input
+                    st.success("API密钥已保存！")
             
-            # 创建网格布局
-            for i in range(0, preview_count, cols_per_row):
-                cols = st.columns(cols_per_row)
-                for j in range(cols_per_row):
-                    idx = i + j
-                    if idx < preview_count:
-                        with cols[j]:
-                            file = bg_files[idx]
-                            img = Image.open(file)
-                            # 保持原始比例，设置合适宽度
-                            display_width = 180
-                            ratio = display_width / img.width
-                            display_height = int(img.height * ratio)
-                            
-                            # 使用高质量的调整大小
-                            display_img = img.copy()
-                            display_img.thumbnail((display_width, display_height * 2), Image.Resampling.LANCZOS)
-                            
-                            st.image(
-                                display_img, 
-                                caption=file.name[:18] + "..." if len(file.name) > 18 else file.name,
-                                width=display_width
-                            )
+            # 搜索区域
+            col_search1, col_search2 = st.columns([3, 1])
+            with col_search1:
+                search_query = st.text_input(
+                    "搜索背景图片",
+                    value=st.session_state.unsplash_search_query,
+                    placeholder="例如：white background, gradient, texture, studio",
+                    help="输入英文关键词搜索背景图片"
+                )
+            
+            with col_search2:
+                search_count = st.selectbox("数量", [12, 24, 36], index=0)
+            
+            # 热门搜索建议
+            st.markdown("**热门搜索：**")
+            popular_searches = ["white background", "gradient", "texture", "studio", "minimal", "abstract", "professional", "clean background"]
+            cols_popular = st.columns(8)
+            for idx, search_term in enumerate(popular_searches):
+                with cols_popular[idx % 8]:
+                    if st.button(search_term, key=f"popular_{search_term}"):
+                        st.session_state.unsplash_search_query = search_term
+                        st.rerun()
+            
+            # 搜索按钮
+            if st.button("🔍 搜索Unsplash图库", type="primary", use_container_width=True):
+                if not st.session_state.unsplash_api_key:
+                    st.error("请先配置Unsplash API密钥")
+                else:
+                    with st.spinner(f'正在搜索"{search_query}"...'):
+                        # 初始化API
+                        unsplash_api = UnsplashAPI(st.session_state.unsplash_api_key)
+                        photos = unsplash_api.search_photos(search_query, per_page=search_count)
+                        
+                        if photos:
+                            st.session_state.unsplash_photos = photos
+                            st.session_state.unsplash_search_query = search_query
+                            st.success(f"找到 {len(photos)} 张图片")
+                        else:
+                            st.error("搜索失败，请检查API密钥或网络连接")
+            
+            # 显示搜索结果
+            if st.session_state.unsplash_photos:
+                st.markdown(f"### 📷 搜索结果：{st.session_state.unsplash_search_query}")
+                
+                # 选择背景的列表
+                unsplash_bg_files = []
+                
+                # 分页显示
+                page_size = 12
+                total_pages = (len(st.session_state.unsplash_photos) + page_size - 1) // page_size
+                
+                if 'unsplash_page' not in st.session_state:
+                    st.session_state.unsplash_page = 0
+                
+                # 分页控件
+                if total_pages > 1:
+                    page_cols = st.columns([1, 2, 1])
+                    with page_cols[0]:
+                        if st.button("◀️ 上一页", key="unsplash_prev"):
+                            if st.session_state.unsplash_page > 0:
+                                st.session_state.unsplash_page -= 1
+                                st.rerun()
+                    
+                    with page_cols[1]:
+                        st.write(f"第 {st.session_state.unsplash_page + 1} / {total_pages} 页")
+                    
+                    with page_cols[2]:
+                        if st.button("下一页 ▶️", key="unsplash_next"):
+                            if st.session_state.unsplash_page < total_pages - 1:
+                                st.session_state.unsplash_page += 1
+                                st.rerun()
+                
+                # 显示当前页图片
+                start_idx = st.session_state.unsplash_page * page_size
+                end_idx = min(start_idx + page_size, len(st.session_state.unsplash_photos))
+                
+                # 2列网格显示
+                cols_per_row = 2
+                for i in range(start_idx, end_idx, cols_per_row):
+                    cols = st.columns(cols_per_row)
+                    for j in range(cols_per_row):
+                        idx = i + j
+                        if idx < end_idx:
+                            with cols[j]:
+                                photo = st.session_state.unsplash_photos[idx]
+                                
+                                # 创建卡片
+                                st.markdown(f'<div class="unsplash-image-card">', unsafe_allow_html=True)
+                                
+                                # 显示图片
+                                img_url = photo.get("urls", {}).get("small")
+                                if img_url:
+                                    st.image(img_url, use_column_width=True)
+                                
+                                # 作者信息
+                                author = photo.get("user", {}).get("name", "Unknown")
+                                st.markdown(f'<div class="unsplash-author">📸 摄影师: {author}</div>', unsafe_allow_html=True)
+                                
+                                st.markdown('</div>', unsafe_allow_html=True)
+                                
+                                # 选择按钮
+                                col_select1, col_select2 = st.columns(2)
+                                with col_select1:
+                                    if st.button("✅ 选择", key=f"select_unsplash_{idx}", use_container_width=True):
+                                        # 下载图片
+                                        with st.spinner("下载图片中..."):
+                                            unsplash_api = UnsplashAPI(st.session_state.unsplash_api_key)
+                                            img = unsplash_api.download_photo(img_url)
+                                            if img:
+                                                # 创建模拟的文件对象
+                                                class MockFile:
+                                                    def __init__(self, img, idx):
+                                                        self.name = f"unsplash_bg_{idx}.jpg"
+                                                        self.type = "image/jpeg"
+                                                        self.image = img
+                                                        self.idx = idx
+                                                
+                                                mock_file = MockFile(img, idx)
+                                                unsplash_bg_files.append(mock_file)
+                                                st.session_state.unsplash_selected_bg = mock_file
+                                                st.success(f"已选择背景图 #{idx+1}")
+                                
+                                with col_select2:
+                                    if st.button("👁️ 预览", key=f"preview_unsplash_{idx}", use_container_width=True):
+                                        # 预览大图
+                                        st.image(img_url, caption=f"Unsplash背景 #{idx+1} - 摄影师: {author}", use_column_width=True)
+                
+                # 显示已选择的背景
+                if 'unsplash_selected_bg' in st.session_state and st.session_state.unsplash_selected_bg:
+                    st.markdown("### ✅ 已选择的背景")
+                    selected = st.session_state.unsplash_selected_bg
+                    
+                    col_selected1, col_selected2 = st.columns([1, 3])
+                    with col_selected1:
+                        st.image(selected.image, width=150)
+                    
+                    with col_selected2:
+                        st.write(f"**文件名:** {selected.name}")
+                        st.write(f"**来源:** Unsplash图库")
+                        
+                        if st.button("🗑️ 清除选择", key="clear_unsplash_selection"):
+                            del st.session_state.unsplash_selected_bg
+                            st.rerun()
     
     with col2:
-        # 产品图上传
+        # 产品图上传（保持不变）
         st.markdown("#### 产品图上传")
         product_files = st.file_uploader(
             "拖拽或选择产品图片",
@@ -681,11 +1206,21 @@ with tab1:
                             )
     
     # 上传状态汇总
-    if bg_files and product_files:
-        total_combinations = len(bg_files) * len(product_files)
-        st.info(f"📊 **准备合成:** {len(bg_files)} 张背景图 × {len(product_files)} 张产品图 = **{total_combinations} 张合成图**")
+    bg_files_combined = []
+    
+    # 获取所有背景文件（包括上传的和Unsplash的）
+    if 'bg_files' in locals() and bg_files:
+        bg_files_combined.extend(bg_files)
+    
+    if 'unsplash_selected_bg' in st.session_state and st.session_state.unsplash_selected_bg:
+        # 将Unsplash选择的图片添加到背景文件列表
+        bg_files_combined.append(st.session_state.unsplash_selected_bg)
+    
+    if bg_files_combined and product_files:
+        total_combinations = len(bg_files_combined) * len(product_files)
+        st.info(f"📊 **准备合成:** {len(bg_files_combined)} 张背景图 × {len(product_files)} 张产品图 = **{total_combinations} 张合成图**")
 
-# 标签页2：预置背景库
+# 标签页2：预置背景库（现在可以保留或删除，这里保留但内容简化）
 with tab2:
     st.header("🖼️ 预置背景库")
     st.markdown("选择或管理预置的背景图片")
@@ -693,8 +1228,9 @@ with tab2:
     # 这里可以添加背景库的显示和管理功能
     st.markdown("""
     <div style="text-align: center; padding: 3rem; color: #666;">
-        <h3>🎨 背景库功能开发中</h3>
-        <p>即将推出：纯色背景、渐变背景、纹理背景库</p>
+        <h3>🎨 背景库功能已集成到上传页面</h3>
+        <p>现在您可以在上传图片页面直接使用Unsplash在线图库</p>
+        <p>👉 切换到"上传图片"标签页，选择"Unsplash图库"即可使用</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -988,11 +1524,216 @@ with tab4:
                     st.session_state.video_info = None
                     st.rerun()
 
+# 标签页5：AI文案生成
+with tab5:
+    st.header("📝 AI文案生成 - 阿里巴巴/MIC平台优化")
+    st.markdown("""
+    <div class="highlight-box">
+        <p><b>功能说明：</b>根据选择的产品，自动生成适用于阿里巴巴和国际站(MIC)的英文产品标题、关键词和属性词。</p>
+        <p><b>生成规则：</b></p>
+        <ul>
+            <li>标题长度：8-12个单词，85-128个字符</li>
+            <li>格式规范：首字母大写，介词小写</li>
+            <li>SEO优化：符合阿里/MIC平台搜索规则</li>
+            <li>关键词：包含短尾核心词和长尾复合词</li>
+            <li>属性词：分类清晰，可直接复制使用</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # 使用两列布局
+    col_setting, col_preview = st.columns([1, 2], gap="large")
+    
+    with col_setting:
+        st.markdown("### 1. 产品设置")
+        
+        # 产品选择
+        product_options = [
+            "MBBR Media", 
+            "disc diffuser", 
+            "drum filter", 
+            "bio block", 
+            "mbr", 
+            "Screw press dewatering machine", 
+            "tube settler", 
+            "tube diffuser"
+        ]
+        
+        selected_product = st.selectbox(
+            "选择产品类型",
+            product_options,
+            help="选择需要生成文案的产品",
+            key="product_select"
+        )
+        
+        # 平台选择
+        platform = st.radio(
+            "目标平台",
+            ["阿里巴巴国际站", "Made-in-China.com"],
+            help="选择产品要发布的平台",
+            key="platform_select"
+        )
+        
+        # 生成按钮
+        if st.button("🤖 开始生成AI文案", type="primary", use_container_width=True, key="generate_content"):
+            with st.spinner(f'正在为 {selected_product} 生成AI文案...'):
+                # 调用生成函数
+                titles, keywords, attributes = generate_product_content(selected_product, platform)
+                
+                # 保存到session_state
+                st.session_state.generated_titles = titles
+                st.session_state.generated_keywords = keywords
+                st.session_state.generated_attributes = attributes
+                
+                st.success(f"✅ 成功为 {selected_product} 生成文案内容！")
+    
+    with col_preview:
+        if st.session_state.generated_titles:
+            st.markdown("### 2. 生成结果")
+            
+            # 标题部分
+            st.markdown('<div class="section-title">📝 10个产品标题</div>', unsafe_allow_html=True)
+            st.markdown("**复制说明：** 以下标题可直接复制到阿里/MIC平台的产品标题字段")
+            
+            # 创建可复制的文本框
+            titles_text = "\n".join(st.session_state.generated_titles)
+            st.text_area(
+                "产品标题 (共10个)",
+                titles_text,
+                height=200,
+                key="titles_area",
+                label_visibility="collapsed"
+            )
+            
+            # 复制按钮
+            st.download_button(
+                label="📋 复制所有标题",
+                data=titles_text,
+                file_name=f"{selected_product.replace(' ', '_')}_titles.txt",
+                mime="text/plain",
+                key="copy_titles"
+            )
+            
+            # 关键词部分
+            st.markdown('<div class="section-title">🔑 10个关键词</div>', unsafe_allow_html=True)
+            st.markdown("**包含：** 短尾核心词 + 长尾复合词")
+            
+            keywords_text = "\n".join(st.session_state.generated_keywords)
+            st.text_area(
+                "关键词列表",
+                keywords_text,
+                height=150,
+                key="keywords_area",
+                label_visibility="collapsed"
+            )
+            
+            # 复制按钮
+            st.download_button(
+                label="📋 复制所有关键词",
+                data=keywords_text,
+                file_name=f"{selected_product.replace(' ', '_')}_keywords.txt",
+                mime="text/plain",
+                key="copy_keywords"
+            )
+            
+            # 属性词部分
+            st.markdown('<div class="section-title">🏷️ 10个属性词</div>', unsafe_allow_html=True)
+            st.markdown("**分类说明：** 按材料、尺寸、性能、应用等分类")
+            
+            st.text_area(
+                "属性词分类",
+                st.session_state.generated_attributes,
+                height=250,
+                key="attributes_area",
+                label_visibility="collapsed"
+            )
+            
+            # 复制按钮
+            st.download_button(
+                label="📋 复制所有属性词",
+                data=st.session_state.generated_attributes,
+                file_name=f"{selected_product.replace(' ', '_')}_attributes.txt",
+                mime="text/plain",
+                key="copy_attributes"
+            )
+            
+            # 批量下载按钮
+            st.markdown("---")
+            col_dl1, col_dl2, col_dl3 = st.columns(3)
+            with col_dl1:
+                # 创建ZIP包包含所有内容
+                zip_buffer = BytesIO()
+                with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                    zip_file.writestr(f"{selected_product}_titles.txt", titles_text)
+                    zip_file.writestr(f"{selected_product}_keywords.txt", keywords_text)
+                    zip_file.writestr(f"{selected_product}_attributes.txt", st.session_state.generated_attributes)
+                
+                zip_buffer.seek(0)
+                
+                st.download_button(
+                    label="📦 下载所有文案 (ZIP)",
+                    data=zip_buffer,
+                    file_name=f"{selected_product.replace(' ', '_')}_content_pack.zip",
+                    mime="application/zip",
+                    use_container_width=True,
+                    key="download_all"
+                )
+            
+            with col_dl2:
+                if st.button("🔄 重新生成", key="regenerate", use_container_width=True):
+                    st.session_state.generated_titles = None
+                    st.session_state.generated_keywords = None
+                    st.session_state.generated_attributes = None
+                    st.rerun()
+            
+            with col_dl3:
+                if st.button("📊 生成统计", key="stats", use_container_width=True):
+                    # 显示统计信息
+                    avg_title_length = sum(len(title) for title in st.session_state.generated_titles) / len(st.session_state.generated_titles)
+                    avg_word_count = sum(len(title.split()) for title in st.session_state.generated_titles) / len(st.session_state.generated_titles)
+                    
+                    st.info(f"""
+                    **文案统计信息：**
+                    - 标题数量: 个
+                    - 平均标题长度: {avg_title_length:.1f} 字符
+                    - 平均单词数: {avg_word_count:.1f} 个
+                    - 关键词数量: 10个
+                    - 属性词数量: 10个
+                    - 目标平台: {platform}
+                    """)
+        
+        else:
+            # 未生成时的预览
+            st.markdown("### 2. 文案预览区")
+            st.markdown("""
+            <div style="text-align: center; padding: 3rem; color: #666; background-color: #f8f9fa; border-radius: 10px;">
+                <h4>👈 请先在左侧选择产品</h4>
+                <p>选择产品类型和目标平台后，点击"开始生成AI文案"按钮</p>
+                <p>系统将为您生成：</p>
+                <ul style="text-align: left; display: inline-block;">
+                    <li>10个优化产品标题</li>
+                    <li>10个SEO关键词</li>
+                    <li>10个分类属性词</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
+
 # ==================== 执行批处理 ====================
 if process_button:
     # 检查必要文件
-    if not bg_files:
-        st.error("❌ 请至少上传一张背景图。")
+    # 获取所有背景文件（包括上传的和Unsplash的）
+    bg_files_combined = []
+    
+    # 获取上传的背景文件
+    if 'bg_files' in locals() and bg_files:
+        bg_files_combined.extend(bg_files)
+    
+    # 获取Unsplash选择的背景文件
+    if 'unsplash_selected_bg' in st.session_state and st.session_state.unsplash_selected_bg:
+        bg_files_combined.append(st.session_state.unsplash_selected_bg)
+    
+    if not bg_files_combined:
+        st.error("❌ 请至少上传一张背景图或从Unsplash图库选择一张背景。")
         st.stop()
     if not product_files:
         st.error("❌ 请至少上传一张产品图。")
@@ -1027,15 +1768,22 @@ if process_button:
     # 创建临时目录存放结果
     with tempfile.TemporaryDirectory() as tmpdir:
         output_files = []
-        total = len(bg_files) * len(product_files)
+        total = len(bg_files_combined) * len(product_files)
         
         # 进度条
         progress_bar = st.progress(0)
         status_text = st.empty()
         
         processed = 0
-        for i, bg_file in enumerate(bg_files):
-            bg_image = Image.open(bg_file)
+        for i, bg_file in enumerate(bg_files_combined):
+            # 处理背景文件（可能是上传的文件或Unsplash文件）
+            if hasattr(bg_file, 'read'):  # 上传的文件
+                bg_image = Image.open(bg_file)
+            elif hasattr(bg_file, 'image'):  # Unsplash文件
+                bg_image = bg_file.image
+            else:
+                continue
+            
             for j, product_file in enumerate(product_files):
                 product_image = Image.open(product_file)
                 
@@ -1052,7 +1800,12 @@ if process_button:
                 )
                 
                 # 保存结果
-                output_filename = f"{os.path.splitext(bg_file.name)[0]}_{os.path.splitext(product_file.name)[0]}.{output_format.lower()}"
+                if hasattr(bg_file, 'name'):
+                    bg_name = os.path.splitext(bg_file.name)[0]
+                else:
+                    bg_name = f"unsplash_bg_{i}"
+                
+                output_filename = f"{bg_name}_{os.path.splitext(product_file.name)[0]}.{output_format.lower()}"
                 output_path = os.path.join(tmpdir, output_filename)
                 
                 if output_format.upper() == 'JPG':
@@ -1167,15 +1920,15 @@ if process_button:
 st.markdown("---")
 st.markdown("### 💡 使用说明")
 
-# 使用四列布局显示说明（因为现在有四个主要功能）
-info_col1, info_col2, info_col3, info_col4 = st.columns(4)
+# 使用五列布局显示说明（因为现在有五个主要功能）
+info_col1, info_col2, info_col3, info_col4, info_col5 = st.columns(5)
 
 with info_col1:
     st.markdown("""
     <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
         <h4>📝 图片合成</h4>
         <ul>
-            <li>背景图：JPG/PNG格式</li>
+            <li>背景图：上传或Unsplash</li>
             <li>产品图：PNG透明背景最佳</li>
             <li>Logo：系统已预置黑/白Logo</li>
         </ul>
@@ -1207,6 +1960,18 @@ with info_col3:
     """, unsafe_allow_html=True)
 
 with info_col4:
+    st.markdown("""
+    <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
+        <h4>📝 AI文案生成</h4>
+        <ul>
+            <li>10个产品标题</li>
+            <li>10个SEO关键词</li>
+            <li>10个分类属性词</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
+with info_col5:
     st.markdown("""
     <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
         <h4>⚡ 快速开始</h4>
