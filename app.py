@@ -1,4 +1,4 @@
-# app.py - 骏泰产品图智能合成工坊完整版
+# app.py - 骏泰产品图工作台
 import zipfile
 from io import BytesIO
 import streamlit as st
@@ -343,7 +343,7 @@ def get_custom_css():
 st.markdown(get_custom_css(), unsafe_allow_html=True)
 
 # 页面标题
-st.markdown('<h1 class="main-header">🎨 骏泰产品图智能合成工坊</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-header">🎨 骏泰产品图工作台</h1>', unsafe_allow_html=True)
 st.markdown("---")
 
 # 初始化会话状态
