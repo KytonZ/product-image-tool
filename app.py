@@ -999,7 +999,6 @@ with tab1:
         
         # 背景来源选择选项卡
         bg_source = st.radio(
-            "选择背景来源",
             ["上传图片", "Unsplash图库"],
             horizontal=True,
             key="bg_source_radio"
@@ -1047,7 +1046,6 @@ with tab1:
         
         else:  # Unsplash图库
             # 搜索区域 - 修复对齐问题
-            st.markdown("### Unsplash在线图库")
             
             # 使用container确保在同一行
             with st.container():
