@@ -15,7 +15,7 @@ import requests
 
 # 设置页面配置
 st.set_page_config(
-    page_title="骏泰产品图智能合成工坊", 
+    page_title="骏泰产品图工作台", 
     page_icon="🎨", 
     layout="wide",
     initial_sidebar_state="expanded"
