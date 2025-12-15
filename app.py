@@ -199,9 +199,9 @@ def get_custom_css():
         /* Unsplash图片样式 */
         .unsplash-image-card {
             border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 15px;
+            border-radius: 6px;
+            padding: 5px;
+            margin-bottom: 8px;
             background: white;
             transition: all 0.3s ease;
             position: relative;
@@ -209,7 +209,7 @@ def get_custom_css():
         
         .unsplash-image-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             border-color: #2196F3;
         }
         
@@ -230,6 +230,15 @@ def get_custom_css():
             border-radius: 4px;
             font-size: 11px;
         }
+        /* 紧凑布局 */
+        .stTabs [data-baseweb="tab"] {
+            padding: 8px 16px;
+        }
+
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 5px;
+        }
+
         
         /* 选项卡样式 */
         .bg-tab-container {
