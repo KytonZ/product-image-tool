@@ -1054,7 +1054,7 @@ with tab1:
             
             # 搜索区域 - 修复对齐问题
             search_query = st.text_input(
-                "",  # 空标签
+                laber="",  # 空标签
                 value=st.session_state.unsplash_search_query,
                 placeholder="例如：white background",
                 help="输入英文关键词",
