@@ -273,6 +273,41 @@ def get_custom_css():
             border-radius: 5px;
             margin-bottom: 20px;
         }
+        
+        /* 上传列对齐样式 */
+        .upload-column {
+            min-height: 600px;
+        }
+        
+        /* Unsplash图片网格布局 */
+        .unsplash-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            margin-top: 1rem;
+        }
+        
+        /* 视频信息卡片 */
+        .video-info-card {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #FF6B6B;
+        }
+        
+        .video-info-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        
+        .video-info-text {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #555;
+        }
     </style>
     """
 
@@ -306,15 +341,17 @@ if 'unsplash_selected_bg' not in st.session_state:
     st.session_state.unsplash_selected_bg = None
 if 'unsplash_search_query' not in st.session_state:
     st.session_state.unsplash_search_query = "white background"
-if 'unsplash_api_key' not in st.session_state:
-    st.session_state.unsplash_api_key = ""
-if 'unsplash_api_key_input' not in st.session_state:
-    st.session_state.unsplash_api_key_input = ""
 
 # ==================== Unsplash API类 ====================
 class UnsplashAPI:
-    def __init__(self, access_key=None):
-        self.access_key = access_key or st.secrets.get("UNSPLASH_ACCESS_KEY", "")
+    def __init__(self):
+        # 自动从Streamlit Secrets读取API密钥
+        try:
+            self.access_key = st.secrets["UNSPLASH_ACCESS_KEY"]
+        except:
+            self.access_key = ""
+            st.warning("⚠️ 未找到Unsplash API密钥，请在Streamlit Secrets中配置UNSPLASH_ACCESS_KEY")
+        
         self.base_url = "https://api.unsplash.com"
     
     def search_photos(self, query, page=1, per_page=12):
@@ -850,7 +887,6 @@ with st.sidebar:
         key="logo_color_select"
     )
     
-    
     st.markdown("---")
     
     # 3. 产品图设置
@@ -926,10 +962,11 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(["📤 上传图片", "🖼️ 预置背�
 with tab1:
     st.subheader("上传你的素材")
     
-    # 使用两列布局
+    # 使用两列布局，并添加upload-column类使其对齐
     col1, col2 = st.columns([1, 1], gap="large")
     
     with col1:
+        st.markdown('<div class="upload-column">', unsafe_allow_html=True)
         # 背景图上传区域 - 集成了Unsplash
         st.markdown("#### 背景图上传")
         
@@ -973,7 +1010,7 @@ with tab1:
                                 file = bg_files[idx]
                                 img = Image.open(file)
                                 # 保持原始比例，设置合适宽度
-                                display_width = 180
+                                display_width = 150  # 减小显示宽度
                                 ratio = display_width / img.width
                                 display_height = int(img.height * ratio)
                                 
@@ -983,36 +1020,26 @@ with tab1:
                                 
                                 st.image(
                                     display_img, 
-                                    caption=file.name[:18] + "..." if len(file.name) > 18 else file.name,
+                                    caption=file.name[:15] + "..." if len(file.name) > 15 else file.name,
                                     width=display_width
                                 )
         
         else:  # Unsplash图库
             st.markdown("### 🌐 Unsplash在线图库")
             
-            # API密钥配置区域（可以折叠）
-            #with st.expander("🔑 配置Unsplash API密钥", expanded=False):
+            # 初始化Unsplash API
+            unsplash_api = UnsplashAPI()
+            
+            # 如果API密钥不存在，显示提示
+            if not unsplash_api.access_key:
+                st.warning("⚠️ Unsplash API密钥未配置，请在Streamlit Secrets中设置UNSPLASH_ACCESS_KEY")
                 st.info("""
                 **如何获取Unsplash API密钥：**
                 1. 访问 https://unsplash.com/developers
                 2. 注册开发者账号
                 3. 创建新应用
-                4. 复制Access Key到这里
+                4. 复制Access Key到Streamlit Secrets
                 """)
-                
-                # API密钥输入
-                api_key_input = st.text_input(
-                    "输入你的Unsplash Access Key",
-                    type="password",
-                    value=st.session_state.unsplash_api_key_input,
-                    help="输入你的Unsplash API密钥",
-                    key="unsplash_api_input"
-                )
-                
-            if api_key_input:
-                    st.session_state.unsplash_api_key_input = api_key_input
-                    st.session_state.unsplash_api_key = api_key_input
-                    st.success("API密钥已保存！")
             
             # 搜索区域
             col_search1, col_search2 = st.columns([3, 1])
@@ -1021,11 +1048,12 @@ with tab1:
                     "搜索背景图片",
                     value=st.session_state.unsplash_search_query,
                     placeholder="例如：white background, gradient, texture, studio",
-                    help="输入英文关键词搜索背景图片"
+                    help="输入英文关键词搜索背景图片",
+                    key="unsplash_search_input"
                 )
             
             with col_search2:
-                search_count = st.selectbox("数量", [12, 24, 36], index=0)
+                search_count = st.selectbox("数量", [12, 24, 36], index=0, key="unsplash_count_select")
             
             # 热门搜索建议
             st.markdown("**热门搜索：**")
@@ -1038,13 +1066,11 @@ with tab1:
                         st.rerun()
             
             # 搜索按钮
-            if st.button("🔍 搜索Unsplash图库", type="primary", use_container_width=True):
-                if not st.session_state.unsplash_api_key:
-                    st.error("请先配置Unsplash API密钥")
+            if st.button("🔍 搜索Unsplash图库", type="primary", use_container_width=True, key="search_unsplash"):
+                if not unsplash_api.access_key:
+                    st.error("请先在Streamlit Secrets中配置Unsplash API密钥")
                 else:
                     with st.spinner(f'正在搜索"{search_query}"...'):
-                        # 初始化API
-                        unsplash_api = UnsplashAPI(st.session_state.unsplash_api_key)
                         photos = unsplash_api.search_photos(search_query, per_page=search_count)
                         
                         if photos:
@@ -1057,9 +1083,6 @@ with tab1:
             # 显示搜索结果
             if st.session_state.unsplash_photos:
                 st.markdown(f"### 📷 搜索结果：{st.session_state.unsplash_search_query}")
-                
-                # 选择背景的列表
-                unsplash_bg_files = []
                 
                 # 分页显示
                 page_size = 12
@@ -1086,12 +1109,12 @@ with tab1:
                                 st.session_state.unsplash_page += 1
                                 st.rerun()
                 
-                # 显示当前页图片
+                # 显示当前页图片 - 使用网格布局，每行显示3张图片
                 start_idx = st.session_state.unsplash_page * page_size
                 end_idx = min(start_idx + page_size, len(st.session_state.unsplash_photos))
                 
-                # 2列网格显示
-                cols_per_row = 2
+                # 3列网格显示（修改为3列）
+                cols_per_row = 3
                 for i in range(start_idx, end_idx, cols_per_row):
                     cols = st.columns(cols_per_row)
                     for j in range(cols_per_row):
@@ -1103,14 +1126,14 @@ with tab1:
                                 # 创建卡片
                                 st.markdown(f'<div class="unsplash-image-card">', unsafe_allow_html=True)
                                 
-                                # 显示图片
+                                # 显示图片 - 使用较小的预览
                                 img_url = photo.get("urls", {}).get("small")
                                 if img_url:
                                     st.image(img_url, use_column_width=True)
                                 
                                 # 作者信息
                                 author = photo.get("user", {}).get("name", "Unknown")
-                                st.markdown(f'<div class="unsplash-author">📸 摄影师: {author}</div>', unsafe_allow_html=True)
+                                st.markdown(f'<div class="unsplash-author">📸 {author}</div>', unsafe_allow_html=True)
                                 
                                 st.markdown('</div>', unsafe_allow_html=True)
                                 
@@ -1120,7 +1143,6 @@ with tab1:
                                     if st.button("✅ 选择", key=f"select_unsplash_{idx}", use_container_width=True):
                                         # 下载图片
                                         with st.spinner("下载图片中..."):
-                                            unsplash_api = UnsplashAPI(st.session_state.unsplash_api_key)
                                             img = unsplash_api.download_photo(img_url)
                                             if img:
                                                 # 创建模拟的文件对象
@@ -1132,7 +1154,6 @@ with tab1:
                                                         self.idx = idx
                                                 
                                                 mock_file = MockFile(img, idx)
-                                                unsplash_bg_files.append(mock_file)
                                                 st.session_state.unsplash_selected_bg = mock_file
                                                 st.success(f"已选择背景图 #{idx+1}")
                                 
@@ -1148,7 +1169,7 @@ with tab1:
                     
                     col_selected1, col_selected2 = st.columns([1, 3])
                     with col_selected1:
-                        st.image(selected.image, width=150)
+                        st.image(selected.image, width=120)  # 缩小预览
                     
                     with col_selected2:
                         st.write(f"**文件名:** {selected.name}")
@@ -1157,9 +1178,12 @@ with tab1:
                         if st.button("🗑️ 清除选择", key="clear_unsplash_selection"):
                             del st.session_state.unsplash_selected_bg
                             st.rerun()
+        
+        st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        # 产品图上传（保持不变）
+        st.markdown('<div class="upload-column">', unsafe_allow_html=True)
+        # 产品图上传
         st.markdown("#### 产品图上传")
         product_files = st.file_uploader(
             "拖拽或选择产品图片",
@@ -1191,7 +1215,7 @@ with tab1:
                             file = product_files[idx]
                             img = Image.open(file)
                             # 保持原始比例，设置合适宽度
-                            display_width = 180
+                            display_width = 150  # 与背景图预览保持一致
                             ratio = display_width / img.width
                             display_height = int(img.height * ratio)
                             
@@ -1201,9 +1225,10 @@ with tab1:
                             
                             st.image(
                                 display_img, 
-                                caption=file.name[:18] + "..." if len(file.name) > 18 else file.name,
+                                caption=file.name[:15] + "..." if len(file.name) > 15 else file.name,
                                 width=display_width
                             )
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # 上传状态汇总
     bg_files_combined = []
@@ -1220,7 +1245,7 @@ with tab1:
         total_combinations = len(bg_files_combined) * len(product_files)
         st.info(f"📊 **准备合成:** {len(bg_files_combined)} 张背景图 × {len(product_files)} 张产品图 = **{total_combinations} 张合成图**")
 
-# 标签页2：预置背景库（现在可以保留或删除，这里保留但内容简化）
+# 标签页2：预置背景库
 with tab2:
     st.header("🖼️ 预置背景库")
     st.markdown("选择或管理预置的背景图片")
@@ -1328,7 +1353,7 @@ with tab3:
                                 with preview_cols[idx]:
                                     # 高质量调整大小
                                     display_img = preview_img.copy()
-                                    display_width = 180
+                                    display_width = 150
                                     ratio = display_width / display_img.width
                                     display_height = int(display_img.height * ratio)
                                     display_img.thumbnail((display_width, display_height), Image.Resampling.LANCZOS)
@@ -1694,7 +1719,7 @@ with tab5:
                     
                     st.info(f"""
                     **文案统计信息：**
-                    - 标题数量: 个
+                    - 标题数量: 10个
                     - 平均标题长度: {avg_title_length:.1f} 字符
                     - 平均单词数: {avg_word_count:.1f} 个
                     - 关键词数量: 10个
