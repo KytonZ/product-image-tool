@@ -1206,12 +1206,25 @@ with tab1:
                                     # 显示图片
                                     st.image(img_url, use_column_width=True)
                                     
-                                    # 创建紧凑的按钮容器
-                                    button_cols = st.columns(2)
-                                    
-                                    with button_cols[0]:
-                                        if st.button("选择", key=f"select_{current_page}_{idx}", 
-                                                   use_container_width=True):
+                                    # 单个选择按钮（无预览按钮）
+                                    # 使用自定义小按钮样式，字体更小
+                                    button_container = st.container()
+                                    with button_container:
+                                        # 检查是否已选择当前图片
+                                        is_selected = st.session_state.unsplash_selected_bg and hasattr(st.session_state.unsplash_selected_bg, 'idx') and st.session_state.unsplash_selected_bg.idx == idx
+    
+                                        # 设置按钮样式和文字
+                                        button_label = "选择此背景图" if is_selected else "选择"
+                                        button_type = "primary" if is_selected else "secondary"
+    
+                                        # 自定义小按钮：通过key区分不同图片，use_container_width=False控制宽度
+                                        if st.button(
+                                            button_label, 
+                                            key=f"select_{current_page}_{idx}",
+                                            use_container_width=False,
+                                            type=button_type,
+                                            args=(idx,)  # 传递图片索引用于状态判断
+                                        ):
                                             with st.spinner("下载中..."):
                                                 img = unsplash_api.download_photo(img_url)
                                                 if img:
@@ -1220,18 +1233,31 @@ with tab1:
                                                             self.name = f"unsplash_bg_{current_page}_{idx}.jpg"
                                                             self.type = "image/jpeg"
                                                             self.image = img
-                                                            self.idx = idx
-                                                    
+                                                            self.idx = idx  # 记录索引用于状态判断
+                
                                                     mock_file = MockFile(img, idx)
                                                     st.session_state.unsplash_selected_bg = mock_file
-                                                    st.success("已选择背景图")
-                                    
-                                    with button_cols[1]:
-                                        if st.button("预览", key=f"preview_{current_page}_{idx}", 
-                                                   use_container_width=True):
-                                            # 在底部显示大图预览
-                                            st.image(img_url, caption=f"预览 - 第{current_page}页第{idx+1}张", 
-                                                   use_column_width=True)
+                                                    # 移除成功提示，通过按钮状态变化体现选择结果
+                                                    st.rerun()  # 刷新页面更新按钮状态
+
+                                    # 自定义按钮CSS（缩小字体和宽度）
+                                    st.markdown("""
+                                    <style>
+                                    /* 缩小选择按钮字体和内边距 */
+                                    div[data-testid="stButton"][data-key^="select_"] button {
+                                        font-size: 0.7rem !important;
+                                        padding: 0.15rem 0.3rem !important;
+                                        width: auto !important;
+                                        max-width: 120px !important;
+                                    }
+                                    /* 选中状态的绿色背景白色文字 */
+                                    div[data-testid="stButton"][data-key^="select_"] button[data-type="primary"] {
+                                        background-color: #28a745 !important;
+                                        color: white !important;
+                                        border-color: #28a745 !important;
+                                    }
+                                    </style>
+                                    """, unsafe_allow_html=True)
     with col2:
         # 产品图上传逻辑（保持不变）
         st.markdown("#### 产品图上传")
@@ -2064,4 +2090,4 @@ with info_col5:
     """, unsafe_allow_html=True)
 
 st.markdown("---")
-st.caption("💡 提示：如需调整Logo文件，请替换 logos/ 文件夹中的 black_logo.png 或 white_logo.png")
+st.caption("")
