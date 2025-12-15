@@ -975,7 +975,7 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(["📤 上传图片", "🖼️ 预置背�
 with tab1:
     
     # 使用两列布局，并添加upload-column类使其对齐
-    col1, col2 = st.columns([1, 1], gap="large")
+    col1, col2 = st.columns([1, 1], gap="small")
     
     with col1:
         st.markdown('<div class="upload-column">', unsafe_allow_html=True)
