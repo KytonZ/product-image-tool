@@ -1231,87 +1231,70 @@ with tab1:
                                     </div>
                                     """, unsafe_allow_html=True)
                                     
-                                    # 单个选择按钮（1:1图片下无偏移 + 选中绿底白字 + 小字体）
-                                    is_selected = False
-                                    if st.session_state.get('unsplash_selected_bg'):
-                                        selected_idx = getattr(st.session_state.unsplash_selected_bg, 'idx', -1)
-                                        selected_page = getattr(st.session_state.unsplash_selected_bg, 'page', -1)
-                                        is_selected = (selected_page == current_page) and (selected_idx == idx)
+                                # 单个选择按钮（1:1图片下无偏移 + 选中绿底白字 + 小字体）
+                                is_selected = False
+                                if st.session_state.get('unsplash_selected_bg'):
+                                    selected_idx = getattr(st.session_state.unsplash_selected_bg, 'idx', -1)
+                                    selected_page = getattr(st.session_state.unsplash_selected_bg, 'page', -1)
+                                    is_selected = (selected_page == current_page) and (selected_idx == idx)
 
-                                    # 按钮文字（无emoji）
-                                    button_label = "选择此背景图" if is_selected else "选择背景图"
+                                # 按钮文字（无emoji）
+                                button_label = "选择此背景图" if is_selected else "选择背景图"
 
-                                    # 核心：强制统一所有状态的盒模型（消除偏移的关键）
-                                    st.markdown(f"""
-                                    <style>
-                                    /* 终极方案：固定按钮尺寸+统一所有状态样式 */
-                                    div[data-testid="stButton"] > button[data-key="select_{current_page}_{idx}"] {{
-                                        width: 100% !important;          /* 等宽 */
-                                        font-size: 0.65rem !important;   /* 小字体 */
-                                        padding: 0.25rem 0 !important;   /* 固定内边距 */
-                                        margin: 0 !important;            /* 强制无外边距（消除偏移核心） */
-                                        border-radius: 6px !important;   /* 圆角 */
-                                        border: 1px solid #d1d5db !important;
-                                        height: 32px !important;         /* 固定高度（关键：选中/未选中高度一致） */
-                                        line-height: 1 !important;       /* 固定行高 */
-                                        box-sizing: border-box !important; /* 盒模型统一 */
-                                        transition: all 0.2s ease !important;
-                                        {'background-color: #28a745 !important; color: white !important; border-color: #28a745 !important;' if is_selected else 'background-color: #f8f9fa !important; color: #333 !important;'}
-                                    }}
-                                    /* hover效果（不改变尺寸） */
-                                    div[data-testid="stButton"] > button[data-key="select_{current_page}_{idx}"]:hover {{
-                                        opacity: 0.9 !important;
-                                        box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
-                                        transform: none !important;      /* 禁用位移 */
-                                    }}
-                                    /* 彻底禁用Streamlit的primary按钮默认样式干扰 */
-                                    div[data-testid="stButton"] > button[data-key="select_{current_page}_{idx}"].stButtonPrimary {{
-                                        background-color: #28a745 !important;
-                                        color: white !important;
-                                        border-color: #28a745 !important;
-                                        box-shadow: none !important;
-                                    }}
-                                    </style>
-                                    """, unsafe_allow_html=True)
+                                # 核心：强制统一所有状态的盒模型（消除偏移的关键）
+                                st.markdown(f"""
+                                <style>
+                                /* 终极方案：固定按钮尺寸+统一所有状态样式 */
+                                div[data-testid="stButton"] > button[data-key="select_{current_page}_{idx}"] {{
+                                    width: 100% !important;          /* 等宽 */
+                                    font-size: 0.65rem !important;   /* 小字体 */
+                                    padding: 0.25rem 0 !important;   /* 固定内边距 */
+                                    margin: 0 !important;            /* 强制无外边距（消除偏移核心） */
+                                    border-radius: 6px !important;   /* 圆角 */
+                                    border: 1px solid #d1d5db !important;
+                                    height: 32px !important;         /* 固定高度（关键：选中/未选中高度一致） */
+                                    line-height: 1 !important;       /* 固定行高 */
+                                    box-sizing: border-box !important; /* 盒模型统一 */
+                                    transition: all 0.2s ease !important;
+                                    {'background-color: #28a745 !important; color: white !important; border-color: #28a745 !important;' if is_selected else 'background-color: #f8f9fa !important; color: #333 !important;'}
+                                }}
+                                /* hover效果（不改变尺寸） */
+                                div[data-testid="stButton"] > button[data-key="select_{current_page}_{idx}"]:hover {{
+                                    opacity: 0.9 !important;
+                                    box-shadow: 0 2px 4px rgba(0,0,0,0.05) !important;
+                                    transform: none !important;      /* 禁用位移 */
+                                }}
+                                /* 彻底禁用Streamlit的primary按钮默认样式干扰 */
+                                div[data-testid="stButton"] > button[data-key="select_{current_page}_{idx}"].stButtonPrimary {{
+                                    background-color: #28a745 !important;
+                                    color: white !important;
+                                    border-color: #28a745 !important;
+                                    box-shadow: none !important;
+                                }}
+                                </style>
+                                """, unsafe_allow_html=True)
 
-                                    # 渲染按钮（不设置type=primary，避免默认样式干扰）
-                                    if st.button(
-                                        button_label,
-                                        key=f"select_{current_page}_{idx}",
-                                        use_container_width=True,
-                                    ):
-                                        with st.spinner("下载中..."):
-                                            img = unsplash_api.download_photo(img_url)
-                                            if img:
-                                                class MockFile:
-                                                    def __init__(self, img, idx):
-                                                        self.name = f"unsplash_bg_{current_page}_{idx}.jpg"
-                                                        self.type = "image/jpeg"
-                                                        self.image = img
-                                                        self.idx = idx
-                                                        self.page = current_page
-                                                
-                                                st.session_state.unsplash_selected_bg = mock_file
-                                                st.rerun()
+                                # 渲染按钮（不设置type=primary，避免默认样式干扰）
+                                if st.button(
+                                    button_label,
+                                    key=f"select_{current_page}_{idx}",
+                                    use_container_width=True,
+                                ):
+                                    with st.spinner("下载中..."):
+                                        img = unsplash_api.download_photo(img_url)
+                                        if img:
+                                            class MockFile:
+                                                def __init__(self, img, idx):
+                                                    self.name = f"unsplash_bg_{current_page}_{idx}.jpg"
+                                                    self.type = "image/jpeg"
+                                                    self.image = img
+                                                    self.idx = idx
+                                                    self.page = current_page
+                                            
+                                            st.session_state.unsplash_selected_bg = mock_file
+                                            st.rerun()
 
-                                    # 自定义按钮CSS（缩小字体和宽度）
-                                    st.markdown("""
-                                    <style>
-                                    /* 缩小选择按钮字体和内边距 */
-                                    div[data-testid="stButton"][data-key^="select_"] button {
-                                        font-size: 0.7rem !important;
-                                        padding: 0.15rem 0.3rem !important;
-                                        width: auto !important;
-                                        max-width: 120px !important;
-                                    }
-                                    /* 选中状态的绿色背景白色文字 */
-                                    div[data-testid="stButton"][data-key^="select_"] button[data-type="primary"] {
-                                        background-color: #28a745 !important;
-                                        color: white !important;
-                                        border-color: #28a745 !important;
-                                    }
-                                    </style>
-                                    """, unsafe_allow_html=True)
+
     with col2:
         # 产品图上传逻辑（保持不变）
         st.markdown("#### 产品图上传")
