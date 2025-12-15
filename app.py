@@ -33,7 +33,7 @@ def get_custom_css():
         /* 主标题样式 */
         .main-header {
             padding: 0.5rem 0;
-            margin-bottom: 0.5rem !important;
+            margin-bottom: 0.2rem !important;
         }
         
         /* 卡片式UI */
@@ -959,6 +959,7 @@ with st.sidebar:
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["📤 上传图片", "🖼️ 预置背景库", "🔄 图片去重生成器", "🎬 视频抽帧工具", "📝 AI文案生成"])
 
 # 标签页1：上传图片（已集成Unsplash）
+# 标签页1：上传图片（已集成Unsplash）
 with tab1:
     st.subheader("上传你的素材")
     
@@ -1055,15 +1056,6 @@ with tab1:
             with col_search2:
                 search_count = st.selectbox("数量", [12, 24, 36], index=0, key="unsplash_count_select")
             
-            # 热门搜索建议
-            st.markdown("**热门搜索：**")
-            popular_searches = ["white background", "gradient", "texture", "studio", "minimal", "abstract", "professional", "clean background"]
-            cols_popular = st.columns(8)
-            for idx, search_term in enumerate(popular_searches):
-                with cols_popular[idx % 8]:
-                    if st.button(search_term, key=f"popular_{search_term}"):
-                        st.session_state.unsplash_search_query = search_term
-                        st.rerun()
             
             # 搜索按钮
             if st.button("🔍 搜索Unsplash图库", type="primary", use_container_width=True, key="search_unsplash"):
@@ -1185,49 +1177,90 @@ with tab1:
         st.markdown('<div class="upload-column">', unsafe_allow_html=True)
         # 产品图上传
         st.markdown("#### 产品图上传")
-        product_files = st.file_uploader(
-            "拖拽或选择产品图片",
-            type=['png', 'jpg', 'jpeg'],
-            accept_multiple_files=True,
-            key="product_upload",
-            help="建议使用透明背景的PNG图片以获得最佳效果",
-            label_visibility="collapsed"
+        
+        # 产品图来源选择选项卡 - 新增部分
+        product_source = st.radio(
+            "选择产品图来源",
+            ["上传图片", "示例产品图库"],
+            horizontal=True,
+            key="product_source_radio"
         )
         
-        if product_files:
-            product_count = len(product_files)
-            st.markdown(f'<div class="status-success">✅ 已上传 <span class="file-count">{product_count}</span> 张产品图</div>', unsafe_allow_html=True)
+        if product_source == "上传图片":
+            # 原来的产品图上传代码
+            product_files = st.file_uploader(
+                "拖拽或选择产品图片",
+                type=['png', 'jpg', 'jpeg'],
+                accept_multiple_files=True,
+                key="product_upload",
+                help="建议使用透明背景的PNG图片以获得最佳效果",
+                label_visibility="collapsed"
+            )
             
-            # 显示前几张预览
-            st.markdown("**预览（最多显示12张）**")
+            if product_files:
+                product_count = len(product_files)
+                st.markdown(f'<div class="status-success">✅ 已上传 <span class="file-count">{product_count}</span> 张产品图</div>', unsafe_allow_html=True)
+                
+                # 显示前几张预览
+                st.markdown("**预览（最多显示12张）**")
+                
+                # 计算每行列数
+                cols_per_row = min(4, product_count) if product_count > 0 else 4
+                preview_count = min(12, product_count)
+                
+                # 创建网格布局
+                for i in range(0, preview_count, cols_per_row):
+                    cols = st.columns(cols_per_row)
+                    for j in range(cols_per_row):
+                        idx = i + j
+                        if idx < preview_count:
+                            with cols[j]:
+                                file = product_files[idx]
+                                img = Image.open(file)
+                                # 保持原始比例，设置合适宽度
+                                display_width = 150  # 与背景图预览保持一致
+                                ratio = display_width / img.width
+                                display_height = int(img.height * ratio)
+                                
+                                # 使用高质量的调整大小
+                                display_img = img.copy()
+                                display_img.thumbnail((display_width, display_height * 2), Image.Resampling.LANCZOS)
+                                
+                                st.image(
+                                    display_img, 
+                                    caption=file.name[:15] + "..." if len(file.name) > 15 else file.name,
+                                    width=display_width
+                                )
+        else:  # 示例产品图库
+            st.markdown("### 📦 示例产品图库")
+            st.info("""
+            **功能说明：**
+            - 这里可以添加预置的产品图示例
+            - 未来可以扩展为在线图库功能
+            - 目前请使用"上传图片"功能
+            """)
             
-            # 计算每行列数
-            cols_per_row = min(4, product_count) if product_count > 0 else 4
-            preview_count = min(12, product_count)
+            # 显示一些示例图片（这里只是示例，您可以替换为实际图片）
+            st.markdown("**示例图片：**")
+            example_cols = st.columns(3)
             
-            # 创建网格布局
-            for i in range(0, preview_count, cols_per_row):
-                cols = st.columns(cols_per_row)
-                for j in range(cols_per_row):
-                    idx = i + j
-                    if idx < preview_count:
-                        with cols[j]:
-                            file = product_files[idx]
-                            img = Image.open(file)
-                            # 保持原始比例，设置合适宽度
-                            display_width = 150  # 与背景图预览保持一致
-                            ratio = display_width / img.width
-                            display_height = int(img.height * ratio)
-                            
-                            # 使用高质量的调整大小
-                            display_img = img.copy()
-                            display_img.thumbnail((display_width, display_height * 2), Image.Resampling.LANCZOS)
-                            
-                            st.image(
-                                display_img, 
-                                caption=file.name[:15] + "..." if len(file.name) > 15 else file.name,
-                                width=display_width
-                            )
+            # 这里可以添加实际的示例图片路径
+            example_images = []
+            # 如果有示例图片文件，可以在这里加载
+            # for img_path in ["examples/product1.png", "examples/product2.png"]:
+            #     if os.path.exists(img_path):
+            #         example_images.append(Image.open(img_path))
+            
+            if example_images:
+                for idx, img in enumerate(example_images[:3]):
+                    with example_cols[idx]:
+                        st.image(img, caption=f"示例产品 {idx+1}", width=120)
+            else:
+                st.warning("示例图片库为空，请在上方选择'上传图片'选项。")
+            
+            # 确保product_files变量存在但为空
+            product_files = []
+        
         st.markdown('</div>', unsafe_allow_html=True)
     
     # 上传状态汇总
