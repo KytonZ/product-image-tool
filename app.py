@@ -1231,51 +1231,68 @@ with tab1:
                                     </div>
                                     """, unsafe_allow_html=True)
                                     
-                                    # 单个选择按钮（与图片等宽 + 选中变绿 + 小字体）
+                                    # 单个选择按钮（与图片等宽 + 选中变绿 + 小字体 + 无emoji）
                                     # 检查是否已选择当前图片（增加容错判断，避免报错）
                                     is_selected = False
                                     if st.session_state.get('unsplash_selected_bg'):
                                         selected_idx = getattr(st.session_state.unsplash_selected_bg, 'idx', -1)
-                                        # 要匹配当前页+当前索引（避免不同页索引重复导致误判）
-                                        current_unique_key = f"{current_page}_{idx}"
-                                        selected_unique_key = f"{st.session_state.unsplash_current_page}_{selected_idx}"
-                                        is_selected = (selected_unique_key == current_unique_key)
+                                        selected_page = getattr(st.session_state.unsplash_selected_bg, 'page', -1)
+                                        # 精准匹配：页码+索引都一致才判定为选中
+                                        is_selected = (selected_page == current_page) and (selected_idx == idx)
 
-                                    # 设置按钮文字
-                                    button_label = "✅ 选择此背景图" if is_selected else "选择背景图"
+                                    # 设置按钮文字（移除✅ emoji）
+                                    button_label = "选择此背景图" if is_selected else "选择背景图"
 
-                                    # 核心：通过data-key定位按钮的CSS（必改！）
+                                    # 核心：提升CSS优先级（必改！解决绿色不生效问题）
                                     st.markdown(f"""
                                     <style>
-                                    /* 定位当前按钮 + 全局样式重置 */
-                                    button[data-key="select_{current_page}_{idx}"] {{
+                                    /* 双层选择器提升优先级，覆盖Streamlit内置样式 */
+                                    div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"] {{
                                         width: 100% !important;          /* 与图片等宽 */
-                                        font-size: 0.65rem !important;   /* 更小字体（按需可改0.6rem） */
-                                        padding: 0.25rem 0 !important;   /* 更小内边距 */
-                                        border-radius: 6px !important;   /* 圆润边角 */
+                                        font-size: 0.65rem !important;   /* 小字体 */
+                                        padding: 0.25rem 0 !important;   /* 内边距 */
+                                        border-radius: 6px !important;   /* 圆角 */
                                         border: 1px solid #d1d5db !important;
                                         transition: all 0.2s ease !important;
-                                        {'background-color: #28a745 !important; color: white !important; border-color: #28a745 !important;' if is_selected else 'background-color: #f0f2f6 !important; color: #333 !important;'}
+                                        box-sizing: border-box !important;
+                                    }}
+                                    /* 选中状态：强制绿色背景+白色文字 */
+                                    div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"].selected {{
+                                        background-color: #28a745 !important; /* 标准绿色 */
+                                        color: #ffffff !important;           /* 纯白色 */
+                                        border-color: #28a745 !important;
+                                    }}
+                                    /* 未选中状态 */
+                                    div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"]:not(.selected) {{
+                                        background-color: #f0f2f6 !important; /* 浅灰色 */
+                                        color: #333333 !important;           /* 深灰色 */
                                     }}
                                     /* hover效果 */
-                                    button[data-key="select_{current_page}_{idx}"]:hover {{
+                                    div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"]:hover {{
                                         opacity: 0.9 !important;
                                         box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
                                         transform: none !important;
                                     }}
-                                    /* 去掉Streamlit默认的hover样式干扰 */
-                                    button[data-key="select_{current_page}_{idx}"]:not(:active):hover {{
-                                        border-color: {'#28a745 !important;' if is_selected else '#94a3b8 !important;'};
-                                    }}
                                     </style>
                                     """, unsafe_allow_html=True)
 
-                                    # 等宽按钮（移除无用的args参数）
-                                    if st.button(
-                                        button_label,
-                                        key=f"select_{current_page}_{idx}",
-                                        use_container_width=True,  # 强制与图片等宽
-                                    ):
+                                    # 渲染按钮（通过动态class控制选中状态）
+                                    btn_kwargs = {
+                                        "key": f"select_{current_page}_{idx}",
+                                        "use_container_width": True,
+                                        "help": ""
+                                    }
+                                    # 动态添加class（核心：让CSS识别选中状态）
+                                    if is_selected:
+                                        btn_kwargs["type"] = "primary"  # 触发Streamlit原生primary样式，辅助生效
+                                        # 强制注入class（备用方案）
+                                        st.markdown(f"""
+                                        <script>
+                                        document.querySelector('button[data-key="select_{current_page}_{idx}"]').classList.add('selected');
+                                        </script>
+                                        """, unsafe_allow_html=True)
+
+                                    if st.button(button_label,** btn_kwargs):
                                         with st.spinner("下载中..."):
                                             img = unsplash_api.download_photo(img_url)
                                             if img:
@@ -1284,12 +1301,13 @@ with tab1:
                                                         self.name = f"unsplash_bg_{current_page}_{idx}.jpg"
                                                         self.type = "image/jpeg"
                                                         self.image = img
-                                                        self.idx = idx  # 记录索引用于状态判断
-                                                        self.page = current_page  # 新增：记录所属页码，避免跨页误判
+                                                        self.idx = idx  # 记录索引
+                                                        self.page = current_page  # 记录页码
                                                 
                                                 mock_file = MockFile(img, idx)
                                                 st.session_state.unsplash_selected_bg = mock_file
-                                                st.rerun()  # 刷新页面更新按钮状态
+                                                st.rerun()  # 刷新更新状态
+
                                     # 自定义按钮CSS（缩小字体和宽度）
                                     st.markdown("""
                                     <style>
