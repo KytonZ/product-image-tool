@@ -1243,36 +1243,32 @@ with tab1:
                                     # 设置按钮文字（移除✅ emoji）
                                     button_label = "选择此背景图" if is_selected else "选择背景图"
 
-                                    # 1. CSS 部分（替换原有按钮样式）
+                                    # 核心：提升CSS优先级（必改！解决绿色不生效问题）
                                     st.markdown(f"""
                                     <style>
-                                    /* 最高优先级控制按钮样式 */
-                                    body div[data-testid="stApp"] div[data-testid="stButton"] > button[data-key^="select_"] {{
-                                        width: 100% !important;          
-                                        font-size: 0.65rem !important;   
-                                        padding: 0.25rem 0 !important;   
-                                        border-radius: 6px !important;   
+                                    /* 双层选择器提升优先级，覆盖Streamlit内置样式 */
+                                    div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"] {{
+                                        width: 100% !important;          /* 与图片等宽 */
+                                        font-size: 0.65rem !important;   /* 小字体 */
+                                        padding: 0.25rem 0 !important;   /* 内边距 */
+                                        border-radius: 6px !important;   /* 圆角 */
                                         border: 1px solid #d1d5db !important;
                                         transition: all 0.2s ease !important;
                                         box-sizing: border-box !important;
-                                        margin: 0 !important;
-                                        line-height: 1.2 !important;
-                                        height: auto !important;
-                                        background: #f0f2f6 !important;
-                                        color: #333 !important;
                                     }}
-
-                                    /* 选中状态 */
-                                    body div[data-testid="stApp"] div[data-testid="stButton"] > button[data-key^="select_"].selected {{
-                                        background: #28a745 !important;
-                                        background-color: #28a745 !important;
-                                        color: #ffffff !important;
+                                    /* 选中状态：强制绿色背景+白色文字 */
+                                    div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"].selected {{
+                                        background-color: #28a745 !important; /* 标准绿色 */
+                                        color: #ffffff !important;           /* 纯白色 */
                                         border-color: #28a745 !important;
-                                        box-shadow: none !important;
                                     }}
-
+                                    /* 未选中状态 */
+                                    div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"]:not(.selected) {{
+                                        background-color: #f0f2f6 !important; /* 浅灰色 */
+                                        color: #333333 !important;           /* 深灰色 */
+                                    }}
                                     /* hover效果 */
-                                    body div[data-testid="stApp"] div[data-testid="stButton"] > button[data-key^="select_"]:hover {{
+                                    div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"]:hover {{
                                         opacity: 0.9 !important;
                                         box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
                                         transform: none !important;
@@ -1280,28 +1276,23 @@ with tab1:
                                     </style>
                                     """, unsafe_allow_html=True)
 
-                                    # 2. 按钮渲染逻辑（去掉type="primary"）
+                                    # 渲染按钮（通过动态class控制选中状态）
                                     btn_kwargs = {
                                         "key": f"select_{current_page}_{idx}",
                                         "use_container_width": True,
                                         "help": ""
                                     }
-
-                                    # 仅注入selected类，不修改type
+                                    # 动态添加class（核心：让CSS识别选中状态）
                                     if is_selected:
+                                        btn_kwargs["type"] = "primary"  # 触发Streamlit原生primary样式，辅助生效
+                                        # 强制注入class（备用方案）
                                         st.markdown(f"""
                                         <script>
-                                        setTimeout(() => {{
-                                            const btn = document.querySelector('button[data-key="select_{current_page}_{idx}"]');
-                                            if(btn) {{
-                                                btn.classList.add('selected');
-                                            }}
-                                        }}, 100);
+                                        document.querySelector('button[data-key="select_{current_page}_{idx}"]').classList.add('selected');
                                         </script>
                                         """, unsafe_allow_html=True)
 
-                                    # 渲染按钮
-                                    if st.button(button_label, **btn_kwargs):
+                                    if st.button(button_label,** btn_kwargs):
                                         with st.spinner("下载中..."):
                                             img = unsplash_api.download_photo(img_url)
                                             if img:
@@ -1310,12 +1301,12 @@ with tab1:
                                                         self.name = f"unsplash_bg_{current_page}_{idx}.jpg"
                                                         self.type = "image/jpeg"
                                                         self.image = img
-                                                        self.idx = idx
-                                                        self.page = current_page
+                                                        self.idx = idx  # 记录索引
+                                                        self.page = current_page  # 记录页码
                                                 
                                                 mock_file = MockFile(img, idx)
                                                 st.session_state.unsplash_selected_bg = mock_file
-                                                st.rerun()
+                                                st.rerun()  # 刷新更新状态
 
     with col2:
         # 产品图上传逻辑（保持不变）
