@@ -991,7 +991,7 @@ with tab1:
             st.markdown("### 🌐 Unsplash在线图库")
             
             # API密钥配置区域（可以折叠）
-            with st.expander("🔑 配置Unsplash API密钥", expanded=False):
+            # with st.expander("🔑 配置Unsplash API密钥", expanded=False):
                 st.info("""
                 **如何获取Unsplash API密钥：**
                 1. 访问 https://unsplash.com/developers
