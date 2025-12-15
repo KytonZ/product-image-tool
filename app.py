@@ -1061,6 +1061,11 @@ with tab1:
                                 )
         
         else:  # Unsplash图库
+            # 页面初始化：如果有搜索词但没有图片，自动触发搜索
+            if st.session_state.unsplash_search_query and not st.session_state.unsplash_photos:
+                st.session_state.unsplash_search_trigger = True
+                st.session_state.unsplash_current_page = 1
+                
             # 搜索区域
             st.markdown('<div class="search-container">', unsafe_allow_html=True)
             
@@ -1092,7 +1097,7 @@ with tab1:
                     # 上一页按钮 - 总是显示但可能禁用
                     has_photos = len(st.session_state.get('unsplash_photos', [])) > 0
                     current_page = st.session_state.get('unsplash_current_page', 1)
-                    prev_disabled = not has_photos or current_page <= 1
+                    prev_disabled = current_page <= 1
     
                     prev_label = "◀️ 上一页"
                     if st.button(prev_label, key="unsplash_prev", use_container_width=True, disabled=prev_disabled):
@@ -1104,8 +1109,8 @@ with tab1:
                 with btn_col3:
                     has_photos = len(st.session_state.get('unsplash_photos', [])) > 0
                     current_page = st.session_state.get('unsplash_current_page', 1)
-                    total_pages = st.session_state.get('unsplash_total_pages', 0)
-                    next_disabled = not has_photos or current_page >= total_pages
+                    total_pages = st.session_state.get('unsplash_total_pages', 1)
+                    next_disabled = total_pages <= 1 or current_page >= total_pages
     
                     next_label = "下一页 ▶️"
                     if st.button(next_label, key="unsplash_next", use_container_width=True, disabled=next_disabled):
@@ -1154,13 +1159,23 @@ with tab1:
                         st.session_state.unsplash_total_pages = total_pages
                         st.session_state.unsplash_total_results = total_results
                         
+                        # 如果总页数为0，但搜索到了图片，设置总页数为1
+                        if total_pages == 0 and len(photos) > 0:
+                            st.session_state.unsplash_total_pages = 1
+                            total_pages = 1
+            
                         if st.session_state.unsplash_current_page == 1:
                             st.success(f"找到 {total_results} 张图片，共{total_pages}页")
+                
+                        # 重要：立即重新渲染按钮状态
+                        st.rerun()
                     else:
                         if total_results == 0:
                             st.warning(f"未找到与'{st.session_state.unsplash_search_query}'相关的图片")
                         else:
                             st.error("搜索失败，请尝试其他关键词")
+                        # 重置分页信息
+                        st.session_state.unsplash_total_pages = 1
                     
                     # 重置搜索触发标志
                     st.session_state.unsplash_search_trigger = False
