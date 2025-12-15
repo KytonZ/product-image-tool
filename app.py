@@ -438,7 +438,7 @@ class UnsplashAPI:
         return None
 
 # ==================== 核心函数定义 ====================
-def compose_image(bg_img, product_img, logo_img, template, product_size, product_position, output_size, output_format):
+def compose_image(bg_img, product_img, logo_img, product_size, product_position, output_size, output_format):
     """合成单张图片的核心函数"""
     # 1. 处理背景：调整到输出尺寸（智能裁剪铺满）
     bg = bg_img.convert("RGBA")
@@ -695,49 +695,49 @@ def generate_product_content(product_name, platform):
             "features": ["High Surface Area", "Biofilm Growth", "Wastewater Treatment", "Nitrogen Removal", "Anoxic Conditions"],
             "applications": ["Wastewater Treatment Plant", "Sewage Treatment", "Industrial Effluent", "Municipal WWTP", "Aquaculture"]
         },
-        "disc diffuser": {
+        "Disc Diffuser": {
             "variations": ["Disc Diffuser", "Membrane Diffuser", "Fine Bubble Diffuser", "Aeration Disc"],
             "materials": ["EPDM", "Silicone", "Polyurethane", "Rubber Membrane"],
             "sizes": ["9 inch", "12 inch", "270mm", "350mm"],
             "features": ["Fine Bubble", "Oxygen Transfer", "Energy Saving", "Anti-Clogging", "Uniform Aeration"],
             "applications": ["Aeration Tank", "Activated Sludge", "SBR Reactor", "Aerobic Treatment"]
         },
-        "drum filter": {
+        "Drum Filter": {
             "variations": ["Drum Filter", "Rotary Drum Filter", "Microscreen Filter", "Drum Screen"],
             "types": ["Solid-Liquid Separation", "Screening Equipment", "Mechanical Filtration"],
             "materials": ["Stainless Steel 304", "Stainless Steel 316", "Polyester Screen", "Nylon Mesh"],
             "features": ["Automatic Cleaning", "Continuous Operation", "Low Maintenance", "High Flow Rate"],
             "applications": ["Aquaculture", "Wastewater Pretreatment", "Industrial Recycling", "Food Processing"]
         },
-        "bio block": {
+        "Bio Block": {
             "variations": ["Bio Block", "Biological Filter Block", "Media Block", "Biofilm Carrier Block"],
             "materials": ["Plastic Media", "PP", "PVC", "Composite Material"],
             "shapes": ["Block", "Cube", "Rectangular", "Modular"],
             "features": ["High Void Ratio", "Large Surface Area", "Easy Installation", "Stackable"],
             "applications": ["Trickling Filter", "Biological Tower", "Biofilter System", "Water Recycling"]
         },
-        "mbr": {
+        "MBR": {
             "variations": ["MBR", "Membrane Bioreactor", "Hollow Fiber MBR", "Flat Sheet MBR"],
             "types": ["Submerged MBR", "External MBR", "Side-Stream MBR"],
             "materials": ["PVDF", "PTFE", "Polyethersulfone", "Ceramic Membrane"],
             "features": ["High Quality Effluent", "Small Footprint", "Low Sludge Production", "Automated Control"],
             "applications": ["Water Reuse", "Wastewater Recycling", "Industrial Treatment", "Decentralized Treatment"]
         },
-        "Screw press dewatering machine": {
+        "Screw Press Dewatering Machine": {
             "variations": ["Screw Press", "Dewatering Machine", "Sludge Dewatering Press", "Screw Press Dewaterer"],
             "types": ["Single Screw", "Twin Screw", "Multi-Disc", "Shaftless Screw"],
             "materials": ["Stainless Steel", "Carbon Steel", "Wear-Resistant Material"],
             "features": ["High Dryness", "Low Energy", "Automatic Operation", "Easy Maintenance"],
             "applications": ["Sludge Treatment", "Municipal Sludge", "Industrial Sludge", "Waste Management"]
         },
-        "tube settler": {
+        "Tube Settler": {
             "variations": ["Tube Settler", "Lamella Clarifier", "Inclined Plate Settler", "Sedimentation Tube"],
             "materials": ["PVC", "PP", "Fiberglass", "Stainless Steel"],
             "angles": ["60 Degree", "55 Degree", "Inclined Design"],
             "features": ["High Efficiency", "Small Footprint", "Easy Installation", "Modular Design"],
             "applications": ["Water Treatment Plant", "Clarification", "Sedimentation Tank", "Precipitation"]
         },
-        "tube diffuser": {
+        "Tube Diffuser": {
             "variations": ["Tube Diffuser", "Aeration Tube", "Fine Bubble Tube", "Membrane Tube Diffuser"],
             "materials": ["EPDM", "Silicone", "Polyurethane", "Ceramic"],
             "sizes": ["1 meter", "2 meter", "Custom Length", "Standard Diameter"],
@@ -910,19 +910,8 @@ with st.sidebar:
     st.markdown("### ⚙️ 合成设置")
     
     # 将所有设置存储到session_state中
-    # 1. 模板选择
-    st.markdown('<div class="settings-title">选择合成模板</div>', unsafe_allow_html=True)
-    st.session_state.template = st.selectbox(
-        "选择合成模板",
-        ["标准模板", "电商海报", "社交媒体", "产品展示"],
-        help="选择适合您需求的合成模板",
-        label_visibility="collapsed",
-        key="template_select"
-    )
     
-    st.markdown("---")
-    
-    # 2. Logo设置
+    # 1. Logo设置
     st.markdown('<div class="settings-title">🖼️ Logo设置</div>', unsafe_allow_html=True)
     st.session_state.logo_color = st.radio(
         "选择Logo颜色",
@@ -934,7 +923,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # 3. 产品图设置
+    # 2. 产品图设置
     st.markdown('<div class="settings-title">📐 产品图设置</div>', unsafe_allow_html=True)
     st.session_state.product_size = st.slider(
         "产品图最大边长", 
@@ -956,7 +945,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # 4. 输出设置
+    # 3. 输出设置
     st.markdown('<div class="settings-title">📦 输出设置</div>', unsafe_allow_html=True)
     
     col_size1, col_size2 = st.columns(2)
@@ -979,19 +968,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # 5. 预览设置
-    st.markdown('<div class="settings-title">👀 预览设置</div>', unsafe_allow_html=True)
-    st.session_state.preview_page_size = st.select_slider(
-        "每页预览数量", 
-        options=[6, 9, 12, 16, 20, 25, 30],
-        value=12,
-        help="控制每页显示的图片数量",
-        key="preview_page_size_slider"
-    )
-    
-    st.markdown("---")
-    
-    # 6. 处理按钮
+    # 4. 处理按钮
     process_button = st.button(
         "🚀 开始智能批量合成", 
         type="primary", 
@@ -1001,7 +978,8 @@ with st.sidebar:
     )
 
 # ==================== 主区域：标签页 ====================
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["📤 上传图片", "🖼️ 预置背景库", "🔄 图片去重生成器", "🎬 视频抽帧工具", "📝 AI文案生成"])
+# 修改为4个标签页，删除了预置背景库标签页
+tab1, tab2, tab3, tab4 = st.tabs(["📤 上传图片", "🔄 图片去重生成器", "🎬 视频抽帧工具", "📝 AI文案生成"])
 
 # ========== tab1 中 Unsplash 部分完整修正代码 ==========
 with tab1:
@@ -1206,7 +1184,7 @@ with tab1:
                                     # 1:1 正方形图片容器（关键）
                                     st.markdown(f"""
                                     <style>
-                                    /* 强制1:1正方形图片容器（关键） */
+                                    /* 强制1:1正方形图片容器 */
                                     .img-container-{current_page}-{idx} {{
                                         position: relative;
                                         width: 100%;
@@ -1214,10 +1192,6 @@ with tab1:
                                         overflow: hidden;
                                         border-radius: 6px;
                                         margin-bottom: 8px;
-                                        /* 添加固定高度以确保完全一致 */
-                                        height: 150px !important;
-                                        min-height: 150px !important;
-                                        max-height: 150px !important;
                                     }}
                                     /* 图片居中裁剪，不拉伸 */
                                     .img-container-{current_page}-{idx} img {{
@@ -1245,7 +1219,7 @@ with tab1:
                                         is_selected = (selected_page == current_page) and (selected_idx == idx)
 
                                     # 设置按钮文字（移除✅ emoji）
-                                    button_label = "选择此背景图" if is_selected else "选择背景图"
+                                    button_label = "选择背景图" if is_selected else "选择背景图"
 
                                     # 核心：提升CSS优先级（必改！解决绿色不生效问题）
                                     st.markdown(f"""
@@ -1310,7 +1284,7 @@ with tab1:
                                                 
                                                 mock_file = MockFile(img, idx)
                                                 st.session_state.unsplash_selected_bg = mock_file
-                                                st.rerun()
+                                                st.rerun()  # 刷新更新状态
 
     with col2:
         # 产品图上传逻辑（保持不变）
@@ -1379,22 +1353,9 @@ with tab1:
     if bg_files_combined and product_files:
         total_combinations = len(bg_files_combined) * len(product_files)
         st.info(f"**准备合成:** {len(bg_files_combined)} 张背景图 × {len(product_files)} 张产品图 = **{total_combinations} 张合成图**")
-# 标签页2：预置背景库
-with tab2:
-    st.header("🖼️ 预置背景库")
-    st.markdown("选择或管理预置的背景图片")
-    
-    # 这里可以添加背景库的显示和管理功能
-    st.markdown("""
-    <div style="text-align: center; padding: 3rem; color: #666;">
-        <h3>🎨 背景库功能已集成到上传页面</h3>
-        <p>现在您可以在上传图片页面直接使用Unsplash在线图库</p>
-        <p>👉 切换到"上传图片"标签页，选择"Unsplash图库"即可使用</p>
-    </div>
-    """, unsafe_allow_html=True)
 
-# 标签页3：图片去重生成器
-with tab3:
+# 标签页2：图片去重生成器（原来的tab3）
+with tab2:
     st.header("🔄 图片去重生成器")
     st.markdown("""
     <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid #2196F3;">
@@ -1511,8 +1472,8 @@ with tab3:
                     key="download_unique"
                 )
 
-# 标签页4：视频抽帧工具
-with tab4:
+# 标签页3：视频抽帧工具（原来的tab4）
+with tab3:
     st.header("🎬 视频抽帧工具")
     st.markdown("""
     <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid #FF6B6B;">
@@ -1683,8 +1644,8 @@ with tab4:
                     st.session_state.video_info = None
                     st.rerun()
 
-# 标签页5：AI文案生成
-with tab5:
+# 标签页4：AI文案生成（原来的tab5）
+with tab4:
     st.header("📝 AI文案生成 - 阿里巴巴/MIC平台优化")
     st.markdown("""
     <div class="highlight-box">
@@ -1706,16 +1667,16 @@ with tab5:
     with col_setting:
         st.markdown("### 1. 产品设置")
         
-        # 产品选择
+        # 产品选择 - 修改产品名称格式
         product_options = [
             "MBBR Media", 
-            "disc diffuser", 
-            "drum filter", 
-            "bio block", 
-            "mbr", 
-            "Screw press dewatering machine", 
-            "tube settler", 
-            "tube diffuser"
+            "Disc Diffuser", 
+            "Drum Filter", 
+            "Bio Block", 
+            "MBR", 
+            "Screw Press Dewatering Machine", 
+            "Tube Settler", 
+            "Tube Diffuser"
         ]
         
         selected_product = st.selectbox(
@@ -1904,12 +1865,10 @@ if process_button:
     
     # 从session_state获取设置值
     logo_color = st.session_state.get('logo_color', '黑色Logo')
-    template = st.session_state.get('template', '标准模板')
     product_size = st.session_state.get('product_size', 600)
     product_position = st.session_state.get('product_position', '居中')
     output_size = st.session_state.get('output_size', 800)
     output_format = st.session_state.get('output_format', 'JPG')
-    preview_page_size = st.session_state.get('preview_page_size', 12)
     
     if logo_color == "黑色Logo":
         logo_path = "logos/black_logo.png"
@@ -1955,7 +1914,7 @@ if process_button:
                 # 调用合成函数
                 result = compose_image(
                     bg_image, product_image, logo_to_use,
-                    template, product_size, product_position, output_size, output_format
+                    product_size, product_position, output_size, output_format
                 )
                 
                 # 保存结果
@@ -1995,59 +1954,30 @@ if process_button:
             use_container_width=True
         )
         
-        # ==================== 分页预览区域 ====================
-        st.subheader("👁️ 合成结果预览")
+        # ==================== 合成结果预览区域 ====================
+        st.subheader("合成结果预览")
         
         if output_files:
-            # 计算总页数
-            total_previews = len(output_files)
-            page_size = preview_page_size
-            total_pages = math.ceil(total_previews / page_size)
+            # 只显示前24张图片
+            preview_files = output_files[:24]
+            total_previews = len(preview_files)
             
-            # 确保当前页码有效
-            if st.session_state.current_page >= total_pages:
-                st.session_state.current_page = total_pages - 1 if total_pages > 0 else 0
+            # 显示图片数量信息
+            st.write(f"共 {len(output_files)} 张合成图片，显示前 {total_previews} 张预览")
             
-            # 分页控件 - 优化布局
-            pagination_cols = st.columns([1, 2, 2, 1])
-            with pagination_cols[0]:
-                if st.button("◀️ 上一页", disabled=st.session_state.current_page == 0, key="prev_page"):
-                    st.session_state.current_page -= 1
-                    st.rerun()
-            with pagination_cols[1]:
-                st.write(f"第 {st.session_state.current_page + 1} / {total_pages} 页")
-            with pagination_cols[2]:
-                st.write(f"共 {total_previews} 张图片")
-            with pagination_cols[3]:
-                if st.button("下一页 ▶️", disabled=st.session_state.current_page >= total_pages - 1, key="next_page"):
-                    st.session_state.current_page += 1
-                    st.rerun()
-            
-            # 显示当前页的图片
-            start_idx = st.session_state.current_page * page_size
-            end_idx = min(start_idx + page_size, total_previews)
-            
-            st.markdown(f"**显示 {start_idx + 1} - {end_idx} 张图片**")
-            
-            # 根据每页数量动态调整列数
-            if page_size >= 20:
-                cols_per_row = 6
-                preview_width = 140
-            elif page_size >= 12:
-                cols_per_row = 5
-                preview_width = 160
-            else:
-                cols_per_row = 4
-                preview_width = 180
+            # 每排6张，最多4排
+            rows = min(4, (total_previews + 5) // 6)  # 计算需要的行数
+            preview_width = 180  # 每张预览图片的宽度
             
             # 使用紧凑网格显示图片
-            for i in range(start_idx, end_idx, cols_per_row):
-                row_cols = st.columns(cols_per_row)
-                for j in range(cols_per_row):
-                    idx = i + j
-                    if idx < end_idx:
-                        with row_cols[j]:
-                            file_path = output_files[idx]
+            for row in range(rows):
+                # 每行6列
+                cols = st.columns(6)
+                for col in range(6):
+                    idx = row * 6 + col
+                    if idx < total_previews:
+                        with cols[col]:
+                            file_path = preview_files[idx]
                             img = Image.open(file_path)
                             
                             # 高质量调整大小，保持清晰度
@@ -2063,15 +1993,10 @@ if process_button:
                                 width=preview_width
                             )
                             st.caption(
-                                os.path.basename(file_path)[:20] + "..." 
-                                if len(os.path.basename(file_path)) > 20 
+                                os.path.basename(file_path)[:15] + "..." 
+                                if len(os.path.basename(file_path)) > 15 
                                 else os.path.basename(file_path)
                             )
-            
-            # 重置页码的按钮
-            if st.button("🔄 重置页码到第一页", key="reset_page"):
-                st.session_state.current_page = 0
-                st.rerun()
         else:
             st.warning("⚠️ 没有生成任何图片")
 
@@ -2079,8 +2004,8 @@ if process_button:
 st.markdown("---")
 st.markdown("### 💡 使用说明")
 
-# 使用五列布局显示说明（因为现在有五个主要功能）
-info_col1, info_col2, info_col3, info_col4, info_col5 = st.columns(5)
+# 使用四列布局显示说明（因为现在有四个主要功能）
+info_col1, info_col2, info_col3, info_col4 = st.columns(4)
 
 with info_col1:
     st.markdown("""
@@ -2127,19 +2052,6 @@ with info_col4:
             <li>10个SEO关键词</li>
             <li>10个分类属性词</li>
         </ul>
-    </div>
-    """, unsafe_allow_html=True)
-
-with info_col5:
-    st.markdown("""
-    <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
-        <h4>⚡ 快速开始</h4>
-        <ol>
-            <li>选择对应标签页</li>
-            <li>上传素材文件</li>
-            <li>调整设置参数</li>
-            <li>开始处理并下载</li>
-        </ol>
     </div>
     """, unsafe_allow_html=True)
 
