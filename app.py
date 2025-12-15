@@ -1206,7 +1206,7 @@ with tab1:
                                     # 1:1 正方形图片容器（关键）
                                     st.markdown(f"""
                                     <style>
-                                    /* 强制1:1正方形图片容器 */
+                                    /* 强制1:1正方形图片容器（关键） */
                                     .img-container-{current_page}-{idx} {{
                                         position: relative;
                                         width: 100%;
@@ -1214,6 +1214,10 @@ with tab1:
                                         overflow: hidden;
                                         border-radius: 6px;
                                         margin-bottom: 8px;
+                                        /* 添加固定高度以确保完全一致 */
+                                        height: 150px !important;
+                                        min-height: 150px !important;
+                                        max-height: 150px !important;
                                     }}
                                     /* 图片居中裁剪，不拉伸 */
                                     .img-container-{current_page}-{idx} img {{
@@ -1241,7 +1245,7 @@ with tab1:
                                         is_selected = (selected_page == current_page) and (selected_idx == idx)
 
                                     # 设置按钮文字（移除✅ emoji）
-                                    button_label = "选择背景图" if is_selected else "选择背景图"
+                                    button_label = "选择此背景图" if is_selected else "选择背景图"
 
                                     # 核心：提升CSS优先级（必改！解决绿色不生效问题）
                                     st.markdown(f"""
