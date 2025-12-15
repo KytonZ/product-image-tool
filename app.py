@@ -997,12 +997,13 @@ with tab1:
     with col1:
         st.markdown("#### 背景图上传")
         
-        # 背景来源选择选项卡
+        # 背景来源选择选项卡 - 隐藏标签文字
         bg_source = st.radio(
-            "选择背景来源",
+            "",  # 空标签
             ["上传图片", "Unsplash图库"],
             horizontal=True,
-            key="bg_source_radio"
+            key="bg_source_radio",
+            label_visibility="collapsed"  # 完全隐藏标签
         )
         
         if bg_source == "上传图片":
@@ -1046,27 +1047,34 @@ with tab1:
                                 )
         
         else:  # Unsplash图库
-            # 搜索区域 - 修复对齐问题
-            st.markdown("### Unsplash在线图库")
+            # 移除了"Unsplash在线图库"标题
             
-            # 使用container确保在同一行
-            with st.container():
-                search_col1, search_col2 = st.columns([4, 1])
-                
-                with search_col1:
-                    search_query = st.text_input(
-                        "搜索背景图片",
-                        value=st.session_state.unsplash_search_query,
-                        placeholder="例如：white background",
-                        help="输入英文关键词",
-                        label_visibility="collapsed"
-                    )
-                
-                with search_col2:
-                    # 确保按钮与输入框对齐
-                    st.markdown('<div style="padding-top: 0.7rem;">', unsafe_allow_html=True)
-                    search_btn = st.button("搜索", type="primary", use_container_width=True, key="search_unsplash")
-                    st.markdown('</div>', unsafe_allow_html=True)
+            # 使用新的容器确保对齐
+            st.markdown('<div class="search-container">', unsafe_allow_html=True)
+            
+            # 搜索区域 - 修复对齐问题
+            search_query = st.text_input(
+                "",  # 空标签
+                value=st.session_state.unsplash_search_query,
+                placeholder="例如：white background",
+                help="输入英文关键词",
+                label_visibility="collapsed",  # 隐藏标签
+                key="unsplash_search_input",
+                label="",  # 空标签
+                args=(),
+                kwargs={"class": "search-input"}
+            )
+            
+            # 搜索按钮 - 直接放在同一行
+            search_btn = st.button(
+                "搜索", 
+                type="primary", 
+                key="search_unsplash",
+                args=(),
+                kwargs={"class": "search-button"}
+            )
+            
+            st.markdown('</div>', unsafe_allow_html=True)
             
             # 初始化Unsplash API
             unsplash_api = UnsplashAPI()
@@ -1167,12 +1175,12 @@ with tab1:
         # 添加占位单选按钮以对齐高度
         with st.container():
             st.radio(
-                "选择产品图来源",
+                "",  # 空标签
                 ["上传图片"],
                 horizontal=True,
                 key="product_source_radio",
                 disabled=True,
-                label_visibility="collapsed"
+                label_visibility="collapsed"  # 隐藏标签
             )
         
         # 产品图上传
