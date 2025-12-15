@@ -1310,7 +1310,7 @@ with tab1:
                                                 
                                                 mock_file = MockFile(img, idx)
                                                 st.session_state.unsplash_selected_bg = mock_file
-                                                st.experimental_rerun()
+                                                st.rerun()
 
     with col2:
         # 产品图上传逻辑（保持不变）
