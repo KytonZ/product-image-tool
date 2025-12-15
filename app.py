@@ -1062,7 +1062,6 @@ with tab1:
                 key="unsplash_search_input",
                 label="",  # 空标签
                 args=(),
-                kwargs={"class": "search-input"}
             )
             
             # 搜索按钮 - 直接放在同一行
