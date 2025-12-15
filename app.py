@@ -1203,8 +1203,33 @@ with tab1:
                                 img_url = photo.get("urls", {}).get("small")
                                 
                                 if img_url:
-                                    # 显示图片
-                                    st.image(img_url, use_column_width=True)
+                                    # 1:1 正方形图片容器（关键）
+                                    st.markdown(f"""
+                                    <style>
+                                    /* 强制1:1正方形图片容器 */
+                                    .img-container-{current_page}-{idx} {{
+                                        position: relative;
+                                        width: 100%;
+                                        aspect-ratio: 1/1;  /* 核心：1:1比例 */
+                                        overflow: hidden;
+                                        border-radius: 6px;
+                                        margin-bottom: 8px;
+                                    }}
+                                    /* 图片居中裁剪，不拉伸 */
+                                    .img-container-{current_page}-{idx} img {{
+                                        position: absolute;
+                                        top: 50%;
+                                        left: 50%;
+                                        transform: translate(-50%, -50%);
+                                        width: 100%;
+                                        height: 100%;
+                                        object-fit: cover;  /* 居中裁剪，保持比例 */
+                                    }}
+                                    </style>
+                                    <div class="img-container-{current_page}-{idx}">
+                                        <img src="{img_url}" alt="Unsplash图片">
+                                    </div>
+                                    """, unsafe_allow_html=True)
                                     
                                     # 单个选择按钮（与图片等宽 + 选中变绿 + 小字体）
                                     # 检查是否已选择当前图片（增加容错判断，避免报错）
