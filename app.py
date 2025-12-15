@@ -1054,7 +1054,7 @@ with tab1:
                 """)
             
             # 搜索区域
-            col_search1, col_search2 = st.columns([3, 1])
+            col_search1, col_search2 = st.columns([4, 1])
             with col_search1:
                 search_query = st.text_input(
                     "搜索背景图片",
@@ -1065,30 +1065,36 @@ with tab1:
                 )
             
             with col_search2:
-                search_count = st.selectbox("数量", [12, 24, 36], index=0, key="unsplash_count_select")
+                if st.button("🔍 搜索", type="primary", use_container_width=True, key="search_unsplash"):
+                    if not unsplash_api.access_key:
+                        st.error("请先在Streamlit Secrets中配置Unsplash API密钥")
+                    else:
+                        with st.spinner(f'正在搜索"{search_query}"...'):
+                            photos = unsplash_api.search_photos(search_query, per_page=15)  # 固定15张
+                            
+                            if photos:
+                                st.session_state.unsplash_photos = photos
+                                st.session_state.unsplash_search_query = search_query
+                                st.success(f"找到 {len(photos)} 张图片")
+                            else:
+                                st.error("搜索失败，请检查API密钥或网络连接")
             
-            
-            # 搜索按钮
-            if st.button("🔍 搜索Unsplash图库", type="primary", use_container_width=True, key="search_unsplash"):
-                if not unsplash_api.access_key:
-                    st.error("请先在Streamlit Secrets中配置Unsplash API密钥")
-                else:
-                    with st.spinner(f'正在搜索"{search_query}"...'):
-                        photos = unsplash_api.search_photos(search_query, per_page=search_count)
-                        
-                        if photos:
-                            st.session_state.unsplash_photos = photos
-                            st.session_state.unsplash_search_query = search_query
-                            st.success(f"找到 {len(photos)} 张图片")
-                        else:
-                            st.error("搜索失败，请检查API密钥或网络连接")
+            # 热门搜索建议
+            st.markdown("**热门搜索：**")
+            popular_searches = ["white background", "gradient", "texture", "studio", "minimal", "abstract", "professional", "clean background"]
+            cols_popular = st.columns(8)
+            for idx, search_term in enumerate(popular_searches):
+                with cols_popular[idx % 8]:
+                    if st.button(search_term, key=f"popular_{search_term}"):
+                        st.session_state.unsplash_search_query = search_term
+                        st.rerun()
             
             # 显示搜索结果
             if st.session_state.unsplash_photos:
                 st.markdown(f"### 📷 搜索结果：{st.session_state.unsplash_search_query}")
                 
-                # 分页显示
-                page_size = 12
+                # 分页显示 - 每页15张，每行5张
+                page_size = 15
                 total_pages = (len(st.session_state.unsplash_photos) + page_size - 1) // page_size
                 
                 if 'unsplash_page' not in st.session_state:
@@ -1096,28 +1102,28 @@ with tab1:
                 
                 # 分页控件
                 if total_pages > 1:
-                    page_cols = st.columns([1, 2, 1])
-                    with page_cols[0]:
-                        if st.button("◀️ 上一页", key="unsplash_prev"):
+                    col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
+                    with col1:
+                        if st.button("◀️ 上一页", key="unsplash_prev", use_container_width=True):
                             if st.session_state.unsplash_page > 0:
                                 st.session_state.unsplash_page -= 1
                                 st.rerun()
-                    
-                    with page_cols[1]:
+                    with col2:
                         st.write(f"第 {st.session_state.unsplash_page + 1} / {total_pages} 页")
-                    
-                    with page_cols[2]:
-                        if st.button("下一页 ▶️", key="unsplash_next"):
+                    with col3:
+                        st.write(f"共 {len(st.session_state.unsplash_photos)} 张图片")
+                    with col4:
+                        if st.button("下一页 ▶️", key="unsplash_next", use_container_width=True):
                             if st.session_state.unsplash_page < total_pages - 1:
                                 st.session_state.unsplash_page += 1
                                 st.rerun()
                 
-                # 显示当前页图片 - 使用网格布局，每行显示3张图片
+                # 显示当前页图片 - 每行显示5张图片
                 start_idx = st.session_state.unsplash_page * page_size
                 end_idx = min(start_idx + page_size, len(st.session_state.unsplash_photos))
                 
-                # 3列网格显示（修改为3列）
-                cols_per_row = 3
+                # 5列网格显示
+                cols_per_row = 5
                 for i in range(start_idx, end_idx, cols_per_row):
                     cols = st.columns(cols_per_row)
                     for j in range(cols_per_row):
@@ -1126,21 +1132,12 @@ with tab1:
                             with cols[j]:
                                 photo = st.session_state.unsplash_photos[idx]
                                 
-                                # 创建卡片
-                                st.markdown(f'<div class="unsplash-image-card">', unsafe_allow_html=True)
-                                
                                 # 显示图片 - 使用较小的预览
                                 img_url = photo.get("urls", {}).get("small")
                                 if img_url:
                                     st.image(img_url, use_column_width=True)
                                 
-                                # 作者信息
-                                author = photo.get("user", {}).get("name", "Unknown")
-                                st.markdown(f'<div class="unsplash-author">📸 {author}</div>', unsafe_allow_html=True)
-                                
-                                st.markdown('</div>', unsafe_allow_html=True)
-                                
-                                # 选择按钮
+                                # 删除作者信息，只显示选择按钮
                                 col_select1, col_select2 = st.columns(2)
                                 with col_select1:
                                     if st.button("✅ 选择", key=f"select_unsplash_{idx}", use_container_width=True):
@@ -1163,7 +1160,7 @@ with tab1:
                                 with col_select2:
                                     if st.button("👁️ 预览", key=f"preview_unsplash_{idx}", use_container_width=True):
                                         # 预览大图
-                                        st.image(img_url, caption=f"Unsplash背景 #{idx+1} - 摄影师: {author}", use_column_width=True)
+                                        st.image(img_url, caption=f"Unsplash背景 #{idx+1}", use_column_width=True)
                 
                 # 显示已选择的背景
                 if 'unsplash_selected_bg' in st.session_state and st.session_state.unsplash_selected_bg:
