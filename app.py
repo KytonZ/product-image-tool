@@ -380,19 +380,12 @@ if 'unsplash_total_pages' not in st.session_state:
 # ==================== Unsplash API类 ====================
 class UnsplashAPI:
     def __init__(self):
-        # 自动从Streamlit Secrets读取API密钥
-        try:
-            self.access_key = st.secrets["UNSPLASH_ACCESS_KEY"]
-        except:
-            self.access_key = ""
-            st.warning("⚠️ 未找到Unsplash API密钥，请在Streamlit Secrets中配置UNSPLASH_ACCESS_KEY")
-        
-        self.base_url = "https://api.unsplash.com"
+        # ... 现有代码保持不变 ...
     
     def search_photos(self, query, page=1, per_page=12):
         """搜索Unsplash图片"""
         if not self.access_key:
-            return []
+            return [], 0, 0  # 返回空列表和0页
         
         url = f"{self.base_url}/search/photos"
         headers = {"Authorization": f"Client-ID {self.access_key}"}
@@ -400,22 +393,29 @@ class UnsplashAPI:
             "query": query,
             "page": page,
             "per_page": per_page,
-            "orientation": "squarish",  # 方形图片适合产品图
+            "orientation": "squarish",
         }
         
         try:
             response = requests.get(url, headers=headers, params=params, timeout=10)
             if response.status_code == 200:
-                return response.json().get("results", [])
+                data = response.json()
+                # 从API响应中获取总页数
+                total = data.get("total", 0)
+                total_pages = data.get("total_pages", 0)
+                # 如果API没有返回total_pages，我们计算一下
+                if total_pages == 0 and total > 0:
+                    total_pages = (total + per_page - 1) // per_page
+                return data.get("results", []), total_pages, total
             elif response.status_code == 401:
                 st.error("Unsplash API密钥无效，请检查您的密钥")
-                return []
+                return [], 0, 0
             else:
                 st.error(f"Unsplash API错误: {response.status_code}")
-                return []
+                return [], 0, 0
         except Exception as e:
             st.error(f"Unsplash API请求失败: {e}")
-            return []
+            return [], 0, 0
     
     def download_photo(self, photo_url):
         """下载图片"""
@@ -1084,18 +1084,22 @@ with tab1:
                 with btn_col2:
                     # 上一页按钮 - 总是显示但可能禁用
                     has_photos = len(st.session_state.get('unsplash_photos', [])) > 0
-                    prev_disabled = not has_photos or st.session_state.get('unsplash_current_page', 1) <= 1
+                    current_page = st.session_state.get('unsplash_current_page', 1)
+                    prev_disabled = not has_photos or current_page <= 1
+    
                     prev_label = "◀️ 上一页"
                     if st.button(prev_label, key="unsplash_prev", use_container_width=True, disabled=prev_disabled):
-                        if st.session_state.unsplash_current_page > 1:
+                        if current_page > 1:
                             st.session_state.unsplash_current_page -= 1
                             st.session_state.unsplash_search_trigger = True
                             st.rerun()
-                
+
                 with btn_col3:
                     has_photos = len(st.session_state.get('unsplash_photos', [])) > 0
-                    next_disabled = not has_photos or st.session_state.get('unsplash_current_page', 1) >= st.session_state.get('unsplash_total_pages', 1)
-                    
+                    current_page = st.session_state.get('unsplash_current_page', 1)
+                    total_pages = st.session_state.get('unsplash_total_pages', 0)
+                    next_disabled = not has_photos or current_page >= total_pages
+    
                     next_label = "下一页 ▶️"
                     if st.button(next_label, key="unsplash_next", use_container_width=True, disabled=next_disabled):
                         st.session_state.unsplash_current_page += 1
@@ -1132,7 +1136,7 @@ with tab1:
             # 执行搜索
             if need_search:
                 with st.spinner(f'正在搜索"{st.session_state.unsplash_search_query}"...'):
-                    photos = unsplash_api.search_photos(
+                    photos, total_pages, total_results = unsplash_api.search_photos(
                         st.session_state.unsplash_search_query, 
                         page=st.session_state.unsplash_current_page, 
                         per_page=12
@@ -1140,10 +1144,16 @@ with tab1:
                     
                     if photos:
                         st.session_state.unsplash_photos = photos
+                        st.session_state.unsplash_total_pages = total_pages
+                        st.session_state.unsplash_total_results = total_results
+                        
                         if st.session_state.unsplash_current_page == 1:
-                            st.success(f"找到图片，共{st.session_state.unsplash_total_pages}页")
+                            st.success(f"找到 {total_results} 张图片，共{total_pages}页")
                     else:
-                        st.error("搜索失败，请尝试其他关键词")
+                        if total_results == 0:
+                            st.warning(f"未找到与'{st.session_state.unsplash_search_query}'相关的图片")
+                        else:
+                            st.error("搜索失败，请尝试其他关键词")
                     
                     # 重置搜索触发标志
                     st.session_state.unsplash_search_trigger = False
@@ -1151,16 +1161,13 @@ with tab1:
             # 显示搜索结果
             if st.session_state.unsplash_photos:
                 # 显示当前页信息
-                total_pages = st.session_state.get('unsplash_total_pages', 1)
+                total_pages = st.session_state.get('unsplash_total_pages', 0)
                 current_page = st.session_state.get('unsplash_current_page', 1)
-                # 只有在有图片时才显示页码信息
-                if len(st.session_state.unsplash_photos) > 0 and total_pages > 0:
-                    st.info(f"第 {current_page} / {total_pages} 页 - 关键词: {st.session_state.unsplash_search_query}")
-                elif len(st.session_state.unsplash_photos) > 0:
-                    st.info(f"关键词: {st.session_state.unsplash_search_query}")
-                if total_pages > 1:
-                    st.info(f"第 {current_page} / {total_pages} 页 - 关键词: {st.session_state.unsplash_search_query}")
+                total_results = st.session_state.get('unsplash_total_results', 0)
                 
+                if total_results > 0:
+                    st.info(f"📊 共找到 {total_results} 张图片 - 第 {current_page} / {total_pages} 页 - 关键词: {st.session_state.unsplash_search_query}")
+    
                 photos = st.session_state.unsplash_photos
                 
                 # 每排6个，显示2排（共12个）
