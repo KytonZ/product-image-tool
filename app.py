@@ -369,7 +369,14 @@ if 'unsplash_selected_bg' not in st.session_state:
     st.session_state.unsplash_selected_bg = None
 if 'unsplash_search_query' not in st.session_state:
     st.session_state.unsplash_search_query = "white background"
-
+# 添加这些到初始化会话状态的部分
+if 'unsplash_search_trigger' not in st.session_state:
+    st.session_state.unsplash_search_trigger = False
+if 'unsplash_current_page' not in st.session_state:
+    st.session_state.unsplash_current_page = 1
+if 'unsplash_total_pages' not in st.session_state:
+    st.session_state.unsplash_total_pages = 0
+    
 # ==================== Unsplash API类 ====================
 class UnsplashAPI:
     def __init__(self):
