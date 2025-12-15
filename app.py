@@ -988,14 +988,13 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(["📤 上传图片", "🖼️ 预置背�
 
 # 标签页1：上传图片（已集成Unsplash）
 with tab1:
-    st.subheader("上传你的素材")
+    # 减小标题间距
+    st.markdown('<h3 style="margin-bottom: 0.2rem;">上传你的素材</h3>', unsafe_allow_html=True)
     
     # 使用两列布局
     col1, col2 = st.columns([1, 1], gap="large")
     
     with col1:
-        st.markdown('<div class="upload-column">', unsafe_allow_html=True)
-        # 背景图上传区域
         st.markdown("#### 背景图上传")
         
         # 背景来源选择选项卡
@@ -1007,28 +1006,24 @@ with tab1:
         )
         
         if bg_source == "上传图片":
-            # 传统的文件上传
             bg_files = st.file_uploader(
                 "拖拽或选择背景图片",
                 type=['png', 'jpg', 'jpeg'],
                 accept_multiple_files=True,
                 key="bg_upload",
-                help="支持JPG/PNG格式，可以一次选择多张图片",
+                help="支持JPG/PNG格式",
                 label_visibility="collapsed"
             )
             
             if bg_files:
                 bg_count = len(bg_files)
-                st.markdown(f'<div class="status-success">✅ 已上传 <span class="file-count">{bg_count}</span> 张背景图</div>', unsafe_allow_html=True)
+                st.success(f"已上传 {bg_count} 张背景图")
                 
-                # 显示前几张预览
                 st.markdown("**预览（最多显示12张）**")
                 
-                # 计算每行列数
                 cols_per_row = min(4, bg_count) if bg_count > 0 else 4
                 preview_count = min(12, bg_count)
                 
-                # 创建网格布局
                 for i in range(0, preview_count, cols_per_row):
                     cols = st.columns(cols_per_row)
                     for j in range(cols_per_row):
@@ -1046,37 +1041,43 @@ with tab1:
                                 
                                 st.image(
                                     display_img, 
-                                    caption=file.name[:15] + "..." if len(file.name) > 15 else file.name,
+                                    caption=file.name[:12] + "..." if len(file.name) > 12 else file.name,
                                     width=display_width
                                 )
         
         else:  # Unsplash图库
-            # 搜索区域 - 一行两个元素对齐
-            search_col1, search_col2 = st.columns([4, 1])
+            # 搜索区域 - 修复对齐问题
+            st.markdown("### Unsplash在线图库")
             
-            with search_col1:
-                search_query = st.text_input(
-                    "搜索背景图片",
-                    value=st.session_state.unsplash_search_query,
-                    placeholder="例如：white background, gradient, texture, studio",
-                    help="输入英文关键词搜索背景图片",
-                    key="unsplash_search_input",
-                    label_visibility="collapsed"
-                )
-            
-            with search_col2:
-                # 添加垂直对齐
-                st.write("")  # 空行用于垂直对齐
-                st.write("")  # 再添加一个空行
-                search_btn = st.button("搜索", type="primary", use_container_width=True, key="search_unsplash")
+            # 使用container确保在同一行
+            with st.container():
+                search_col1, search_col2 = st.columns([4, 1])
+                
+                with search_col1:
+                    search_query = st.text_input(
+                        "搜索背景图片",
+                        value=st.session_state.unsplash_search_query,
+                        placeholder="例如：white background",
+                        help="输入英文关键词",
+                        label_visibility="collapsed"
+                    )
+                
+                with search_col2:
+                    # 确保按钮与输入框对齐
+                    st.markdown('<div style="padding-top: 0.7rem;">', unsafe_allow_html=True)
+                    search_btn = st.button("搜索", type="primary", use_container_width=True, key="search_unsplash")
+                    st.markdown('</div>', unsafe_allow_html=True)
             
             # 初始化Unsplash API
             unsplash_api = UnsplashAPI()
             
+            if not unsplash_api.access_key:
+                st.warning("请在Streamlit Secrets中配置UNSPLASH_ACCESS_KEY")
+            
             # 搜索按钮逻辑
             if search_btn:
                 if not unsplash_api.access_key:
-                    st.error("请先在Streamlit Secrets中配置Unsplash API密钥")
+                    st.error("请先配置Unsplash API密钥")
                 else:
                     with st.spinner(f'正在搜索"{search_query}"...'):
                         photos = unsplash_api.search_photos(search_query, per_page=15)
@@ -1084,39 +1085,43 @@ with tab1:
                         if photos:
                             st.session_state.unsplash_photos = photos
                             st.session_state.unsplash_search_query = search_query
-                            st.session_state.unsplash_page = 0  # 重置页码
+                            st.session_state.unsplash_page = 0
                             st.success(f"找到 {len(photos)} 张图片")
                         else:
-                            st.error("搜索失败，请检查API密钥或网络连接")
+                            st.error("搜索失败")
             
             # 显示搜索结果
             if st.session_state.unsplash_photos:
                 st.markdown(f"**搜索结果：{st.session_state.unsplash_search_query}**")
                 
-                # 分页显示 - 每页15张，每行5张
-                page_size = 15
                 photos = st.session_state.unsplash_photos
+                page_size = 15
                 total_pages = (len(photos) + page_size - 1) // page_size
                 
                 if 'unsplash_page' not in st.session_state:
                     st.session_state.unsplash_page = 0
                 
-                # 分页控件
+                # 翻页控件 - 确保可见
                 if total_pages > 1:
-                    page_cols = st.columns([2, 1, 1, 2])
-                    with page_cols[1]:
-                        if st.button("上一页", key="unsplash_prev", use_container_width=True):
-                            if st.session_state.unsplash_page > 0:
-                                st.session_state.unsplash_page -= 1
-                                st.rerun()
-                    
-                    with page_cols[2]:
-                        if st.button("下一页", key="unsplash_next", use_container_width=True):
-                            if st.session_state.unsplash_page < total_pages - 1:
-                                st.session_state.unsplash_page += 1
-                                st.rerun()
+                    # 使用expander确保翻页控件始终可见
+                    with st.expander("翻页控制", expanded=False):
+                        page_cols = st.columns(3)
+                        with page_cols[0]:
+                            if st.button("上一页", key="unsplash_prev", use_container_width=True):
+                                if st.session_state.unsplash_page > 0:
+                                    st.session_state.unsplash_page -= 1
+                                    st.rerun()
+                        
+                        with page_cols[1]:
+                            st.write(f"第 {st.session_state.unsplash_page + 1} / {total_pages} 页")
+                        
+                        with page_cols[2]:
+                            if st.button("下一页", key="unsplash_next", use_container_width=True):
+                                if st.session_state.unsplash_page < total_pages - 1:
+                                    st.session_state.unsplash_page += 1
+                                    st.rerun()
                 
-                # 显示当前页图片 - 每行显示5张图片
+                # 显示当前页图片
                 start_idx = st.session_state.unsplash_page * page_size
                 end_idx = min(start_idx + page_size, len(photos))
                 
@@ -1129,17 +1134,15 @@ with tab1:
                         if idx < end_idx:
                             with cols[j]:
                                 photo = photos[idx]
-                                
-                                # 显示图片
                                 img_url = photo.get("urls", {}).get("small")
+                                
                                 if img_url:
                                     st.image(img_url, use_column_width=True)
                                 
                                 # 按钮容器
-                                btn_col1, btn_col2 = st.columns(2)
-                                with btn_col1:
+                                btn_cols = st.columns(2)
+                                with btn_cols[0]:
                                     if st.button("选择", key=f"select_{idx}", use_container_width=True):
-                                        # 下载图片
                                         with st.spinner("下载中..."):
                                             img = unsplash_api.download_photo(img_url)
                                             if img:
@@ -1152,45 +1155,25 @@ with tab1:
                                                 
                                                 mock_file = MockFile(img, idx)
                                                 st.session_state.unsplash_selected_bg = mock_file
-                                                st.success(f"已选择背景图")
+                                                st.success("已选择背景图")
                                 
-                                with btn_col2:
+                                with btn_cols[1]:
                                     if st.button("预览", key=f"preview_{idx}", use_container_width=True):
-                                        # 预览大图
                                         st.image(img_url, caption=f"背景图 #{idx+1}", use_column_width=True)
-                
-                # 显示已选择的背景
-                if 'unsplash_selected_bg' in st.session_state and st.session_state.unsplash_selected_bg:
-                    st.markdown("**已选择的背景**")
-                    selected = st.session_state.unsplash_selected_bg
-                    
-                    sel_col1, sel_col2 = st.columns([1, 3])
-                    with sel_col1:
-                        st.image(selected.image, width=100)
-                    
-                    with sel_col2:
-                        st.write(f"文件名: {selected.name}")
-                        st.write(f"来源: Unsplash图库")
-                        
-                        if st.button("清除选择", key="clear_selection"):
-                            del st.session_state.unsplash_selected_bg
-                            st.rerun()
-        
-        st.markdown('</div>', unsafe_allow_html=True)
     
     with col2:
-        st.markdown('<div class="upload-column">', unsafe_allow_html=True)
-        # 产品图上传
         st.markdown("#### 产品图上传")
         
-        # 为了对齐，添加一个空的单选按钮（与左侧结构一致）
-        product_source = st.radio(
-            "选择产品图来源",
-            ["上传图片"],
-            horizontal=True,
-            key="product_source_radio",
-            disabled=True  # 暂时只允许上传
-        )
+        # 添加占位单选按钮以对齐高度
+        with st.container():
+            st.radio(
+                "选择产品图来源",
+                ["上传图片"],
+                horizontal=True,
+                key="product_source_radio",
+                disabled=True,
+                label_visibility="collapsed"
+            )
         
         # 产品图上传
         product_files = st.file_uploader(
@@ -1198,22 +1181,19 @@ with tab1:
             type=['png', 'jpg', 'jpeg'],
             accept_multiple_files=True,
             key="product_upload",
-            help="建议使用透明背景的PNG图片以获得最佳效果",
+            help="建议使用透明背景的PNG图片",
             label_visibility="collapsed"
         )
         
         if product_files:
             product_count = len(product_files)
-            st.markdown(f'<div class="status-success">✅ 已上传 <span class="file-count">{product_count}</span> 张产品图</div>', unsafe_allow_html=True)
+            st.success(f"已上传 {product_count} 张产品图")
             
-            # 显示前几张预览
             st.markdown("**预览（最多显示12张）**")
             
-            # 计算每行列数
             cols_per_row = min(4, product_count) if product_count > 0 else 4
             preview_count = min(12, product_count)
             
-            # 创建网格布局
             for i in range(0, preview_count, cols_per_row):
                 cols = st.columns(cols_per_row)
                 for j in range(cols_per_row):
@@ -1231,15 +1211,13 @@ with tab1:
                             
                             st.image(
                                 display_img, 
-                                caption=file.name[:15] + "..." if len(file.name) > 15 else file.name,
+                                caption=file.name[:12] + "..." if len(file.name) > 12 else file.name,
                                 width=display_width
                             )
-        st.markdown('</div>', unsafe_allow_html=True)
     
     # 上传状态汇总
     bg_files_combined = []
     
-    # 获取所有背景文件（包括上传的和Unsplash的）
     if 'bg_files' in locals() and bg_files:
         bg_files_combined.extend(bg_files)
     
@@ -1248,7 +1226,8 @@ with tab1:
     
     if bg_files_combined and product_files:
         total_combinations = len(bg_files_combined) * len(product_files)
-        st.info(f"📊 **准备合成:** {len(bg_files_combined)} 张背景图 × {len(product_files)} 张产品图 = **{total_combinations} 张合成图**")
+        st.info(f"**准备合成:** {len(bg_files_combined)} 张背景图 × {len(product_files)} 张产品图 = **{total_combinations} 张合成图**")
+
 # 标签页2：预置背景库
 with tab2:
     st.header("🖼️ 预置背景库")
