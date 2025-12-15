@@ -1083,21 +1083,25 @@ with tab1:
                 
                 with btn_col2:
                     # 上一页按钮 - 总是显示但可能禁用
-                    prev_disabled = st.session_state.get('unsplash_current_page', 1) <= 1
-                    if st.button("◀️", key="unsplash_prev", use_container_width=True, disabled=prev_disabled):
+                    has_photos = len(st.session_state.get('unsplash_photos', [])) > 0
+                    prev_disabled = not has_photos or st.session_state.get('unsplash_current_page', 1) <= 1
+                    prev_label = "◀️ 上一页"
+                    if st.button(prev_label, key="unsplash_prev", use_container_width=True, disabled=prev_disabled):
                         if st.session_state.unsplash_current_page > 1:
                             st.session_state.unsplash_current_page -= 1
                             st.session_state.unsplash_search_trigger = True
                             st.rerun()
                 
                 with btn_col3:
-                    # 下一页按钮 - 总是显示但可能禁用
-                    next_disabled = st.session_state.get('unsplash_current_page', 1) >= st.session_state.get('unsplash_total_pages', 1)
-                    if st.button("▶️", key="unsplash_next", use_container_width=True, disabled=next_disabled):
+                    has_photos = len(st.session_state.get('unsplash_photos', [])) > 0
+                    next_disabled = not has_photos or st.session_state.get('unsplash_current_page', 1) >= st.session_state.get('unsplash_total_pages', 1)
+                    
+                    next_label = "下一页 ▶️"
+                    if st.button(next_label, key="unsplash_next", use_container_width=True, disabled=next_disabled):
                         st.session_state.unsplash_current_page += 1
                         st.session_state.unsplash_search_trigger = True
                         st.rerun()
-            
+
             st.markdown('</div>', unsafe_allow_html=True)
             
             # 初始化Unsplash API
