@@ -1212,18 +1212,41 @@ with tab1:
                                     with button_container:
                                         # 检查是否已选择当前图片
                                         is_selected = st.session_state.unsplash_selected_bg and hasattr(st.session_state.unsplash_selected_bg, 'idx') and st.session_state.unsplash_selected_bg.idx == idx
-    
+
                                         # 设置按钮样式和文字
-                                        button_label = "选择此背景图" if is_selected else "选择"
-                                        button_type = "primary" if is_selected else "secondary"
-    
-                                        # 自定义小按钮：通过key区分不同图片，use_container_width=False控制宽度
+                                        button_label = "✅ 选择此背景图" if is_selected else "选择背景图"
+                                        button_bg = "#28a745" if is_selected else "#f0f2f6"
+                                        button_color = "white" if is_selected else "#333"
+                                        button_border = "#28a745" if is_selected else "#d1d5db"
+
+                                        # 按钮容器（与图片等宽）
+                                        st.markdown(f"""
+                                        <style>
+                                        /* 等宽按钮样式 */
+                                        .button-{current_page}-{idx} {{
+                                            width: 100% !important;
+                                            font-size: 0.75rem !important;
+                                            padding: 0.3rem 0 !important;
+                                            border-radius: 6px !important;
+                                            background-color: {button_bg} !important;
+                                            color: {button_color} !important;
+                                            border: 1px solid {button_border} !important;
+                                            transition: all 0.2s ease !important;
+                                        }}
+                                        .button-{current_page}-{idx}:hover {{
+                                            opacity: 0.9 !important;
+                                            transform: none !important;
+                                            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+                                        }}
+                                        </style>
+                                        """, unsafe_allow_html=True)
+
+                                        # 等宽按钮（与图片同宽）
                                         if st.button(
-                                            button_label, 
+                                            button_label,
                                             key=f"select_{current_page}_{idx}",
-                                            use_container_width=False,
-                                            type=button_type,
-                                            args=(idx,)  # 传递图片索引用于状态判断
+                                            use_container_width=True,  # 强制与图片等宽
+                                            args=(idx,)
                                         ):
                                             with st.spinner("下载中..."):
                                                 img = unsplash_api.download_photo(img_url)
@@ -1234,10 +1257,9 @@ with tab1:
                                                             self.type = "image/jpeg"
                                                             self.image = img
                                                             self.idx = idx  # 记录索引用于状态判断
-                
+            
                                                     mock_file = MockFile(img, idx)
                                                     st.session_state.unsplash_selected_bg = mock_file
-                                                    # 移除成功提示，通过按钮状态变化体现选择结果
                                                     st.rerun()  # 刷新页面更新按钮状态
 
                                     # 自定义按钮CSS（缩小字体和宽度）
