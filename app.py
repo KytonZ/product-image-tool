@@ -1060,7 +1060,6 @@ with tab1:
                 help="输入英文关键词",
                 label_visibility="collapsed",  # 隐藏标签
                 key="unsplash_search_input",
-                label="",  # 空标签
                 args=(),
             )
             
