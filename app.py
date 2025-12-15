@@ -32,8 +32,8 @@ def get_custom_css():
         
         /* 主标题样式 */
         .main-header {
-            padding: 0.5rem 0;
-            margin-bottom: 0.2rem !important;
+            padding: 0.3rem 0;
+            margin-bottom: 0.1rem !important;
         }
         
         /* 卡片式UI */
@@ -51,7 +51,10 @@ def get_custom_css():
             gap: 10px;
             padding: 0 10px;
         }
-        
+        /* 减少标签页内标题间距 */
+        .stTabs [data-baseweb="tab-list"] {
+            margin-bottom: 0.5rem !important;
+        }
         .stTabs [data-baseweb="tab"] {
             padding: 10px 20px;
             border-radius: 5px 5px 0 0;
