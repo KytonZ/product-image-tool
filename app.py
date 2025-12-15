@@ -1003,7 +1003,7 @@ with st.sidebar:
 # ==================== 主区域：标签页 ====================
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["📤 上传图片", "🖼️ 预置背景库", "🔄 图片去重生成器", "🎬 视频抽帧工具", "📝 AI文案生成"])
 
-# 标签页1：上传图片（已集成Unsplash）
+# ========== tab1 中 Unsplash 部分完整修正代码 ==========
 with tab1:
     # 减小标题间距
     st.markdown('<h3 style="margin-bottom: 0.2rem;">上传你的素材</h3>', unsafe_allow_html=True)
@@ -1024,6 +1024,7 @@ with tab1:
         )
         
         if bg_source == "上传图片":
+            # 上传背景图逻辑（保持不变）
             bg_files = st.file_uploader(
                 "拖拽或选择背景图片",
                 type=['png', 'jpg', 'jpeg'],
@@ -1064,62 +1065,13 @@ with tab1:
                                 )
         
         else:  # Unsplash图库
-            # 搜索区域
+            # 初始化Unsplash API（提前初始化，避免重复定义）
+            unsplash_api = UnsplashAPI()
+            
+            # 1. 先渲染搜索框和按钮（定义变量）
             st.markdown('<div class="search-container">', unsafe_allow_html=True)
             
             # 使用两列布局：搜索框和按钮
-
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            # 初始化Unsplash API
-            unsplash_api = UnsplashAPI()
-            
-            if not unsplash_api.access_key:
-                st.warning("请在Streamlit Secrets中配置UNSPLASH_ACCESS_KEY")
-            
-            # 检查是否需要搜索
-            need_search = False
-            
-            # 如果点击了搜索按钮
-            if search_btn:
-                if not unsplash_api.access_key:
-                    st.error("请先配置Unsplash API密钥")
-                else:
-                    # 重置到第一页
-                    st.session_state.unsplash_current_page = 1
-                    st.session_state.unsplash_search_query = search_query
-                    st.session_state.unsplash_search_trigger = True
-                    # 立即执行搜索
-                    need_search = True
-            
-            # 如果有搜索触发标志
-            if st.session_state.get('unsplash_search_trigger', False):
-                need_search = True
-            
-            # 执行搜索
-            if need_search:
-                with st.spinner(f'正在搜索"{st.session_state.unsplash_search_query}"...'):
-                    photos, total_pages, total_results = unsplash_api.search_photos(
-                        st.session_state.unsplash_search_query, 
-                        page=st.session_state.unsplash_current_page, 
-                        per_page=12
-                    )
-                    
-                    if photos:
-                        st.session_state.unsplash_photos = photos
-                        st.session_state.unsplash_total_pages = total_pages
-                        st.session_state.unsplash_total_results = total_results
-                        
-                        if st.session_state.unsplash_current_page == 1:
-                            st.success(f"找到 {total_results} 张图片，共{total_pages}页")
-                    else:
-                        if total_results == 0:
-                            st.warning(f"未找到与'{st.session_state.unsplash_search_query}'相关的图片")
-                        else:
-                            st.error("搜索失败，请尝试其他关键词")
-                    
-                    # 重置搜索触发标志
-                    st.session_state.unsplash_search_trigger = False
             search_col1, search_col2 = st.columns([3, 2])
             
             with search_col1:
@@ -1136,6 +1088,7 @@ with tab1:
                 # 搜索和翻页按钮在同一行
                 btn_col1, btn_col2, btn_col3 = st.columns(3)
                 with btn_col1:
+                    # 先定义搜索按钮
                     search_btn = st.button(
                         "搜索", 
                         type="primary", 
@@ -1144,31 +1097,85 @@ with tab1:
                     )
                 
                 with btn_col2:
-                    # 上一页按钮 - 总是显示但可能禁用
-                    has_photos = len(st.session_state.get('unsplash_photos', [])) > 0
-                    current_page = st.session_state.get('unsplash_current_page', 1)
-                    prev_disabled = not has_photos or current_page <= 1
-    
-                    prev_label = "◀️ 上一页"
-                    if st.button(prev_label, key="unsplash_prev", use_container_width=True, disabled=prev_disabled):
-                        if current_page > 1:
-                            st.session_state.unsplash_current_page -= 1
-                            st.session_state.unsplash_search_trigger = True
-                            st.rerun()
-
-                with btn_col3:
+                    # 先获取最新状态（避免变量未定义）
                     has_photos = len(st.session_state.get('unsplash_photos', [])) > 0
                     current_page = st.session_state.get('unsplash_current_page', 1)
                     total_pages = st.session_state.get('unsplash_total_pages', 0)
-                    next_disabled = not has_photos or (current_page >= total_pages) or (total_pages == 0)
-    
-                    next_label = "下一页 ▶️"
-                    if st.button(next_label, key="unsplash_next", use_container_width=True, disabled=next_disabled):
-                        st.session_state.unsplash_current_page += 1
-                        st.session_state.unsplash_search_trigger = True
-                        st.rerun()
+                    
+                    # 上一页按钮 - 总是显示但可能禁用
+                    prev_disabled = not has_photos or current_page <= 1
+            
+                    prev_label = "◀️ 上一页"
+                    prev_btn = st.button(prev_label, key="unsplash_prev", use_container_width=True, disabled=prev_disabled)
 
-            # 显示搜索结果
+                with btn_col3:
+                    # 下一页按钮 - 先定义禁用条件，再渲染
+                    next_disabled = not has_photos or (current_page >= total_pages) or (total_pages == 0)
+            
+                    next_label = "下一页 ▶️"
+                    next_btn = st.button(next_label, key="unsplash_next", use_container_width=True, disabled=next_disabled)
+
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # 2. 检查按钮点击事件（变量已定义）
+            need_search = False
+            
+            # 搜索按钮点击
+            if search_btn:
+                if not unsplash_api.access_key:
+                    st.error("请先配置Unsplash API密钥")
+                else:
+                    # 重置到第一页
+                    st.session_state.unsplash_current_page = 1
+                    st.session_state.unsplash_search_query = search_query
+                    st.session_state.unsplash_search_trigger = True
+                    need_search = True
+            
+            # 上一页按钮点击
+            if prev_btn and not prev_disabled:
+                st.session_state.unsplash_current_page -= 1
+                st.session_state.unsplash_search_trigger = True
+                need_search = True
+            
+            # 下一页按钮点击
+            if next_btn and not next_disabled:
+                st.session_state.unsplash_current_page += 1
+                st.session_state.unsplash_search_trigger = True
+                need_search = True
+            
+            # 搜索触发标志
+            if st.session_state.get('unsplash_search_trigger', False):
+                need_search = True
+            
+            # 3. 执行搜索逻辑（变量已定义，且按钮点击已判断）
+            if need_search:
+                if not unsplash_api.access_key:
+                    st.error("⚠️ 未找到Unsplash API密钥，请在Streamlit Secrets中配置UNSPLASH_ACCESS_KEY")
+                else:
+                    with st.spinner(f'正在搜索"{st.session_state.unsplash_search_query}"...'):
+                        photos, total_pages, total_results = unsplash_api.search_photos(
+                            st.session_state.unsplash_search_query, 
+                            page=st.session_state.unsplash_current_page, 
+                            per_page=12
+                        )
+                        
+                        if photos:
+                            st.session_state.unsplash_photos = photos
+                            st.session_state.unsplash_total_pages = total_pages
+                            st.session_state.unsplash_total_results = total_results
+                            
+                            if st.session_state.unsplash_current_page == 1:
+                                st.success(f"找到 {total_results} 张图片，共{total_pages}页")
+                        else:
+                            if total_results == 0:
+                                st.warning(f"未找到与'{st.session_state.unsplash_search_query}'相关的图片")
+                            else:
+                                st.error("搜索失败，请尝试其他关键词")
+                        
+                        # 重置搜索触发标志
+                        st.session_state.unsplash_search_trigger = False
+            
+            # 4. 显示搜索结果
             if st.session_state.unsplash_photos:
                 # 显示当前页信息
                 total_pages = st.session_state.get('unsplash_total_pages', 0)
@@ -1177,7 +1184,7 @@ with tab1:
                 
                 if total_results > 0:
                     st.info(f"📊 共找到 {total_results} 张图片 - 第 {current_page} / {total_pages} 页 - 关键词: {st.session_state.unsplash_search_query}")
-    
+        
                 photos = st.session_state.unsplash_photos
                 
                 # 每排6个，显示2排（共12个）
@@ -1226,6 +1233,7 @@ with tab1:
                                             st.image(img_url, caption=f"预览 - 第{current_page}页第{idx+1}张", 
                                                    use_column_width=True)
     with col2:
+        # 产品图上传逻辑（保持不变）
         st.markdown("#### 产品图上传")
         
         # 添加占位单选按钮以对齐高度
@@ -1291,7 +1299,6 @@ with tab1:
     if bg_files_combined and product_files:
         total_combinations = len(bg_files_combined) * len(product_files)
         st.info(f"**准备合成:** {len(bg_files_combined)} 张背景图 × {len(product_files)} 张产品图 = **{total_combinations} 张合成图**")
-
 # 标签页2：预置背景库
 with tab2:
     st.header("🖼️ 预置背景库")
