@@ -380,7 +380,14 @@ if 'unsplash_total_pages' not in st.session_state:
 # ==================== Unsplash API类 ====================
 class UnsplashAPI:
     def __init__(self):
-        # ... 现有代码保持不变 ...
+        # 自动从Streamlit Secrets读取API密钥
+        try:
+            self.access_key = st.secrets["UNSPLASH_ACCESS_KEY"]
+        except:
+            self.access_key = ""
+            st.warning("⚠️ 未找到Unsplash API密钥，请在Streamlit Secrets中配置UNSPLASH_ACCESS_KEY")
+        
+        self.base_url = "https://api.unsplash.com"
     
     def search_photos(self, query, page=1, per_page=12):
         """搜索Unsplash图片"""
