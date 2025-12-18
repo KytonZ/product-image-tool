@@ -2051,6 +2051,19 @@ with tab4:
 
 # 标签页5：Logo添加器（新增功能）
 with tab5:
+    # 预设位置映射表
+    preset_map = {
+        "左上角": (5, 5),
+        "右上角": (95, 5),
+        "左下角": (5, 95),
+        "右下角": (95, 95),
+        "居中": (50, 50),
+        "顶部居中": (50, 5),
+        "底部居中": (50, 95),
+        "左侧居中": (5, 50),
+        "右侧居中": (95, 50)
+    }
+    
     st.header("🖼️ Logo添加器")
     st.markdown("""
     <div class="logo-adder-container">
@@ -2169,19 +2182,6 @@ with tab5:
         # 当预设位置改变时更新坐标
         if selected_preset != st.session_state.logo_adder_preset_position:
             st.session_state.logo_adder_preset_position = selected_preset
-            
-            # 更新对应的坐标
-            preset_map = {
-                "左上角": (5, 5),
-                "右上角": (95, 5),
-                "左下角": (5, 95),
-                "右下角": (95, 95),
-                "居中": (50, 50),
-                "顶部居中": (50, 5),
-                "底部居中": (50, 95),
-                "左侧居中": (5, 50),
-                "右侧居中": (95, 50)
-            }
             
             if selected_preset in preset_map and selected_preset != "自定义":
                 x, y = preset_map[selected_preset]
@@ -2360,7 +2360,7 @@ with tab5:
             </div>
             """, unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
-            
+                        
 # ==================== 执行批处理 ====================
 if process_button:
     # 检查必要文件
