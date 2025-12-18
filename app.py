@@ -2064,7 +2064,7 @@ with tab5:
     st.header("🖼️ Logo添加器")
     st.markdown("""
     <div class="logo-adder-container">
-        <p><b>功能说明：</b>为单张图片添加Logo水印，支持自定义Logo位置、大小和透明度。</p>
+        <p></b>为单张图片添加Logo水印，支持自定义Logo位置、大小和透明度。</p>
     </div>
     """, unsafe_allow_html=True)
     
