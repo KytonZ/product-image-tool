@@ -1189,8 +1189,8 @@ with st.sidebar:
     )
 
 # ==================== 主区域：标签页 ====================
-# 修改为6个标签页，添加STEP 3D查看器作为第六个标签页
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📤 产品图合成", "🔄 图片去重", "🎬 视频抽帧", "📝 AI文案(暂不可用)", "🖼️ Logo水印添加", "📌 3D模型查看"])
+# 修改为5个标签页，添加Logo水印添加
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📤 产品图合成", "🔄 图片去重", "🎬 视频抽帧", "📝 AI文案(暂不可用)", "🖼️ Logo水印添加"])
 
 # ========== tab1 中 Unsplash 部分完整修正代码 ==========
 with tab1:
@@ -2336,77 +2336,6 @@ with tab5:
             """, unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
-# 标签页6：STEP 3D查看器 - 新增的第六个标签页
-with tab6:
-    st.header("📌 最小化STEP/STP 3D查看器")
-    st.markdown("""
-    <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid #2196F3;">
-        <p>上传STEP/STP格式的3D模型文件，可以在浏览器中直接查看和交互</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # 1. 上传STEP/STP文件
-    uploaded_file = st.file_uploader(
-        "上传STEP/STP文件",
-        type=["step", "stp"],
-        help="支持.step/.stp格式的3D模型文件",
-        label_visibility="collapsed"
-    )
-    
-    # 2. 核心：嵌入前端3D查看器（Three.js + STEP解析库）
-    if uploaded_file:
-        # 将上传的文件转为Base64编码（前端可直接读取）
-        file_bytes = uploaded_file.read()
-        file_b64 = base64.b64encode(file_bytes).decode()
-        
-        # 前端核心代码（精简版，仅保留渲染功能）
-        viewer_html = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <style>
-                #viewer {{ width: 100%; height: 700px; }} /* 查看器尺寸 */
-            </style>
-            <!-- 引入Three.js和STEP解析库（CDN，无需本地安装） -->
-            <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
-            <script src="https://cdn.jsdelivr.net/npm/step-fbx-viewer@1.0.12/dist/step-fbx-viewer.min.js"></script>
-        </head>
-        <body>
-            <div id="viewer"></div>
-            <script>
-                // 初始化查看器
-                const viewer = new STEPFBXViewer.Viewer(document.getElementById('viewer'));
-                
-                // 解码Base64并加载STEP文件
-                const fileData = atob('{file_b64}');
-                const uint8Array = new Uint8Array(fileData.length);
-                for (let i = 0; i < fileData.length; i++) {{
-                    uint8Array[i] = fileData.charCodeAt(i);
-                }}
-                const blob = new Blob([uint8Array], {{ type: 'application/octet-stream' }});
-                const file = new File([blob], '{uploaded_file.name}', {{ type: 'application/step' }});
-                
-                // 加载并渲染模型
-                viewer.loadFile(file).then(() => {{
-                    viewer.autoRotate = true; // 自动旋转（可选）
-                    viewer.zoomToFit(); // 自适应视角
-                }}).catch(err => {{
-                    alert('模型加载失败：' + err.message);
-                }});
-            </script>
-        </body>
-        </html>
-        """
-        
-        # 将前端代码嵌入Streamlit页面
-        import streamlit.components.v1 as components
-        components.html(viewer_html, height=720, scrolling=False)
-        
-        st.info(f"✅ 模型 '{uploaded_file.name}' 加载成功！您可以在上面的查看器中旋转和缩放模型。")
-    else:
-        st.info("💡 请上传.step/.stp格式的3D模型文件，上传后自动渲染预览")
-
 # ==================== 执行批处理 ====================
 if process_button:
     # 检查必要文件
@@ -2573,8 +2502,8 @@ if process_button:
 st.markdown("---")
 st.markdown("### 💡 使用说明")
 
-# 使用六列布局显示说明（现在有六个主要功能）
-info_col1, info_col2, info_col3, info_col4, info_col5, info_col6 = st.columns(6)
+# 使用五列布局显示说明（现在有五个主要功能）
+info_col1, info_col2, info_col3, info_col4, info_col5 = st.columns(5)
 
 with info_col1:
     st.markdown("""
@@ -2632,18 +2561,6 @@ with info_col5:
             <li>批量添加Logo水印</li>
             <li>自定义位置大小</li>
             <li>实时预览效果</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
-
-with info_col6:
-    st.markdown("""
-    <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #FF6B6B;">
-        <h4>📌 3D模型查看</h4>
-        <ul>
-            <li>查看STEP/STP格式</li>
-            <li>浏览器内交互</li>
-            <li>3D模型预览</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
