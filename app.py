@@ -1197,7 +1197,7 @@ with tab1:
     # 减小标题间距
     st.header("📤 产品图合成")
     st.markdown("""
-    <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid #2196F3;">
+    <div class="highlight-box">
         <p>上传合适的背景图或unsplash图库中搜索，再上传透明产品图，左侧合成带LOGO产品图</p>
     </div>
     """, unsafe_allow_html=True)    
@@ -1574,7 +1574,7 @@ with tab1:
 with tab2:
     st.header("🔄 图片去重")
     st.markdown("""
-    <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid #2196F3;">
+    <div class="highlight-box">
         <p>通过微调图片像素，生成大量数据层不同的相似图片，可用于应对平台的重复检测。</p>
     </div>
     """, unsafe_allow_html=True)
@@ -1691,7 +1691,7 @@ with tab2:
 with tab3:
     st.header("🎬 视频抽帧")
     st.markdown("""
-    <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid #FF6B6B;">
+    <div class="highlight-box">
         <p>通过随机删除视频中的两帧，生成内容相似但数据不同的新视频，可用于应对平台的重复检测。</p>
     </div>
     """, unsafe_allow_html=True)
@@ -1865,11 +1865,8 @@ with tab4:
         <p><b>功能说明：</b>根据选择的产品，自动生成适用于阿里巴巴和国际站(MIC)的英文产品标题、关键词和属性词。</p>
         <p><b>生成规则：</b></p>
         <ul>
-            <li>标题长度：8-12个单词，85-128个字符</li>
-            <li>格式规范：首字母大写，介词小写</li>
-            <li>SEO优化：符合阿里/MIC平台搜索规则</li>
+            <li>标题长度：8-12个单词，85-128个字符，首字母大写，介词小写</li>
             <li>关键词：包含短尾核心词和长尾复合词</li>
-            <li>属性词：分类清晰，可直接复制使用</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -2068,7 +2065,7 @@ with tab5:
     
     st.header("🖼️ Logo水印添加")
     st.markdown("""
-    <div class="logo-adder-container">
+    <div class="highlight-box">
         <p>为单张图片添加Logo水印，支持自定义Logo位置、大小和透明度。</p>
     </div>
     """, unsafe_allow_html=True)
@@ -2555,7 +2552,7 @@ with info_col4:
 
 with info_col5:
     st.markdown("""
-    <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #4CAF50;">
+    <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
         <h4>🖼️ Logo水印添加</h4>
         <ul>
             <li>批量添加Logo水印</li>
