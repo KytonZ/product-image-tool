@@ -1565,13 +1565,12 @@ with tab1:
         total_combinations = len(bg_files_combined) * len(product_files)
         st.info(f"**准备合成:** {len(bg_files_combined)} 张背景图 × {len(product_files)} 张产品图 = **{total_combinations} 张合成图**")
 
-# 标签页2：图片去重生成器（原来的tab3）
+# 标签页2：图片去重生成器
 with tab2:
     st.header("🔄 图片去重生成器")
     st.markdown("""
     <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid #2196F3;">
         <p>通过微调图片像素，生成大量数据层不同的相似图片，可用于应对平台的重复检测。</p>
-        <p><b>原理</b>：随机修改图片中单个像素的颜色，变化微小到人眼无法察觉。</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -1683,14 +1682,12 @@ with tab2:
                     key="download_unique"
                 )
 
-# 标签页3：视频抽帧工具（原来的tab4）
+# 标签页3：视频抽帧工具
 with tab3:
     st.header("🎬 视频抽帧工具")
     st.markdown("""
     <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid #FF6B6B;">
         <p>通过随机删除视频中的两帧，生成内容相似但数据不同的新视频，可用于应对平台的重复检测。</p>
-        <p><b>原理</b>：随机删除视频中的两帧，变化微小到人眼无法察觉，但能改变视频的哈希值。</p>
-        <p><b>特点</b>：保留原始视频的音频、画质和时长基本不变。</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -1855,7 +1852,7 @@ with tab3:
                     st.session_state.video_info = None
                     st.rerun()
 
-# 标签页4：AI文案生成（暂不可用）（原来的tab5）
+# 标签页4：AI文案生成（暂不可用）
 with tab4:
     st.header("📝 AI文案生成 - 阿里巴巴/MIC平台优化")
     st.markdown("""
@@ -2049,7 +2046,7 @@ with tab4:
             </div>
             """, unsafe_allow_html=True)
 
-# 标签页5：Logo添加器（新增功能） - 修改为单张图片处理
+# 标签页5：Logo添加器
 with tab5:
     # 预设位置映射表
     preset_map = {
@@ -2068,12 +2065,6 @@ with tab5:
     st.markdown("""
     <div class="logo-adder-container">
         <p><b>功能说明：</b>为单张图片添加Logo水印，支持自定义Logo位置、大小和透明度。</p>
-        <p><b>特点：</b></p>
-        <ul>
-            <li>可调节Logo大小、位置和透明度</li>
-            <li>提供常用预设位置</li>
-            <li>直接下载JPG格式图片</li>
-        </ul>
     </div>
     """, unsafe_allow_html=True)
     
