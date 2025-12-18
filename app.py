@@ -1190,7 +1190,7 @@ with st.sidebar:
 
 # ==================== 主区域：标签页 ====================
 # 修改为5个标签页，添加Logo添加器
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["📤 上传图片", "🔄 图片去重生成器", "🎬 视频抽帧工具", "📝 AI文案生成", "🖼️ Logo添加器"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📤 上传图片", "🔄 图片去重生成器", "🎬 视频抽帧工具", "📝 AI文案生成(暂不可用)", "🖼️ Logo添加器"])
 
 # ========== tab1 中 Unsplash 部分完整修正代码 ==========
 with tab1:
@@ -1855,7 +1855,7 @@ with tab3:
                     st.session_state.video_info = None
                     st.rerun()
 
-# 标签页4：AI文案生成（原来的tab5）
+# 标签页4：AI文案生成（暂不可用）（原来的tab5）
 with tab4:
     st.header("📝 AI文案生成 - 阿里巴巴/MIC平台优化")
     st.markdown("""
@@ -2049,7 +2049,7 @@ with tab4:
             </div>
             """, unsafe_allow_html=True)
 
-# 标签页5：Logo添加器（新增功能）
+# 标签页5：Logo添加器（新增功能） - 修改为单张图片处理
 with tab5:
     # 预设位置映射表
     preset_map = {
@@ -2067,14 +2067,12 @@ with tab5:
     st.header("🖼️ Logo添加器")
     st.markdown("""
     <div class="logo-adder-container">
-        <p><b>功能说明：</b>为图片批量添加Logo水印，支持自定义Logo位置、大小和透明度。</p>
+        <p><b>功能说明：</b>为单张图片添加Logo水印，支持自定义Logo位置、大小和透明度。</p>
         <p><b>特点：</b></p>
         <ul>
-            <li>支持批量上传图片</li>
             <li>可调节Logo大小、位置和透明度</li>
             <li>提供常用预设位置</li>
-            <li>实时预览效果</li>
-            <li>批量下载处理后的图片</li>
+            <li>直接下载JPG格式图片</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -2085,42 +2083,34 @@ with tab5:
     with col_left:
         st.markdown("### 1. 上传图片")
         
-        # 上传图片
-        uploaded_images = st.file_uploader(
+        # 上传图片 - 单张模式
+        uploaded_image = st.file_uploader(
             "选择需要添加Logo的图片",
             type=['png', 'jpg', 'jpeg'],
-            accept_multiple_files=True,
+            accept_multiple_files=False,
             key="logo_adder_uploader",
-            help="支持JPG和PNG格式，可多选",
+            help="支持JPG和PNG格式，单张处理模式",
             label_visibility="collapsed"
         )
         
-        if uploaded_images:
+        if uploaded_image:
             # 保存到session_state
-            st.session_state.logo_adder_images = uploaded_images
+            st.session_state.logo_adder_image = uploaded_image
             
             # 显示上传状态
-            image_count = len(uploaded_images)
-            st.success(f"已上传 {image_count} 张图片")
+            st.success("已上传图片")
             
-            # 预览第一张图片
-            if uploaded_images:
-                st.markdown("**第一张图片预览**")
-                first_img = Image.open(uploaded_images[0])
-                
-                # 计算显示尺寸
-                display_width = 200
-                display_height = int(first_img.height * (display_width / first_img.width))
-                display_img = first_img.copy()
-                display_img.thumbnail((display_width, display_height), Image.Resampling.LANCZOS)
-                
-                st.image(display_img, caption=uploaded_images[0].name, width=display_width)
-                st.caption(f"尺寸: {first_img.width} × {first_img.height} 像素")
+            # 显示原图信息
+            img = Image.open(uploaded_image)
+            st.markdown("**原图信息**")
+            st.caption(f"文件名: {uploaded_image.name}")
+            st.caption(f"尺寸: {img.width} × {img.height} 像素")
+            st.caption(f"格式: {uploaded_image.type}")
     
     with col_middle:
         st.markdown("### 2. Logo设置")
         
-        # Logo颜色选择 - 去掉外框
+        # Logo颜色选择
         st.markdown("**Logo颜色**")
         logo_color = st.radio(
             "",
@@ -2132,7 +2122,7 @@ with tab5:
         )
         st.session_state.logo_adder_logo_color = logo_color
         
-        # Logo透明度设置 - 去掉外框
+        # Logo透明度设置
         st.markdown("**Logo透明度**")
         opacity = st.slider(
             "",
@@ -2147,7 +2137,7 @@ with tab5:
         st.session_state.logo_adder_logo_opacity = opacity
         st.markdown(f"当前值: {int(opacity/255*100)}%")
         
-        # Logo大小设置 - 去掉外框
+        # Logo大小设置
         st.markdown("**Logo大小**")
         size = st.slider(
             "",
@@ -2165,12 +2155,12 @@ with tab5:
     with col_right:
         st.markdown("### 3. 位置设置")
         
-        # 预设位置 - 简化设计
+        # 预设位置
         st.markdown("**预设位置**")
         
         preset_options = ["自定义", "左上角", "右上角", "左下角", "右下角", "居中", "顶部居中", "底部居中", "左侧居中", "右侧居中"]
         
-        # 创建更简洁的预设选择方式
+        # 预设选择框
         selected_preset = st.selectbox(
             "选择预设位置",
             preset_options,
@@ -2190,7 +2180,7 @@ with tab5:
                 # 强制重新运行以更新滑块
                 st.rerun()
         
-        # 自定义位置 - 简化设计
+        # 自定义位置
         st.markdown("**自定义位置**")
         
         col_x, col_y = st.columns(2)
@@ -2226,7 +2216,7 @@ with tab5:
         st.info(f"📍 当前位置: X={x_pos}%, Y={y_pos}% | 预设: {current_preset}")
         
         # 处理按钮和下载逻辑
-        if uploaded_images:
+        if uploaded_image:
             # 加载Logo图片
             logo_path = None
             if st.session_state.logo_adder_logo_color == "黑色Logo":
@@ -2245,13 +2235,10 @@ with tab5:
                 logo_img = Image.open(logo_path)
                 st.session_state.logo_adder_logo_image = logo_img
                 
-                # 实时预览区域
-                st.markdown("### 4. 实时预览")
-                
-                # 使用第一张图片进行预览
-                preview_img = Image.open(uploaded_images[0])
-                preview_result = add_logo_to_image(
-                    preview_img,
+                # 处理图片
+                original_img = Image.open(uploaded_image)
+                processed_result = add_logo_to_image(
+                    original_img,
                     logo_img,
                     st.session_state.logo_adder_logo_x,
                     st.session_state.logo_adder_logo_y,
@@ -2259,94 +2246,86 @@ with tab5:
                     st.session_state.logo_adder_logo_opacity
                 )
                 
-                if preview_result:
-                    # 计算显示尺寸
-                    display_width = 400
-                    display_height = int(preview_result.height * (display_width / preview_result.width))
-                    display_img = preview_result.copy()
-                    display_img.thumbnail((display_width, display_height), Image.Resampling.LANCZOS)
+                if processed_result:
+                    # 保存处理后的结果到session_state
+                    st.session_state.logo_adder_processed_result = processed_result
                     
-                    # 显示预览
-                    st.image(display_img, caption="添加Logo后的效果预览", width=display_width)
+                    # 实时预览区域 - 放大预览
+                    st.markdown("### 4. 实时预览")
+                    
+                    # 计算显示尺寸 - 放大预览
+                    display_width = 600  # 放大预览尺寸
+                    
+                    # 获取原始图片尺寸
+                    original_width, original_height = processed_result.size
+                    
+                    # 计算按比例缩放的高度
+                    display_height = int(original_height * (display_width / original_width))
+                    
+                    # 创建高质量的预览图
+                    preview_img = processed_result.copy()
+                    preview_img.thumbnail((display_width, display_height), Image.Resampling.LANCZOS)
+                    
+                    # 显示放大预览
+                    st.image(preview_img, caption="添加Logo后的效果预览", use_column_width=True)
                     
                     # 添加Logo位置标记
-                    logo_width = int(min(preview_img.width, preview_img.height) * (st.session_state.logo_adder_logo_size / 100))
-                    logo_x = int((preview_img.width - logo_width) * (st.session_state.logo_adder_logo_x / 100))
-                    logo_y = int((preview_img.height - logo_width) * (st.session_state.logo_adder_logo_y / 100))
+                    logo_width = int(min(original_width, original_height) * (st.session_state.logo_adder_logo_size / 100))
+                    logo_x = int((original_width - logo_width) * (st.session_state.logo_adder_logo_x / 100))
+                    logo_y = int((original_height - logo_width) * (st.session_state.logo_adder_logo_y / 100))
                     
                     # 显示Logo位置信息
+                    st.caption(f"原图尺寸: {original_width} × {original_height} 像素")
                     st.caption(f"Logo位置: X={logo_x}px, Y={logo_y}px | 大小: {logo_width}px × {logo_width}px | 透明度: {int(st.session_state.logo_adder_logo_opacity/255*100)}%")
                     
-                    # 下载按钮 - 直接处理并下载
-                    st.markdown("### 5. 下载处理结果")
+                    # 下载按钮 - 直接下载单张JPG
+                    st.markdown("### 5. 下载结果")
                     
-                    st.info(f"将处理 {len(uploaded_images)} 张图片，处理完成后自动下载ZIP文件")
+                    # 将处理结果转换为JPG格式
+                    jpg_buffer = BytesIO()
                     
-                    # 直接处理并下载的按钮
-                    if st.button("🚀 处理并下载所有图片", type="primary", use_container_width=True, key="process_and_download"):
-                        with st.spinner(f'正在处理 {len(uploaded_images)} 张图片...'):
-                            # 创建进度条
-                            progress_bar = st.progress(0)
-                            
-                            # 批量处理所有图片
-                            processed_images = []
-                            original_names = []
-                            
-                            for idx, img_file in enumerate(uploaded_images):
-                                img = Image.open(img_file)
-                                result = add_logo_to_image(
-                                    img,
-                                    logo_img,
-                                    st.session_state.logo_adder_logo_x,
-                                    st.session_state.logo_adder_logo_y,
-                                    st.session_state.logo_adder_logo_size,
-                                    st.session_state.logo_adder_logo_opacity
-                                )
-                                
-                                if result:
-                                    processed_images.append(result)
-                                    original_names.append(img_file.name)
-                                
-                                # 更新进度条
-                                progress = (idx + 1) / len(uploaded_images)
-                                progress_bar.progress(progress)
-                            
-                            progress_bar.empty()
-                            
-                            if processed_images:
-                                # 创建ZIP文件
-                                zip_buffer = create_zip_from_images(processed_images, original_names)
-                                
-                                st.success(f"✅ 成功处理 {len(processed_images)} 张图片！")
-                                
-                                # 显示下载按钮
-                                st.download_button(
-                                    label="📥 下载处理后的图片 (ZIP压缩包)",
-                                    data=zip_buffer,
-                                    file_name="images_with_logo.zip",
-                                    mime="application/zip",
-                                    use_container_width=True,
-                                    key="download_logo_adder"
-                                )
-                                
-                                # 显示处理结果预览（前3张）
-                                st.markdown("**处理结果预览（前3张）**")
-                                
-                                preview_cols = st.columns(3)
-                                for idx, processed_img in enumerate(processed_images[:3]):
-                                    with preview_cols[idx]:
-                                        # 计算显示尺寸
-                                        display_width = 150
-                                        display_height = int(processed_img.height * (display_width / processed_img.width))
-                                        display_img = processed_img.copy()
-                                        display_img.thumbnail((display_width, display_height), Image.Resampling.LANCZOS)
-                                        
-                                        st.image(
-                                            display_img,
-                                            caption=f"处理结果 {idx+1}",
-                                            width=display_width
-                                        )
-                                        st.caption(f"{original_names[idx]}")
+                    # 如果是RGBA模式，转换为RGB
+                    if processed_result.mode == 'RGBA':
+                        rgb_img = Image.new('RGB', processed_result.size, (255, 255, 255))
+                        rgb_img.paste(processed_result, mask=processed_result.split()[3])
+                        result_to_save = rgb_img
+                    else:
+                        result_to_save = processed_result
+                    
+                    # 保存为JPG，高质量
+                    result_to_save.save(jpg_buffer, format='JPEG', quality=95)
+                    jpg_buffer.seek(0)
+                    
+                    # 生成下载文件名
+                    original_name = os.path.splitext(uploaded_image.name)[0]
+                    download_filename = f"{original_name}_with_logo.jpg"
+                    
+                    # 显示文件大小信息
+                    file_size_kb = len(jpg_buffer.getvalue()) / 1024
+                    st.info(f"文件大小: {file_size_kb:.1f} KB | 格式: JPG | 质量: 95%")
+                    
+                    # 下载按钮
+                    st.download_button(
+                        label="📥 下载处理后的图片 (JPG格式)",
+                        data=jpg_buffer,
+                        file_name=download_filename,
+                        mime="image/jpeg",
+                        use_container_width=True,
+                        key="download_logo_adder"
+                    )
+                    
+                    # 添加快捷提示
+                    st.markdown("---")
+                    col_tip1, col_tip2, col_tip3 = st.columns(3)
+                    with col_tip1:
+                        st.markdown("**💡 小贴士**")
+                        st.caption("• 调整设置后实时预览")
+                    with col_tip2:
+                        st.markdown("**⚡ 快速操作**")
+                        st.caption("• 使用预设位置快速定位")
+                    with col_tip3:
+                        st.markdown("**🔧 高级设置**")
+                        st.caption("• 自定义位置精确定位")
         
         else:
             # 未上传图片时的提示
@@ -2356,11 +2335,11 @@ with tab5:
             <div style="text-align: center; padding: 2rem; color: #666;">
                 <h4>👈 请先在左侧上传图片</h4>
                 <p>上传图片后，可以调整Logo设置并实时预览效果</p>
-                <p>支持批量处理多张图片</p>
+                <p>支持单张图片处理，直接下载JPG格式</p>
             </div>
             """, unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
-                        
+
 # ==================== 执行批处理 ====================
 if process_button:
     # 检查必要文件
@@ -2569,7 +2548,7 @@ with info_col3:
 with info_col4:
     st.markdown("""
     <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
-        <h4>📝 AI文案生成</h4>
+        <h4>📝 AI文案生成（暂不可用）</h4>
         <ul>
             <li>10个产品标题</li>
             <li>10个SEO关键词</li>
@@ -2591,4 +2570,4 @@ with info_col5:
     """, unsafe_allow_html=True)
 
 st.markdown("---")
-st.caption("© 2023 骏泰产品图工作台 | 版本 2.0")
+st.caption("© 2025 骏泰产品图工作台")
