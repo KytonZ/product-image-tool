@@ -337,7 +337,7 @@ def get_custom_css():
             color: #555;
         }
         
-        /* Logo添加器专用样式 */
+        /* Logo添加器专用样式 - 简化版本 */
         .logo-adder-container {
             background: #f8f9fa;
             border-radius: 10px;
@@ -355,55 +355,74 @@ def get_custom_css():
             margin-top: 20px;
         }
         
-        .logo-adder-control-group {
-            background: white;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border: 1px solid #e0e0e0;
+        /* 去掉控制组的外框，简化设计 */
+        .stSlider, .stRadio, .stSelectbox {
+            margin-bottom: 1rem;
+        }
+        
+        /* 优化预设位置按钮 */
+        .preset-buttons-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 1rem;
         }
         
         .preset-button {
-            margin: 5px;
+            flex: 1;
+            min-width: 100px;
             padding: 8px 12px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-            background: #f0f0f0;
+            border-radius: 6px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            color: #333;
+            font-size: 14px;
+            text-align: center;
             cursor: pointer;
             transition: all 0.2s;
         }
         
         .preset-button:hover {
-            background: #e0e0e0;
+            border-color: #4CAF50;
+            background: #f0f9f0;
         }
         
         .preset-button.active {
+            border-color: #4CAF50;
             background: #4CAF50;
             color: white;
-            border-color: #4CAF50;
         }
         
-        /* 实时预览样式 */
+        /* 优化滑块样式 */
+        .stSlider label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        /* 优化实时预览 */
         .live-preview-container {
-            position: relative;
-            display: inline-block;
-            max-width: 100%;
+            margin-top: 1.5rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            background: white;
         }
         
-        .live-preview-label {
-            position: absolute;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            pointer-events: none;
+        .preview-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
         }
         
-        .logo-preview-overlay {
-            position: absolute;
-            pointer-events: none;
-            border: 2px dashed #4CAF50;
+        /* 下载按钮样式优化 */
+        .download-section {
+            margin-top: 2rem;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #2196F3;
         }
     </style>
     """
