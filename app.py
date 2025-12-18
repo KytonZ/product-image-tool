@@ -337,7 +337,7 @@ def get_custom_css():
             color: #555;
         }
         
-        /* Logo添加器专用样式 - 简化版本 */
+        /* Logo水印添加 */
         .logo-adder-container {
             background: #f8f9fa;
             border-radius: 10px;
@@ -465,7 +465,7 @@ if 'unsplash_current_page' not in st.session_state:
 if 'unsplash_total_pages' not in st.session_state:
     st.session_state.unsplash_total_pages = 0
 
-# Logo添加器相关的会话状态
+# Logo水印添加相关的会话状态
 if 'logo_adder_images' not in st.session_state:
     st.session_state.logo_adder_images = []
 if 'logo_adder_logo_color' not in st.session_state:
@@ -1015,7 +1015,7 @@ def generate_product_content(product_name, platform):
     
     return titles, keywords, attribute_text
 
-# ==================== Logo添加器核心函数 ====================
+# ==================== Logo水印添加核心函数 ====================
 def add_logo_to_image(base_image, logo_image, x_percent, y_percent, size_percent, opacity):
     """将Logo添加到图片上的核心函数"""
     try:
@@ -1189,8 +1189,8 @@ with st.sidebar:
     )
 
 # ==================== 主区域：标签页 ====================
-# 修改为5个标签页，添加Logo添加器
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["📤 产品图合成", "🔄 图片去重生成器", "🎬 视频抽帧工具", "📝 AI文案生成(暂不可用)", "🖼️ Logo添加器"])
+# 修改为5个标签页，添加Logo水印添加
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📤 产品图合成", "🔄 图片去重", "🎬 视频抽帧", "📝 AI文案(暂不可用)", "🖼️ Logo水印添加"])
 
 # ========== tab1 中 Unsplash 部分完整修正代码 ==========
 with tab1:
@@ -1198,7 +1198,7 @@ with tab1:
     st.header("📤 产品图合成")
     st.markdown("""
     <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid #2196F3;">
-        <p>上传合适的背景图或在unsplash图库中搜索背景与透明产品图合成成带LOGO产品图</p>
+        <p>上传合适的背景图或unsplash图库中搜索，再上传透明产品图，左侧合成带LOGO产品图</p>
     </div>
     """, unsafe_allow_html=True)    
 
@@ -1570,9 +1570,9 @@ with tab1:
         total_combinations = len(bg_files_combined) * len(product_files)
         st.info(f"**准备合成:** {len(bg_files_combined)} 张背景图 × {len(product_files)} 张产品图 = **{total_combinations} 张合成图**")
 
-# 标签页2：图片去重生成器
+# 标签页2：图片去重
 with tab2:
-    st.header("🔄 图片去重生成器")
+    st.header("🔄 图片去重")
     st.markdown("""
     <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid #2196F3;">
         <p>通过微调图片像素，生成大量数据层不同的相似图片，可用于应对平台的重复检测。</p>
@@ -1687,9 +1687,9 @@ with tab2:
                     key="download_unique"
                 )
 
-# 标签页3：视频抽帧工具
+# 标签页3：视频抽帧
 with tab3:
-    st.header("🎬 视频抽帧工具")
+    st.header("🎬 视频抽帧")
     st.markdown("""
     <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid #FF6B6B;">
         <p>通过随机删除视频中的两帧，生成内容相似但数据不同的新视频，可用于应对平台的重复检测。</p>
@@ -1857,9 +1857,9 @@ with tab3:
                     st.session_state.video_info = None
                     st.rerun()
 
-# 标签页4：AI文案生成（暂不可用）
+# 标签页4：AI文案（暂不可用）
 with tab4:
-    st.header("📝 AI文案生成 - 阿里巴巴/MIC平台优化")
+    st.header("📝 AI文案 - 阿里巴巴/MIC平台")
     st.markdown("""
     <div class="highlight-box">
         <p><b>功能说明：</b>根据选择的产品，自动生成适用于阿里巴巴和国际站(MIC)的英文产品标题、关键词和属性词。</p>
@@ -2051,7 +2051,7 @@ with tab4:
             </div>
             """, unsafe_allow_html=True)
 
-# 标签页5：Logo添加器
+# 标签页5：Logo水印添加
 with tab5:
     # 预设位置映射表
     preset_map = {
@@ -2066,7 +2066,7 @@ with tab5:
         "右侧居中": (95, 50)
     }
     
-    st.header("🖼️ Logo添加器")
+    st.header("🖼️ Logo水印添加")
     st.markdown("""
     <div class="logo-adder-container">
         <p>为单张图片添加Logo水印，支持自定义Logo位置、大小和透明度。</p>
@@ -2544,7 +2544,7 @@ with info_col3:
 with info_col4:
     st.markdown("""
     <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
-        <h4>📝 AI文案生成（暂不可用）</h4>
+        <h4>📝 AI文案（暂不可用）</h4>
         <ul>
             <li>10个产品标题</li>
             <li>10个SEO关键词</li>
@@ -2556,7 +2556,7 @@ with info_col4:
 with info_col5:
     st.markdown("""
     <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #4CAF50;">
-        <h4>🖼️ Logo添加器</h4>
+        <h4>🖼️ Logo水印添加</h4>
         <ul>
             <li>批量添加Logo水印</li>
             <li>自定义位置大小</li>
