@@ -1116,85 +1116,84 @@ def create_zip_from_images(images, original_names, output_format='PNG'):
     zip_buffer.seek(0)
     return zip_buffer
 
+# ==================== 侧边栏设置区域 ====================
+with st.sidebar:
+    st.markdown("### ⚙️ 合成设置")
+    
+    # 将所有设置存储到session_state中
+    
+    # 1. Logo设置
+    st.markdown('<div class="settings-title">🖼️ Logo设置</div>', unsafe_allow_html=True)
+    st.session_state.logo_color = st.radio(
+        "选择Logo颜色",
+        ["黑色Logo", "白色Logo"],
+        horizontal=True,
+        help="根据背景颜色选择合适的Logo颜色以确保清晰可见",
+        key="logo_color_select"
+    )
+    
+    st.markdown("---")
+    
+    # 2. 产品图设置
+    st.markdown('<div class="settings-title">📐 产品图设置</div>', unsafe_allow_html=True)
+    st.session_state.product_size = st.slider(
+        "产品图最大边长", 
+        min_value=500, 
+        max_value=1000, 
+        value=800, 
+        step=50,
+        help="控制产品图在合成图中的大小",
+        key="product_size_slider"
+    )
+    
+    st.session_state.product_position = st.select_slider(
+        "产品图位置", 
+        options=['左上', '中上', '右上', '左中', '居中', '右中', '左下', '中下', '右下'],
+        value='居中',
+        help="选择产品图在合成图中的位置",
+        key="product_position_slider"
+    )
+    
+    st.markdown("---")
+    
+    # 3. 输出设置
+    st.markdown('<div class="settings-title">📦 输出设置</div>', unsafe_allow_html=True)
+    
+    col_size1, col_size2 = st.columns(2)
+    with col_size1:
+        st.session_state.output_size = st.selectbox(
+            "输出尺寸", 
+            [400, 600, 800, 1000, 1200, 1500, 2000],
+            index=2,
+            help="选择输出图片的尺寸",
+            key="output_size_select"
+        )
+    with col_size2:
+        st.session_state.output_format = st.radio(
+            "输出格式", 
+            ['JPG', 'PNG'],
+            horizontal=True,
+            help="JPG适用于照片，PNG适用于需要透明背景的图片",
+            key="output_format_radio"
+        )
+    
+    st.markdown("---")
+    
+    # 4. 处理按钮
+    process_button = st.button(
+        "🚀 开始智能批量合成", 
+        type="primary", 
+        use_container_width=True,
+        help="点击开始处理所有图片",
+        key="process_button"
+    )
+
 # ==================== 主区域：标签页 ====================
 # 修改为5个标签页，添加Logo添加器
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["📤 上传图片", "🔄 图片去重生成器", "🎬 视频抽帧工具", "📝 AI文案生成(暂不可用)", "🖼️ Logo添加器"])
 
-# ========== Tab1: 上传图片 ==========
+# ========== tab1 中 Unsplash 部分完整修正代码 ==========
 with tab1:
-    # ========== Tab1 侧边栏 ==========
-    with st.sidebar:
-        st.markdown("### ⚙️ 合成设置")
-        
-        # 将所有设置存储到session_state中
-        
-        # 1. Logo设置
-        st.markdown('<div class="settings-title">🖼️ Logo设置</div>', unsafe_allow_html=True)
-        st.session_state.logo_color = st.radio(
-            "选择Logo颜色",
-            ["黑色Logo", "白色Logo"],
-            horizontal=True,
-            help="根据背景颜色选择合适的Logo颜色以确保清晰可见",
-            key="logo_color_select"
-        )
-        
-        st.markdown("---")
-        
-        # 2. 产品图设置
-        st.markdown('<div class="settings-title">📐 产品图设置</div>', unsafe_allow_html=True)
-        st.session_state.product_size = st.slider(
-            "产品图最大边长", 
-            min_value=500, 
-            max_value=1000, 
-            value=800, 
-            step=50,
-            help="控制产品图在合成图中的大小",
-            key="product_size_slider"
-        )
-        
-        st.session_state.product_position = st.select_slider(
-            "产品图位置", 
-            options=['左上', '中上', '右上', '左中', '居中', '右中', '左下', '中下', '右下'],
-            value='居中',
-            help="选择产品图在合成图中的位置",
-            key="product_position_slider"
-        )
-        
-        st.markdown("---")
-        
-        # 3. 输出设置
-        st.markdown('<div class="settings-title">📦 输出设置</div>', unsafe_allow_html=True)
-        
-        col_size1, col_size2 = st.columns(2)
-        with col_size1:
-            st.session_state.output_size = st.selectbox(
-                "输出尺寸", 
-                [400, 600, 800, 1000, 1200, 1500, 2000],
-                index=2,
-                help="选择输出图片的尺寸",
-                key="output_size_select"
-            )
-        with col_size2:
-            st.session_state.output_format = st.radio(
-                "输出格式", 
-                ['JPG', 'PNG'],
-                horizontal=True,
-                help="JPG适用于照片，PNG适用于需要透明背景的图片",
-                key="output_format_radio"
-            )
-        
-        st.markdown("---")
-        
-        # 4. 处理按钮
-        process_button = st.button(
-            "🚀 开始智能批量合成", 
-            type="primary", 
-            use_container_width=True,
-            help="点击开始处理所有图片",
-            key="process_button"
-        )
-    
-    # ========== Tab1 主内容 ==========
     # 减小标题间距
     st.markdown('<h3 style="margin-bottom: 0.2rem;">上传你的素材</h3>', unsafe_allow_html=True)
     
@@ -1566,14 +1565,8 @@ with tab1:
         total_combinations = len(bg_files_combined) * len(product_files)
         st.info(f"**准备合成:** {len(bg_files_combined)} 张背景图 × {len(product_files)} 张产品图 = **{total_combinations} 张合成图**")
 
-# ========== Tab2: 图片去重生成器 ==========
+# 标签页2：图片去重生成器
 with tab2:
-    # ========== Tab2 侧边栏 ==========
-    with st.sidebar:
-        st.markdown("### ⚙️ 参数设置")
-        st.markdown("暂无参数设置")
-    
-    # ========== Tab2 主内容 ==========
     st.header("🔄 图片去重生成器")
     st.markdown("""
     <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid #2196F3;">
@@ -1689,14 +1682,8 @@ with tab2:
                     key="download_unique"
                 )
 
-# ========== Tab3: 视频抽帧工具 ==========
+# 标签页3：视频抽帧工具
 with tab3:
-    # ========== Tab3 侧边栏 ==========
-    with st.sidebar:
-        st.markdown("### ⚙️ 参数设置")
-        st.markdown("暂无参数设置")
-    
-    # ========== Tab3 主内容 ==========
     st.header("🎬 视频抽帧工具")
     st.markdown("""
     <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid #FF6B6B;">
@@ -1865,11 +1852,28 @@ with tab3:
                     st.session_state.video_info = None
                     st.rerun()
 
-# ========== Tab4: AI文案生成 ==========
+# 标签页4：AI文案生成（暂不可用）
 with tab4:
-    # ========== Tab4 侧边栏 ==========
-    with st.sidebar:
-        st.markdown("### ⚙️ 产品设置")
+    st.header("📝 AI文案生成 - 阿里巴巴/MIC平台优化")
+    st.markdown("""
+    <div class="highlight-box">
+        <p><b>功能说明：</b>根据选择的产品，自动生成适用于阿里巴巴和国际站(MIC)的英文产品标题、关键词和属性词。</p>
+        <p><b>生成规则：</b></p>
+        <ul>
+            <li>标题长度：8-12个单词，85-128个字符</li>
+            <li>格式规范：首字母大写，介词小写</li>
+            <li>SEO优化：符合阿里/MIC平台搜索规则</li>
+            <li>关键词：包含短尾核心词和长尾复合词</li>
+            <li>属性词：分类清晰，可直接复制使用</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # 使用两列布局
+    col_setting, col_preview = st.columns([1, 2], gap="large")
+    
+    with col_setting:
+        st.markdown("### 1. 产品设置")
         
         # 产品选择 - 修改产品名称格式
         product_options = [
@@ -1887,7 +1891,7 @@ with tab4:
             "选择产品类型",
             product_options,
             help="选择需要生成文案的产品",
-            key="product_select_sidebar"
+            key="product_select"
         )
         
         # 平台选择
@@ -1895,11 +1899,11 @@ with tab4:
             "目标平台",
             ["阿里巴巴国际站", "Made-in-China.com"],
             help="选择产品要发布的平台",
-            key="platform_select_sidebar"
+            key="platform_select"
         )
         
         # 生成按钮
-        if st.button("🤖 开始生成AI文案", type="primary", use_container_width=True, key="generate_content_sidebar"):
+        if st.button("🤖 开始生成AI文案", type="primary", use_container_width=True, key="generate_content"):
             with st.spinner(f'正在为 {selected_product} 生成AI文案...'):
                 # 调用生成函数
                 titles, keywords, attributes = generate_product_content(selected_product, platform)
@@ -1911,153 +1915,138 @@ with tab4:
                 
                 st.success(f"✅ 成功为 {selected_product} 生成文案内容！")
     
-    # ========== Tab4 主内容 ==========
-    st.header("📝 AI文案生成 - 阿里巴巴/MIC平台优化")
-    st.markdown("""
-    <div class="highlight-box">
-        <p><b>功能说明：</b>根据选择的产品，自动生成适用于阿里巴巴和国际站(MIC)的英文产品标题、关键词和属性词。</p>
-        <p><b>生成规则：</b></p>
-        <ul>
-            <li>标题长度：8-12个单词，85-128个字符</li>
-            <li>格式规范：首字母大写，介词小写</li>
-            <li>SEO优化：符合阿里/MIC平台搜索规则</li>
-            <li>关键词：包含短尾核心词和长尾复合词</li>
-            <li>属性词：分类清晰，可直接复制使用</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    if st.session_state.generated_titles:
-        st.markdown("### 生成结果")
-        
-        # 标题部分
-        st.markdown('<div class="section-title">📝 10个产品标题</div>', unsafe_allow_html=True)
-        st.markdown("**复制说明：** 以下标题可直接复制到阿里/MIC平台的产品标题字段")
-        
-        # 创建可复制的文本框
-        titles_text = "\n".join(st.session_state.generated_titles)
-        st.text_area(
-            "产品标题 (共10个)",
-            titles_text,
-            height=200,
-            key="titles_area",
-            label_visibility="collapsed"
-        )
-        
-        # 复制按钮
-        st.download_button(
-            label="📋 复制所有标题",
-            data=titles_text,
-            file_name=f"{selected_product.replace(' ', '_')}_titles.txt",
-            mime="text/plain",
-            key="copy_titles"
-        )
-        
-        # 关键词部分
-        st.markdown('<div class="section-title">🔑 10个关键词</div>', unsafe_allow_html=True)
-        st.markdown("**包含：** 短尾核心词 + 长尾复合词")
-        
-        keywords_text = "\n".join(st.session_state.generated_keywords)
-        st.text_area(
-            "关键词列表",
-            keywords_text,
-            height=150,
-            key="keywords_area",
-            label_visibility="collapsed"
-        )
-        
-        # 复制按钮
-        st.download_button(
-            label="📋 复制所有关键词",
-            data=keywords_text,
-            file_name=f"{selected_product.replace(' ', '_')}_keywords.txt",
-            mime="text/plain",
-            key="copy_keywords"
-        )
-        
-        # 属性词部分
-        st.markdown('<div class="section-title">🏷️ 10个属性词</div>', unsafe_allow_html=True)
-        st.markdown("**分类说明：** 按材料、尺寸、性能、应用等分类")
-        
-        st.text_area(
-            "属性词分类",
-            st.session_state.generated_attributes,
-            height=250,
-            key="attributes_area",
-            label_visibility="collapsed"
-        )
-        
-        # 复制按钮
-        st.download_button(
-            label="📋 复制所有属性词",
-            data=st.session_state.generated_attributes,
-            file_name=f"{selected_product.replace(' ', '_')}_attributes.txt",
-            mime="text/plain",
-            key="copy_attributes"
-        )
-        
-        # 批量下载按钮
-        st.markdown("---")
-        col_dl1, col_dl2, col_dl3 = st.columns(3)
-        with col_dl1:
-            # 创建ZIP包包含所有内容
-            zip_buffer = BytesIO()
-            with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-                zip_file.writestr(f"{selected_product}_titles.txt", titles_text)
-                zip_file.writestr(f"{selected_product}_keywords.txt", keywords_text)
-                zip_file.writestr(f"{selected_product}_attributes.txt", st.session_state.generated_attributes)
+    with col_preview:
+        if st.session_state.generated_titles:
+            st.markdown("### 2. 生成结果")
             
-            zip_buffer.seek(0)
+            # 标题部分
+            st.markdown('<div class="section-title">📝 10个产品标题</div>', unsafe_allow_html=True)
+            st.markdown("**复制说明：** 以下标题可直接复制到阿里/MIC平台的产品标题字段")
             
-            st.download_button(
-                label="📦 下载所有文案 (ZIP)",
-                data=zip_buffer,
-                file_name=f"{selected_product.replace(' ', '_')}_content_pack.zip",
-                mime="application/zip",
-                use_container_width=True,
-                key="download_all"
+            # 创建可复制的文本框
+            titles_text = "\n".join(st.session_state.generated_titles)
+            st.text_area(
+                "产品标题 (共10个)",
+                titles_text,
+                height=200,
+                key="titles_area",
+                label_visibility="collapsed"
             )
-        
-        with col_dl2:
-            if st.button("🔄 重新生成", key="regenerate", use_container_width=True):
-                st.session_state.generated_titles = None
-                st.session_state.generated_keywords = None
-                st.session_state.generated_attributes = None
-                st.rerun()
-        
-        with col_dl3:
-            if st.button("📊 生成统计", key="stats", use_container_width=True):
-                # 显示统计信息
-                avg_title_length = sum(len(title) for title in st.session_state.generated_titles) / len(st.session_state.generated_titles)
-                avg_word_count = sum(len(title.split()) for title in st.session_state.generated_titles) / len(st.session_state.generated_titles)
+            
+            # 复制按钮
+            st.download_button(
+                label="📋 复制所有标题",
+                data=titles_text,
+                file_name=f"{selected_product.replace(' ', '_')}_titles.txt",
+                mime="text/plain",
+                key="copy_titles"
+            )
+            
+            # 关键词部分
+            st.markdown('<div class="section-title">🔑 10个关键词</div>', unsafe_allow_html=True)
+            st.markdown("**包含：** 短尾核心词 + 长尾复合词")
+            
+            keywords_text = "\n".join(st.session_state.generated_keywords)
+            st.text_area(
+                "关键词列表",
+                keywords_text,
+                height=150,
+                key="keywords_area",
+                label_visibility="collapsed"
+            )
+            
+            # 复制按钮
+            st.download_button(
+                label="📋 复制所有关键词",
+                data=keywords_text,
+                file_name=f"{selected_product.replace(' ', '_')}_keywords.txt",
+                mime="text/plain",
+                key="copy_keywords"
+            )
+            
+            # 属性词部分
+            st.markdown('<div class="section-title">🏷️ 10个属性词</div>', unsafe_allow_html=True)
+            st.markdown("**分类说明：** 按材料、尺寸、性能、应用等分类")
+            
+            st.text_area(
+                "属性词分类",
+                st.session_state.generated_attributes,
+                height=250,
+                key="attributes_area",
+                label_visibility="collapsed"
+            )
+            
+            # 复制按钮
+            st.download_button(
+                label="📋 复制所有属性词",
+                data=st.session_state.generated_attributes,
+                file_name=f"{selected_product.replace(' ', '_')}_attributes.txt",
+                mime="text/plain",
+                key="copy_attributes"
+            )
+            
+            # 批量下载按钮
+            st.markdown("---")
+            col_dl1, col_dl2, col_dl3 = st.columns(3)
+            with col_dl1:
+                # 创建ZIP包包含所有内容
+                zip_buffer = BytesIO()
+                with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                    zip_file.writestr(f"{selected_product}_titles.txt", titles_text)
+                    zip_file.writestr(f"{selected_product}_keywords.txt", keywords_text)
+                    zip_file.writestr(f"{selected_product}_attributes.txt", st.session_state.generated_attributes)
                 
-                st.info(f"""
-                **文案统计信息：**
-                - 标题数量: 10个
-                - 平均标题长度: {avg_title_length:.1f} 字符
-                - 平均单词数: {avg_word_count:.1f} 个
-                - 关键词数量: 10个
-                - 属性词数量: 10个
-                - 目标平台: {platform}
-                """)
-    
-    else:
-        # 未生成时的预览
-        st.markdown("### 文案预览区")
-        st.markdown("""
-        <div style="text-align: center; padding: 3rem; color: #666; background-color: #f8f9fa; border-radius: 10px;">
-            <h4>👈 请在左侧侧边栏选择产品</h4>
-            <p>选择产品类型和目标平台后，点击"开始生成AI文案"按钮</p>
-            <p>系统将为您生成：</p>
-            <ul style="text-align: left; display: inline-block;">
-                <li>10个优化产品标题</li>
-                <li>10个SEO关键词</li>
-                <li>10个分类属性词</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+                zip_buffer.seek(0)
+                
+                st.download_button(
+                    label="📦 下载所有文案 (ZIP)",
+                    data=zip_buffer,
+                    file_name=f"{selected_product.replace(' ', '_')}_content_pack.zip",
+                    mime="application/zip",
+                    use_container_width=True,
+                    key="download_all"
+                )
+            
+            with col_dl2:
+                if st.button("🔄 重新生成", key="regenerate", use_container_width=True):
+                    st.session_state.generated_titles = None
+                    st.session_state.generated_keywords = None
+                    st.session_state.generated_attributes = None
+                    st.rerun()
+            
+            with col_dl3:
+                if st.button("📊 生成统计", key="stats", use_container_width=True):
+                    # 显示统计信息
+                    avg_title_length = sum(len(title) for title in st.session_state.generated_titles) / len(st.session_state.generated_titles)
+                    avg_word_count = sum(len(title.split()) for title in st.session_state.generated_titles) / len(st.session_state.generated_titles)
+                    
+                    st.info(f"""
+                    **文案统计信息：**
+                    - 标题数量: 10个
+                    - 平均标题长度: {avg_title_length:.1f} 字符
+                    - 平均单词数: {avg_word_count:.1f} 个
+                    - 关键词数量: 10个
+                    - 属性词数量: 10个
+                    - 目标平台: {platform}
+                    """)
+        
+        else:
+            # 未生成时的预览
+            st.markdown("### 2. 文案预览区")
+            st.markdown("""
+            <div style="text-align: center; padding: 3rem; color: #666; background-color: #f8f9fa; border-radius: 10px;">
+                <h4>👈 请先在左侧选择产品</h4>
+                <p>选择产品类型和目标平台后，点击"开始生成AI文案"按钮</p>
+                <p>系统将为您生成：</p>
+                <ul style="text-align: left; display: inline-block;">
+                    <li>10个优化产品标题</li>
+                    <li>10个SEO关键词</li>
+                    <li>10个分类属性词</li>
+                </ul>
+            </div>
+            """, unsafe_allow_html=True)
 
-# ========== Tab5: Logo添加器 ==========
+# 标签页5：Logo添加器
 with tab5:
     # 预设位置映射表
     preset_map = {
@@ -2072,104 +2061,6 @@ with tab5:
         "右侧居中": (95, 50)
     }
     
-    # ========== Tab5 侧边栏 ==========
-    with st.sidebar:
-        st.markdown("### ⚙️ 参数设置")
-        
-        # Logo颜色选择
-        st.markdown("#### Logo设置")
-        logo_color = st.radio(
-            "Logo颜色",
-            ["黑色Logo", "白色Logo"],
-            index=0 if st.session_state.logo_adder_logo_color == "黑色Logo" else 1,
-            horizontal=True,
-            key="logo_adder_color_radio_sidebar"
-        )
-        st.session_state.logo_adder_logo_color = logo_color
-        
-        # Logo透明度设置
-        st.markdown("**Logo透明度**")
-        opacity = st.slider(
-            "",
-            min_value=0,
-            max_value=255,
-            value=st.session_state.logo_adder_logo_opacity,
-            step=5,
-            help="0为完全透明，255为完全不透明",
-            key="logo_adder_opacity_slider_sidebar",
-            label_visibility="collapsed"
-        )
-        st.session_state.logo_adder_logo_opacity = opacity
-        
-        # Logo大小设置
-        st.markdown("**Logo大小**")
-        size = st.slider(
-            "",
-            min_value=5,
-            max_value=200,
-            value=st.session_state.logo_adder_logo_size,
-            step=5,
-            help="Logo相对于图片宽高的百分比",
-            key="logo_adder_size_slider_sidebar",
-            label_visibility="collapsed"
-        )
-        st.session_state.logo_adder_logo_size = size
-        
-        st.markdown("---")
-        
-        # 位置设置
-        st.markdown("#### 位置设置")
-        
-        # 预设位置
-        preset_options = ["自定义", "左上角", "右上角", "左下角", "右下角", "居中", "顶部居中", "底部居中", "左侧居中", "右侧居中"]
-        
-        # 预设选择框
-        selected_preset = st.selectbox(
-            "选择预设位置",
-            preset_options,
-            index=preset_options.index(st.session_state.logo_adder_preset_position) if st.session_state.logo_adder_preset_position in preset_options else 0,
-            key="preset_selectbox_sidebar",
-            help="选择预设位置或使用自定义位置"
-        )
-        
-        # 当预设位置改变时更新坐标
-        if selected_preset != st.session_state.logo_adder_preset_position:
-            st.session_state.logo_adder_preset_position = selected_preset
-            
-            if selected_preset in preset_map and selected_preset != "自定义":
-                x, y = preset_map[selected_preset]
-                st.session_state.logo_adder_logo_x = x
-                st.session_state.logo_adder_logo_y = y
-                # 强制重新运行以更新滑块
-                st.rerun()
-        
-        # 自定义位置
-        st.markdown("**自定义位置**")
-        
-        col_x, col_y = st.columns(2)
-        with col_x:
-            x_pos = st.slider(
-                "X轴位置 (%)",
-                min_value=0,
-                max_value=100,
-                value=st.session_state.logo_adder_logo_x,
-                step=1,
-                key="logo_adder_x_slider_sidebar"
-            )
-            st.session_state.logo_adder_logo_x = x_pos
-        
-        with col_y:
-            y_pos = st.slider(
-                "Y轴位置 (%)",
-                min_value=0,
-                max_value=100,
-                value=st.session_state.logo_adder_logo_y,
-                step=1,
-                key="logo_adder_y_slider_sidebar"
-            )
-            st.session_state.logo_adder_logo_y = y_pos
-    
-    # ========== Tab5 主内容 ==========
     st.header("🖼️ Logo添加器")
     st.markdown("""
     <div class="logo-adder-container">
@@ -2177,8 +2068,8 @@ with tab5:
     </div>
     """, unsafe_allow_html=True)
     
-    # 使用两列布局
-    col_left, col_right = st.columns([1, 1], gap="large")
+    # 使用三列布局
+    col_left, col_middle, col_right = st.columns([1, 1, 2], gap="medium")
     
     with col_left:
         st.markdown("### 1. 上传图片")
@@ -2207,7 +2098,115 @@ with tab5:
             st.caption(f"尺寸: {img.width} × {img.height} 像素")
             st.caption(f"格式: {uploaded_image.type}")
     
+    with col_middle:
+        st.markdown("### 2. Logo设置")
+        
+        # Logo颜色选择
+        st.markdown("**Logo颜色**")
+        logo_color = st.radio(
+            "",
+            ["黑色Logo", "白色Logo"],
+            index=0 if st.session_state.logo_adder_logo_color == "黑色Logo" else 1,
+            horizontal=True,
+            key="logo_adder_color_radio",
+            label_visibility="collapsed"
+        )
+        st.session_state.logo_adder_logo_color = logo_color
+        
+        # Logo透明度设置
+        st.markdown("**Logo透明度**")
+        opacity = st.slider(
+            "",
+            min_value=0,
+            max_value=255,
+            value=st.session_state.logo_adder_logo_opacity,
+            step=5,
+            help="0为完全透明，255为完全不透明",
+            key="logo_adder_opacity_slider",
+            label_visibility="collapsed"
+        )
+        st.session_state.logo_adder_logo_opacity = opacity
+        st.markdown(f"当前值: {int(opacity/255*100)}%")
+        
+        # Logo大小设置
+        st.markdown("**Logo大小**")
+        size = st.slider(
+            "",
+            min_value=5,
+            max_value=200,
+            value=st.session_state.logo_adder_logo_size,
+            step=5,
+            help="Logo相对于图片宽高的百分比",
+            key="logo_adder_size_slider",
+            label_visibility="collapsed"
+        )
+        st.session_state.logo_adder_logo_size = size
+        st.markdown(f"当前值: {size}%")
+    
     with col_right:
+        st.markdown("### 3. 位置设置")
+        
+        # 预设位置
+        st.markdown("**预设位置**")
+        
+        preset_options = ["自定义", "左上角", "右上角", "左下角", "右下角", "居中", "顶部居中", "底部居中", "左侧居中", "右侧居中"]
+        
+        # 预设选择框
+        selected_preset = st.selectbox(
+            "选择预设位置",
+            preset_options,
+            index=preset_options.index(st.session_state.logo_adder_preset_position) if st.session_state.logo_adder_preset_position in preset_options else 0,
+            key="preset_selectbox",
+            help="选择预设位置或使用自定义位置"
+        )
+        
+        # 当预设位置改变时更新坐标
+        if selected_preset != st.session_state.logo_adder_preset_position:
+            st.session_state.logo_adder_preset_position = selected_preset
+            
+            if selected_preset in preset_map and selected_preset != "自定义":
+                x, y = preset_map[selected_preset]
+                st.session_state.logo_adder_logo_x = x
+                st.session_state.logo_adder_logo_y = y
+                # 强制重新运行以更新滑块
+                st.rerun()
+        
+        # 自定义位置
+        st.markdown("**自定义位置**")
+        
+        col_x, col_y = st.columns(2)
+        with col_x:
+            x_pos = st.slider(
+                "X轴位置 (%)",
+                min_value=0,
+                max_value=100,
+                value=st.session_state.logo_adder_logo_x,
+                step=1,
+                key="logo_adder_x_slider"
+            )
+            st.session_state.logo_adder_logo_x = x_pos
+        
+        with col_y:
+            y_pos = st.slider(
+                "Y轴位置 (%)",
+                min_value=0,
+                max_value=100,
+                value=st.session_state.logo_adder_logo_y,
+                step=1,
+                key="logo_adder_y_slider"
+            )
+            st.session_state.logo_adder_logo_y = y_pos
+        
+        # 显示当前位置和预设状态
+        current_preset = "自定义"
+        for preset, (preset_x, preset_y) in preset_map.items():
+            if x_pos == preset_x and y_pos == preset_y:
+                current_preset = preset
+                break
+        
+        st.info(f"📍 当前位置: X={x_pos}%, Y={y_pos}% | 预设: {current_preset}")
+        
+        # 处理按钮和下载逻辑
         if uploaded_image:
             # 加载Logo图片
             logo_path = None
@@ -2243,7 +2242,7 @@ with tab5:
                     st.session_state.logo_adder_processed_result = processed_result
                     
                     # 实时预览区域 - 放大预览
-                    st.markdown("### 2. 实时预览")
+                    st.markdown("### 4. 实时预览")
                     
                     # 计算显示尺寸 - 放大预览
                     display_width = 600  # 放大预览尺寸
@@ -2271,7 +2270,7 @@ with tab5:
                     st.caption(f"Logo位置: X={logo_x}px, Y={logo_y}px | 大小: {logo_width}px × {logo_width}px | 透明度: {int(st.session_state.logo_adder_logo_opacity/255*100)}%")
                     
                     # 下载按钮 - 直接下载单张JPG
-                    st.markdown("### 3. 下载结果")
+                    st.markdown("### 5. 下载结果")
                     
                     # 将处理结果转换为JPG格式
                     jpg_buffer = BytesIO()
@@ -2308,29 +2307,32 @@ with tab5:
                     
                     # 添加快捷提示
                     st.markdown("---")
-                    col_tip1, col_tip2 = st.columns(2)
+                    col_tip1, col_tip2, col_tip3 = st.columns(3)
                     with col_tip1:
                         st.markdown("**💡 小贴士**")
                         st.caption("• 调整设置后实时预览")
                     with col_tip2:
                         st.markdown("**⚡ 快速操作**")
                         st.caption("• 使用预设位置快速定位")
+                    with col_tip3:
+                        st.markdown("**🔧 高级设置**")
+                        st.caption("• 自定义位置精确定位")
         
         else:
             # 未上传图片时的提示
-            st.markdown("### 2. 预览区域")
+            st.markdown("### 4. 预览区域")
             st.markdown('<div class="logo-adder-preview">', unsafe_allow_html=True)
             st.markdown("""
             <div style="text-align: center; padding: 2rem; color: #666;">
                 <h4>👈 请先在左侧上传图片</h4>
-                <p>上传图片后，可以在侧边栏调整Logo设置并实时预览效果</p>
+                <p>上传图片后，可以调整Logo设置并实时预览效果</p>
                 <p>支持单张图片处理，直接下载JPG格式</p>
             </div>
             """, unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
 # ==================== 执行批处理 ====================
-if 'process_button' in locals() and process_button:
+if process_button:
     # 检查必要文件
     # 获取所有背景文件（包括上传的和Unsplash的）
     bg_files_combined = []
@@ -2537,7 +2539,7 @@ with info_col3:
 with info_col4:
     st.markdown("""
     <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
-        <h4>📝 AI文案生成</h4>
+        <h4>📝 AI文案生成（暂不可用）</h4>
         <ul>
             <li>10个产品标题</li>
             <li>10个SEO关键词</li>
