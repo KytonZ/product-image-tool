@@ -336,6 +336,75 @@ def get_custom_css():
             line-height: 1.6;
             color: #555;
         }
+        
+        /* Logo添加器专用样式 */
+        .logo-adder-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .logo-adder-preview {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            background: white;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .logo-adder-control-group {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .preset-button {
+            margin: 5px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            background: #f0f0f0;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .preset-button:hover {
+            background: #e0e0e0;
+        }
+        
+        .preset-button.active {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        
+        /* 实时预览样式 */
+        .live-preview-container {
+            position: relative;
+            display: inline-block;
+            max-width: 100%;
+        }
+        
+        .live-preview-label {
+            position: absolute;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+        }
+        
+        .logo-preview-overlay {
+            position: absolute;
+            pointer-events: none;
+            border: 2px dashed #4CAF50;
+        }
     </style>
     """
 
@@ -376,6 +445,28 @@ if 'unsplash_current_page' not in st.session_state:
     st.session_state.unsplash_current_page = 1
 if 'unsplash_total_pages' not in st.session_state:
     st.session_state.unsplash_total_pages = 0
+
+# Logo添加器相关的会话状态
+if 'logo_adder_images' not in st.session_state:
+    st.session_state.logo_adder_images = []
+if 'logo_adder_logo_color' not in st.session_state:
+    st.session_state.logo_adder_logo_color = "黑色Logo"
+if 'logo_adder_logo_opacity' not in st.session_state:
+    st.session_state.logo_adder_logo_opacity = 180
+if 'logo_adder_logo_size' not in st.session_state:
+    st.session_state.logo_adder_logo_size = 100
+if 'logo_adder_logo_x' not in st.session_state:
+    st.session_state.logo_adder_logo_x = 50
+if 'logo_adder_logo_y' not in st.session_state:
+    st.session_state.logo_adder_logo_y = 50
+if 'logo_adder_logo_image' not in st.session_state:
+    st.session_state.logo_adder_logo_image = None
+if 'logo_adder_processed_images' not in st.session_state:
+    st.session_state.logo_adder_processed_images = []
+if 'logo_adder_last_zip_buffer' not in st.session_state:
+    st.session_state.logo_adder_last_zip_buffer = None
+if 'logo_adder_preset_position' not in st.session_state:
+    st.session_state.logo_adder_preset_position = "自定义"
 
 # ==================== Unsplash API类 ====================
 class UnsplashAPI:
@@ -905,6 +996,107 @@ def generate_product_content(product_name, platform):
     
     return titles, keywords, attribute_text
 
+# ==================== Logo添加器核心函数 ====================
+def add_logo_to_image(base_image, logo_image, x_percent, y_percent, size_percent, opacity):
+    """将Logo添加到图片上的核心函数"""
+    try:
+        # 复制基础图片
+        base_img = base_image.copy().convert("RGBA")
+        logo_img = logo_image.copy().convert("RGBA")
+        
+        # 计算Logo的实际尺寸（基于图片宽高的百分比）
+        base_width, base_height = base_img.size
+        logo_size = int(min(base_width, base_height) * (size_percent / 100))
+        
+        # 调整Logo大小
+        logo_img.thumbnail((logo_size, logo_size), Image.Resampling.LANCZOS)
+        
+        # 调整Logo透明度
+        if opacity < 255:
+            alpha = logo_img.split()[3]
+            alpha = alpha.point(lambda p: p * opacity / 255)
+            logo_img.putalpha(alpha)
+        
+        # 计算Logo位置（基于百分比）
+        logo_width, logo_height = logo_img.size
+        x_pos = int((base_width - logo_width) * (x_percent / 100))
+        y_pos = int((base_height - logo_height) * (y_percent / 100))
+        
+        # 创建透明图层用于放置Logo
+        logo_layer = Image.new("RGBA", base_img.size, (0, 0, 0, 0))
+        logo_layer.paste(logo_img, (x_pos, y_pos), logo_img)
+        
+        # 合并图片
+        result = Image.alpha_composite(base_img, logo_layer)
+        
+        return result
+    
+    except Exception as e:
+        st.error(f"添加Logo时发生错误: {e}")
+        return None
+
+def apply_preset_position(preset_name, base_width, base_height, logo_width, logo_height):
+    """应用预设位置"""
+    presets = {
+        "左上角": (5, 5),
+        "右上角": (95, 5),
+        "左下角": (5, 95),
+        "右下角": (95, 95),
+        "居中": (50, 50),
+        "顶部居中": (50, 5),
+        "底部居中": (50, 95),
+        "左侧居中": (5, 50),
+        "右侧居中": (95, 50)
+    }
+    
+    if preset_name in presets:
+        return presets[preset_name]
+    else:
+        # 自定义位置，返回当前值
+        return (st.session_state.logo_adder_logo_x, st.session_state.logo_adder_logo_y)
+
+def batch_add_logo_to_images(images, logo_img, x_percent, y_percent, size_percent, opacity):
+    """批量添加Logo到多张图片"""
+    processed_images = []
+    
+    for i, img in enumerate(images):
+        result = add_logo_to_image(img, logo_img, x_percent, y_percent, size_percent, opacity)
+        if result:
+            processed_images.append(result)
+    
+    return processed_images
+
+def create_zip_from_images(images, original_names, output_format='PNG'):
+    """从图片创建ZIP文件"""
+    zip_buffer = BytesIO()
+    
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for i, (img, original_name) in enumerate(zip(images, original_names)):
+            img_buffer = BytesIO()
+            
+            if output_format.upper() == 'JPG':
+                # 转换RGBA为RGB
+                if img.mode == 'RGBA':
+                    rgb_img = Image.new('RGB', img.size, (255, 255, 255))
+                    rgb_img.paste(img, mask=img.split()[3])
+                    img = rgb_img
+                img.save(img_buffer, format='JPEG', quality=95)
+                ext = '.jpg'
+            else:
+                img.save(img_buffer, format='PNG')
+                ext = '.png'
+            
+            img_buffer.seek(0)
+            
+            # 生成文件名
+            name_without_ext = os.path.splitext(original_name)[0]
+            filename = f"{name_without_ext}_with_logo_{i+1:03d}{ext}"
+            
+            zip_file.writestr(filename, img_buffer.getvalue())
+    
+    zip_buffer.seek(0)
+    return zip_buffer
+
 # ==================== 侧边栏设置区域 ====================
 with st.sidebar:
     st.markdown("### ⚙️ 合成设置")
@@ -978,8 +1170,8 @@ with st.sidebar:
     )
 
 # ==================== 主区域：标签页 ====================
-# 修改为4个标签页，删除了预置背景库标签页
-tab1, tab2, tab3, tab4 = st.tabs(["📤 上传图片", "🔄 图片去重生成器", "🎬 视频抽帧工具", "📝 AI文案生成"])
+# 修改为5个标签页，添加Logo添加器
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📤 上传图片", "🔄 图片去重生成器", "🎬 视频抽帧工具", "📝 AI文案生成", "🖼️ Logo添加器"])
 
 # ========== tab1 中 Unsplash 部分完整修正代码 ==========
 with tab1:
@@ -1838,6 +2030,323 @@ with tab4:
             </div>
             """, unsafe_allow_html=True)
 
+# 标签页5：Logo添加器（新增功能）
+with tab5:
+    st.header("🖼️ Logo添加器")
+    st.markdown("""
+    <div class="logo-adder-container">
+        <p><b>功能说明：</b>为图片批量添加Logo水印，支持自定义Logo位置、大小和透明度。</p>
+        <p><b>特点：</b></p>
+        <ul>
+            <li>支持批量上传图片</li>
+            <li>可调节Logo大小、位置和透明度</li>
+            <li>提供常用预设位置</li>
+            <li>实时预览效果</li>
+            <li>批量下载处理后的图片</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # 使用三列布局
+    col_left, col_middle, col_right = st.columns([1, 1, 2], gap="medium")
+    
+    with col_left:
+        st.markdown("### 1. 上传图片")
+        
+        # 上传图片
+        uploaded_images = st.file_uploader(
+            "选择需要添加Logo的图片",
+            type=['png', 'jpg', 'jpeg'],
+            accept_multiple_files=True,
+            key="logo_adder_uploader",
+            help="支持JPG和PNG格式，可多选",
+            label_visibility="collapsed"
+        )
+        
+        if uploaded_images:
+            # 保存到session_state
+            st.session_state.logo_adder_images = uploaded_images
+            
+            # 显示上传状态
+            image_count = len(uploaded_images)
+            st.success(f"已上传 {image_count} 张图片")
+            
+            # 预览第一张图片
+            if uploaded_images:
+                st.markdown("**第一张图片预览**")
+                first_img = Image.open(uploaded_images[0])
+                
+                # 计算显示尺寸
+                display_width = 200
+                display_height = int(first_img.height * (display_width / first_img.width))
+                display_img = first_img.copy()
+                display_img.thumbnail((display_width, display_height), Image.Resampling.LANCZOS)
+                
+                st.image(display_img, caption=uploaded_images[0].name, width=display_width)
+                st.caption(f"尺寸: {first_img.width} × {first_img.height} 像素")
+    
+    with col_middle:
+        st.markdown("### 2. Logo设置")
+        
+        # Logo颜色选择
+        st.markdown('<div class="logo-adder-control-group">', unsafe_allow_html=True)
+        st.markdown("**Logo颜色**")
+        logo_color = st.radio(
+            "",
+            ["黑色Logo", "白色Logo"],
+            index=0 if st.session_state.logo_adder_logo_color == "黑色Logo" else 1,
+            horizontal=True,
+            key="logo_adder_color_radio",
+            label_visibility="collapsed"
+        )
+        st.session_state.logo_adder_logo_color = logo_color
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Logo透明度设置
+        st.markdown('<div class="logo-adder-control-group">', unsafe_allow_html=True)
+        st.markdown("**Logo透明度**")
+        opacity = st.slider(
+            "",
+            min_value=0,
+            max_value=255,
+            value=st.session_state.logo_adder_logo_opacity,
+            step=5,
+            help="0为完全透明，255为完全不透明",
+            key="logo_adder_opacity_slider",
+            label_visibility="collapsed"
+        )
+        st.session_state.logo_adder_logo_opacity = opacity
+        st.markdown(f"当前值: {int(opacity/255*100)}%")
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Logo大小设置
+        st.markdown('<div class="logo-adder-control-group">', unsafe_allow_html=True)
+        st.markdown("**Logo大小**")
+        size = st.slider(
+            "",
+            min_value=5,
+            max_value=200,
+            value=st.session_state.logo_adder_logo_size,
+            step=5,
+            help="Logo相对于图片宽高的百分比",
+            key="logo_adder_size_slider",
+            label_visibility="collapsed"
+        )
+        st.session_state.logo_adder_logo_size = size
+        st.markdown(f"当前值: {size}%")
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col_right:
+        st.markdown("### 3. 位置设置")
+        
+        # 预设位置
+        st.markdown('<div class="logo-adder-control-group">', unsafe_allow_html=True)
+        st.markdown("**预设位置**")
+        
+        preset_options = ["自定义", "左上角", "右上角", "左下角", "右下角", "居中", "顶部居中", "底部居中", "左侧居中", "右侧居中"]
+        
+        # 创建网格布局的预设按钮
+        cols = st.columns(5)
+        selected_preset = st.session_state.logo_adder_preset_position
+        
+        for i, preset in enumerate(preset_options[:5]):
+            with cols[i]:
+                if st.button(preset, key=f"preset_{preset}"):
+                    selected_preset = preset
+                    st.session_state.logo_adder_preset_position = preset
+                    
+                    # 应用预设位置
+                    if preset != "自定义":
+                        preset_map = {
+                            "左上角": (5, 5),
+                            "右上角": (95, 5),
+                            "左下角": (5, 95),
+                            "右下角": (95, 95),
+                            "居中": (50, 50),
+                            "顶部居中": (50, 5),
+                            "底部居中": (50, 95),
+                            "左侧居中": (5, 50),
+                            "右侧居中": (95, 50)
+                        }
+                        if preset in preset_map:
+                            st.session_state.logo_adder_logo_x, st.session_state.logo_adder_logo_y = preset_map[preset]
+        
+        cols2 = st.columns(5)
+        for i, preset in enumerate(preset_options[5:]):
+            with cols2[i]:
+                if st.button(preset, key=f"preset2_{preset}"):
+                    selected_preset = preset
+                    st.session_state.logo_adder_preset_position = preset
+                    
+                    # 应用预设位置
+                    preset_map = {
+                        "左上角": (5, 5),
+                        "右上角": (95, 5),
+                        "左下角": (5, 95),
+                        "右下角": (95, 95),
+                        "居中": (50, 50),
+                        "顶部居中": (50, 5),
+                        "底部居中": (50, 95),
+                        "左侧居中": (5, 50),
+                        "右侧居中": (95, 50)
+                    }
+                    if preset in preset_map:
+                        st.session_state.logo_adder_logo_x, st.session_state.logo_adder_logo_y = preset_map[preset]
+        
+        # 显示当前预设
+        st.markdown(f"**当前预设:** {selected_preset}")
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # 自定义位置
+        st.markdown('<div class="logo-adder-control-group">', unsafe_allow_html=True)
+        st.markdown("**自定义位置**")
+        
+        col_x, col_y = st.columns(2)
+        with col_x:
+            x_pos = st.slider(
+                "X轴位置 (%)",
+                min_value=0,
+                max_value=100,
+                value=st.session_state.logo_adder_logo_x,
+                step=1,
+                key="logo_adder_x_slider"
+            )
+            st.session_state.logo_adder_logo_x = x_pos
+        
+        with col_y:
+            y_pos = st.slider(
+                "Y轴位置 (%)",
+                min_value=0,
+                max_value=100,
+                value=st.session_state.logo_adder_logo_y,
+                step=1,
+                key="logo_adder_y_slider"
+            )
+            st.session_state.logo_adder_logo_y = y_pos
+        
+        st.markdown(f"当前位置: X={x_pos}%, Y={y_pos}%")
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # 处理按钮
+        if uploaded_images:
+            st.markdown("### 4. 处理图片")
+            
+            # 加载Logo图片
+            logo_path = None
+            if st.session_state.logo_adder_logo_color == "黑色Logo":
+                logo_path = "logos/b_logo.png"
+            else:
+                logo_path = "logos/w_logo.png"
+            
+            # 检查Logo文件是否存在
+            logo_exists = os.path.exists(logo_path)
+            
+            if not logo_exists:
+                st.warning(f"⚠️ 未找到Logo文件: {logo_path}")
+                st.warning("请在 logos/ 文件夹中提供 b_logo.png 和 w_logo.png 文件")
+            else:
+                # 加载Logo
+                logo_img = Image.open(logo_path)
+                st.session_state.logo_adder_logo_image = logo_img
+                
+                # 实时预览
+                if uploaded_images:
+                    st.markdown("**实时预览**")
+                    
+                    # 使用第一张图片进行预览
+                    preview_img = Image.open(uploaded_images[0])
+                    preview_result = add_logo_to_image(
+                        preview_img,
+                        logo_img,
+                        st.session_state.logo_adder_logo_x,
+                        st.session_state.logo_adder_logo_y,
+                        st.session_state.logo_adder_logo_size,
+                        st.session_state.logo_adder_logo_opacity
+                    )
+                    
+                    if preview_result:
+                        # 计算显示尺寸
+                        display_width = 300
+                        display_height = int(preview_result.height * (display_width / preview_result.width))
+                        display_img = preview_result.copy()
+                        display_img.thumbnail((display_width, display_height), Image.Resampling.LANCZOS)
+                        
+                        # 显示预览
+                        st.image(display_img, caption="添加Logo后的效果预览", width=display_width)
+                        
+                        # 处理按钮
+                        if st.button("🚀 批量处理所有图片", type="primary", use_container_width=True, key="process_logo_adder"):
+                            with st.spinner(f'正在处理 {len(uploaded_images)} 张图片...'):
+                                # 批量处理所有图片
+                                processed_images = []
+                                original_names = []
+                                
+                                for img_file in uploaded_images:
+                                    img = Image.open(img_file)
+                                    result = add_logo_to_image(
+                                        img,
+                                        logo_img,
+                                        st.session_state.logo_adder_logo_x,
+                                        st.session_state.logo_adder_logo_y,
+                                        st.session_state.logo_adder_logo_size,
+                                        st.session_state.logo_adder_logo_opacity
+                                    )
+                                    
+                                    if result:
+                                        processed_images.append(result)
+                                        original_names.append(img_file.name)
+                                
+                                if processed_images:
+                                    # 创建ZIP文件
+                                    zip_buffer = create_zip_from_images(processed_images, original_names)
+                                    st.session_state.logo_adder_last_zip_buffer = zip_buffer
+                                    st.session_state.logo_adder_processed_images = processed_images[:3]  # 保存前3张用于预览
+                                    
+                                    st.success(f"✅ 成功处理 {len(processed_images)} 张图片！")
+                                    
+                                    # 显示处理后的预览
+                                    st.markdown("**处理结果预览（前3张）**")
+                                    
+                                    preview_cols = st.columns(3)
+                                    for idx, processed_img in enumerate(st.session_state.logo_adder_processed_images[:3]):
+                                        with preview_cols[idx]:
+                                            # 计算显示尺寸
+                                            display_width = 150
+                                            display_height = int(processed_img.height * (display_width / processed_img.width))
+                                            display_img = processed_img.copy()
+                                            display_img.thumbnail((display_width, display_height), Image.Resampling.LANCZOS)
+                                            
+                                            st.image(
+                                                display_img,
+                                                caption=f"处理结果 {idx+1}",
+                                                width=display_width
+                                            )
+                
+                # 下载按钮
+                if st.session_state.logo_adder_last_zip_buffer and uploaded_images:
+                    st.markdown("### 5. 下载结果")
+                    
+                    st.download_button(
+                        label=f"📥 下载所有处理后的图片 (ZIP压缩包)",
+                        data=st.session_state.logo_adder_last_zip_buffer,
+                        file_name="images_with_logo.zip",
+                        mime="application/zip",
+                        use_container_width=True,
+                        key="download_logo_adder"
+                    )
+        
+        else:
+            # 未上传图片时的提示
+            st.markdown('<div class="logo-adder-preview">', unsafe_allow_html=True)
+            st.markdown("""
+            <div style="text-align: center; padding: 2rem; color: #666;">
+                <h4>👈 请先在左侧上传图片</h4>
+                <p>上传图片后，可以调整Logo设置并实时预览效果</p>
+                <p>支持批量处理多张图片</p>
+            </div>
+            """, unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+
 # ==================== 执行批处理 ====================
 if process_button:
     # 检查必要文件
@@ -2004,8 +2513,8 @@ if process_button:
 st.markdown("---")
 st.markdown("### 💡 使用说明")
 
-# 使用四列布局显示说明（因为现在有四个主要功能）
-info_col1, info_col2, info_col3, info_col4 = st.columns(4)
+# 使用五列布局显示说明（现在有五个主要功能）
+info_col1, info_col2, info_col3, info_col4, info_col5 = st.columns(5)
 
 with info_col1:
     st.markdown("""
@@ -2055,5 +2564,17 @@ with info_col4:
     </div>
     """, unsafe_allow_html=True)
 
+with info_col5:
+    st.markdown("""
+    <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #4CAF50;">
+        <h4>🖼️ Logo添加器</h4>
+        <ul>
+            <li>批量添加Logo水印</li>
+            <li>自定义位置大小</li>
+            <li>实时预览效果</li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
 st.markdown("---")
-st.caption("")
+st.caption("© 2023 骏泰产品图工作台 | 版本 2.0")
