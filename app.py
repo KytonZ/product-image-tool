@@ -1,4 +1,4 @@
-# app.py - 骏泰产品图工作台
+# app.py - 骏泰素材工作台
 import zipfile
 from io import BytesIO
 import streamlit as st
@@ -15,7 +15,7 @@ import requests
 
 # 设置页面配置
 st.set_page_config(
-    page_title="骏泰产品图工作台", 
+    page_title="骏泰素材工作台", 
     page_icon="🎨", 
     layout="wide",
     initial_sidebar_state="expanded"
@@ -431,7 +431,7 @@ def get_custom_css():
 st.markdown(get_custom_css(), unsafe_allow_html=True)
 
 # 页面标题
-st.markdown('<h1 class="main-header">🎨 骏泰产品图工作台</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-header">🎨 骏泰素材工作台</h1>', unsafe_allow_html=True)
 st.markdown("---")
 
 # 初始化会话状态
@@ -1190,13 +1190,18 @@ with st.sidebar:
 
 # ==================== 主区域：标签页 ====================
 # 修改为5个标签页，添加Logo添加器
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["📤 上传图片", "🔄 图片去重生成器", "🎬 视频抽帧工具", "📝 AI文案生成(暂不可用)", "🖼️ Logo添加器"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["📤 产品图合成", "🔄 图片去重生成器", "🎬 视频抽帧工具", "📝 AI文案生成(暂不可用)", "🖼️ Logo添加器"])
 
 # ========== tab1 中 Unsplash 部分完整修正代码 ==========
 with tab1:
     # 减小标题间距
-    st.markdown('<h3 style="margin-bottom: 0.2rem;">上传你的素材</h3>', unsafe_allow_html=True)
-    
+    st.header("📤 产品图合成")
+    st.markdown("""
+    <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid #2196F3;">
+        <p>上传合适的背景图或在unsplash图库中搜索背景与透明产品图合成成带LOGO产品图</p>
+    </div>
+    """, unsafe_allow_html=True)    
+
     # 使用两列布局
     col1, col2 = st.columns([1, 1], gap="large")
     
@@ -2561,4 +2566,4 @@ with info_col5:
     """, unsafe_allow_html=True)
 
 st.markdown("---")
-st.caption("© 2025 骏泰产品图工作台")
+st.caption("© 2025 骏泰素材工作台")
