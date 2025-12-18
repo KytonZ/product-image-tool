@@ -1206,7 +1206,7 @@ with tab1:
         # 背景来源选择选项卡 - 隐藏标签文字
         bg_source = st.radio(
             "",  # 空标签
-            ["上传图片", "Unsplash图库（翻下一页需先再次点击搜索）"],
+            ["上传图片", "Unsplash图库(翻下一页需先再次点击搜索)"],
             horizontal=True,
             key="bg_source_radio",
             label_visibility="collapsed"  # 完全隐藏标签
