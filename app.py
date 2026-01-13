@@ -1149,19 +1149,20 @@ with st.sidebar:
     
     # 1. Logo设置
     st.markdown('<div class="settings-title">🖼️ Logo设置</div>', unsafe_allow_html=True)
-    st.session_state.logo_color = st.radio(
+    logo_color = st.radio(
         "选择Logo颜色",
         ["黑色Logo", "白色Logo"],
         horizontal=True,
         help="根据背景颜色选择合适的Logo颜色以确保清晰可见",
         key="logo_color_select"
     )
+    st.session_state.logo_color = logo_color
     
     st.markdown("---")
     
     # 2. 产品图设置
     st.markdown('<div class="settings-title">📐 产品图设置</div>', unsafe_allow_html=True)
-    st.session_state.product_size = st.slider(
+    product_size = st.slider(
         "产品图最大边长", 
         min_value=500, 
         max_value=1000, 
@@ -1170,27 +1171,31 @@ with st.sidebar:
         help="控制产品图在合成图中的大小",
         key="product_size_slider"
     )
+    st.session_state.product_size = product_size
     
-    st.session_state.product_position = st.select_slider(
+    product_position = st.select_slider(
         "产品图位置", 
         options=['左上', '中上', '右上', '左中', '居中', '右中', '左下', '中下', '右下'],
         value='居中',
         help="选择产品图在合成图中的位置",
         key="product_position_slider"
     )
+    st.session_state.product_position = product_position
     
     st.markdown("---")
     
     # 3. 背景遮罩设置 - 修复这里
     st.markdown('<div class="settings-title">🖼️ 背景遮罩</div>', unsafe_allow_html=True)
     
-    # 遮罩开关 - 直接使用组件的返回值，不赋值给session_state
-    dark_mask_enabled = st.toggle(
+    # 遮罩开关
+    dark_mask_enabled = st.checkbox(
         '添加背景遮罩层',
-        value=st.session_state.dark_mask_enabled,
+        value=st.session_state.get('dark_mask_enabled', False),
         help='在背景图上层添加黑色遮罩层，使产品图更突出',
-        key='dark_mask_enabled_toggle'
+        key='dark_mask_enabled_checkbox'
     )
+    
+    st.session_state.dark_mask_enabled = dark_mask_enabled
     
     # 遮罩不透明度滑块
     if dark_mask_enabled:
@@ -1198,16 +1203,15 @@ with st.sidebar:
             '遮罩层不透明度',
             min_value=0,
             max_value=100,
-            value=st.session_state.mask_opacity,
+            value=st.session_state.get('mask_opacity', 20),
             step=5,
             help='遮罩层的不透明度，值越大背景越暗',
             key='mask_opacity_slider'
         )
+        st.session_state.mask_opacity = mask_opacity
         
         if mask_opacity > 0:
             st.markdown(f'<div class="mask-info">遮罩效果：背景变暗 {mask_opacity}%，产品图更突出</div>', unsafe_allow_html=True)
-    else:
-        mask_opacity = 0
     
     st.markdown("---")
     
@@ -1216,21 +1220,23 @@ with st.sidebar:
     
     col_size1, col_size2 = st.columns(2)
     with col_size1:
-        st.session_state.output_size = st.selectbox(
+        output_size = st.selectbox(
             "输出尺寸", 
             [400, 600, 800, 1000, 1200, 1500, 2000],
             index=2,
             help="选择输出图片的尺寸",
             key="output_size_select"
         )
+        st.session_state.output_size = output_size
     with col_size2:
-        st.session_state.output_format = st.radio(
+        output_format = st.radio(
             "输出格式", 
             ['JPG', 'PNG'],
             horizontal=True,
             help="JPG适用于照片，PNG适用于需要透明背景的图片",
             key="output_format_radio"
         )
+        st.session_state.output_format = output_format
     
     st.markdown("---")
     
@@ -2412,10 +2418,9 @@ if process_button:
     output_size = st.session_state.get('output_size', 800)
     output_format = st.session_state.get('output_format', 'JPG')
     
-    # 获取遮罩设置
+    # 获取遮罩设置 - 直接从session_state获取
     dark_mask_enabled = st.session_state.get('dark_mask_enabled', False)
     mask_opacity = st.session_state.get('mask_opacity', 20)
-    dark_mask_opacity = mask_opacity if dark_mask_enabled else 0
     
     if logo_color == '黑色Logo':
         logo_path = "logos/black_logo.png"
@@ -2431,8 +2436,8 @@ if process_button:
         logo_to_use = None
     
     # 显示遮罩状态
-    if dark_mask_enabled and dark_mask_opacity > 0:
-        st.info(f"🌑 背景遮罩已启用，不透明度: {dark_mask_opacity}%")
+    if dark_mask_enabled:
+        st.info(f"🌑 背景遮罩已启用，不透明度: {mask_opacity}%")
     
     # 创建临时目录存放结果
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -2466,7 +2471,7 @@ if process_button:
                 result = compose_image(
                     bg_image, product_image, logo_to_use,
                     product_size, product_position, output_size, output_format,
-                    dark_mask_opacity=dark_mask_opacity
+                    dark_mask_opacity=mask_opacity if dark_mask_enabled else 0
                 )
                 
                 # 保存结果
