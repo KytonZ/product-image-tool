@@ -424,8 +424,19 @@ def get_custom_css():
             border-radius: 10px;
             border-left: 4px solid #2196F3;
         }
+        
+        /* 遮罩设置样式 */
+        .mask-info {
+            background-color: #e8f4fd;
+            border-left: 4px solid #4CAF50;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
     </style>
     """
+    
 
 # 应用CSS样式
 st.markdown(get_custom_css(), unsafe_allow_html=True)
@@ -486,6 +497,12 @@ if 'logo_adder_last_zip_buffer' not in st.session_state:
     st.session_state.logo_adder_last_zip_buffer = None
 if 'logo_adder_preset_position' not in st.session_state:
     st.session_state.logo_adder_preset_position = "自定义"
+
+# 背景遮罩相关的会话状态
+if 'dark_mask_enabled' not in st.session_state:
+    st.session_state.dark_mask_enabled = False
+if 'mask_opacity' not in st.session_state:
+    st.session_state.mask_opacity = 20
 
 # ==================== Unsplash API类 ====================
 class UnsplashAPI:
@@ -548,10 +565,12 @@ class UnsplashAPI:
         return None
 
 # ==================== 核心函数定义 ====================
-def compose_image(bg_img, product_img, logo_img, product_size, product_position, output_size, output_format):
-    """合成单张图片的核心函数"""
+def compose_image(bg_img, product_img, logo_img, product_size, product_position, output_size, output_format, dark_mask_opacity=0):
+    """合成单张图片的核心函数
+    dark_mask_opacity: 背景遮罩层不透明度（0-100）
+    """
     # 1. 处理背景：调整到输出尺寸（智能裁剪铺满）
-    bg = bg_img.convert("RGBA")
+    bg = bg_img.convert('RGBA')
     bg_ratio = output_size / min(bg.width, bg.height)
     new_width = int(bg.width * bg_ratio)
     new_height = int(bg.height * bg_ratio)
@@ -564,8 +583,16 @@ def compose_image(bg_img, product_img, logo_img, product_size, product_position,
     bottom = top + output_size
     bg = bg.crop((left, top, right, bottom))
     
-    # 2. 处理产品图：调整大小并放置
-    product = product_img.convert("RGBA")
+    # 2. 添加黑色遮罩层（如果启用）
+    if dark_mask_opacity > 0:
+        # 创建黑色遮罩层
+        mask_opacity = int(dark_mask_opacity * 255 / 100)  # 转换为0-255范围
+        dark_layer = Image.new('RGBA', bg.size, (0, 0, 0, mask_opacity))
+        # 将黑色遮罩层与背景图叠加
+        bg = Image.alpha_composite(bg, dark_layer)
+    
+    # 3. 处理产品图：调整大小并放置
+    product = product_img.convert('RGBA')
     product.thumbnail((product_size, product_size), Image.Resampling.LANCZOS)
     
     # 根据选择的位置计算坐标
@@ -581,16 +608,16 @@ def compose_image(bg_img, product_img, logo_img, product_size, product_position,
     # 将产品图粘贴到背景上
     bg.paste(product, (product_x, product_y), product)
     
-    # 3. 处理Logo图 - 直接全画布叠加
+    # 4. 处理Logo图 - 直接全画布叠加
     if logo_img:
-        logo = logo_img.convert("RGBA")
+        logo = logo_img.convert('RGBA')
         # 确保Logo图尺寸与输出尺寸一致
         if logo.size != (output_size, output_size):
             logo = logo.resize((output_size, output_size), Image.Resampling.LANCZOS)
-        # 直接以"遮罩"方式叠加整个Logo图层
+        # 直接以遮罩方式叠加整个Logo图层
         bg = Image.alpha_composite(bg, logo)
     
-    # 4. 根据输出格式处理背景
+    # 5. 根据输出格式处理背景
     if output_format.upper() == 'JPG':
         bg_rgb = Image.new('RGB', bg.size, (255, 255, 255))
         bg_rgb.paste(bg, mask=bg.split()[3])
@@ -728,7 +755,7 @@ def remove_random_frames(input_video_path, output_video_path, progress_bar=None,
         has_audio = False
     
     # 2. 处理视频帧（移除指定帧）
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # MP4编码
+    fourcc = cv2.VideoWriter_fourcc('m', 'p', '4', 'v')  # MP4编码
     out = cv2.VideoWriter('temp_video_noaudio.mp4', fourcc, fps, (width, height))
     
     frame_index = 0
@@ -1020,8 +1047,8 @@ def add_logo_to_image(base_image, logo_image, x_percent, y_percent, size_percent
     """将Logo添加到图片上的核心函数"""
     try:
         # 复制基础图片
-        base_img = base_image.copy().convert("RGBA")
-        logo_img = logo_image.copy().convert("RGBA")
+        base_img = base_image.copy().convert('RGBA')
+        logo_img = logo_image.copy().convert('RGBA')
         
         # 计算Logo的实际尺寸（基于图片宽高的百分比）
         base_width, base_height = base_img.size
@@ -1033,7 +1060,7 @@ def add_logo_to_image(base_image, logo_image, x_percent, y_percent, size_percent
         # 调整Logo透明度
         if opacity < 255:
             alpha = logo_img.split()[3]
-            alpha = alpha.point(lambda p: p * opacity / 255)
+            alpha = alpha.point(lambda p: p * opacity // 255)
             logo_img.putalpha(alpha)
         
         # 计算Logo位置（基于百分比）
@@ -1042,7 +1069,7 @@ def add_logo_to_image(base_image, logo_image, x_percent, y_percent, size_percent
         y_pos = int((base_height - logo_height) * (y_percent / 100))
         
         # 创建透明图层用于放置Logo
-        logo_layer = Image.new("RGBA", base_img.size, (0, 0, 0, 0))
+        logo_layer = Image.new('RGBA', base_img.size, (0, 0, 0, 0))
         logo_layer.paste(logo_img, (x_pos, y_pos), logo_img)
         
         # 合并图片
@@ -1120,8 +1147,6 @@ def create_zip_from_images(images, original_names, output_format='PNG'):
 with st.sidebar:
     st.markdown("### ⚙️ 合成设置")
     
-    # 将所有设置存储到session_state中
-    
     # 1. Logo设置
     st.markdown('<div class="settings-title">🖼️ Logo设置</div>', unsafe_allow_html=True)
     st.session_state.logo_color = st.radio(
@@ -1156,7 +1181,37 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # 3. 输出设置
+    # 3. 背景遮罩设置 - 修复这里
+    st.markdown('<div class="settings-title">🖼️ 背景遮罩</div>', unsafe_allow_html=True)
+    
+    # 遮罩开关 - 直接使用组件的返回值，不赋值给session_state
+    dark_mask_enabled = st.toggle(
+        '添加背景遮罩层',
+        value=st.session_state.dark_mask_enabled,
+        help='在背景图上层添加黑色遮罩层，使产品图更突出',
+        key='dark_mask_enabled_toggle'
+    )
+    
+    # 遮罩不透明度滑块
+    if dark_mask_enabled:
+        mask_opacity = st.slider(
+            '遮罩层不透明度',
+            min_value=0,
+            max_value=100,
+            value=st.session_state.mask_opacity,
+            step=5,
+            help='遮罩层的不透明度，值越大背景越暗',
+            key='mask_opacity_slider'
+        )
+        
+        if mask_opacity > 0:
+            st.markdown(f'<div class="mask-info">遮罩效果：背景变暗 {mask_opacity}%，产品图更突出</div>', unsafe_allow_html=True)
+    else:
+        mask_opacity = 0
+    
+    st.markdown("---")
+    
+    # 4. 输出设置
     st.markdown('<div class="settings-title">📦 输出设置</div>', unsafe_allow_html=True)
     
     col_size1, col_size2 = st.columns(2)
@@ -1179,7 +1234,7 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # 4. 处理按钮
+    # 5. 处理按钮
     process_button = st.button(
         "🚀 开始智能批量合成", 
         type="primary", 
@@ -1196,11 +1251,10 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(["📤 产品图合成", "🔄 图片去�
 with tab1:
     # 减小标题间距
     st.header("📤 产品图合成")
-    st.markdown("""
-    <div class="highlight-box">
+    st.markdown(
+    """<div class="highlight-box">
         <p>上传合适的背景图或unsplash图库中搜索，再上传透明产品图，左侧合成带LOGO产品图</p>
-    </div>
-    """, unsafe_allow_html=True)    
+    </div>""", unsafe_allow_html=True)    
 
     # 使用两列布局
     col1, col2 = st.columns([1, 1], gap="large")
@@ -1232,7 +1286,7 @@ with tab1:
                 bg_count = len(bg_files)
                 st.success(f"已上传 {bg_count} 张背景图")
                 
-                st.markdown("**预览（最多显示12张）**")
+                st.markdown("预览（最多显示12张）")
                 
                 cols_per_row = min(4, bg_count) if bg_count > 0 else 4
                 preview_count = min(12, bg_count)
@@ -1346,7 +1400,7 @@ with tab1:
                 if not unsplash_api.access_key:
                     st.error("⚠️ 未找到Unsplash API密钥，请在Streamlit Secrets中配置UNSPLASH_ACCESS_KEY")
                 else:
-                    with st.spinner(f'正在搜索"{st.session_state.unsplash_search_query}"...'):
+                    with st.spinner(f'正在搜索{st.session_state.unsplash_search_query}...'):
                         photos, total_pages, total_results = unsplash_api.search_photos(
                             st.session_state.unsplash_search_query, 
                             page=st.session_state.unsplash_current_page, 
@@ -1400,25 +1454,25 @@ with tab1:
                                     # 1:1 正方形图片容器（关键）
                                     st.markdown(f"""
                                     <style>
-                                    /* 强制1:1正方形图片容器 */
-                                    .img-container-{current_page}-{idx} {{
-                                        position: relative;
-                                        width: 100%;
-                                        aspect-ratio: 1/1;  /* 核心：1:1比例 */
-                                        overflow: hidden;
-                                        border-radius: 6px;
-                                        margin-bottom: 8px;
-                                    }}
-                                    /* 图片居中裁剪，不拉伸 */
-                                    .img-container-{current_page}-{idx} img {{
-                                        position: absolute;
-                                        top: 50%;
-                                        left: 50%;
-                                        transform: translate(-50%, -50%);
-                                        width: 100%;
-                                        height: 100%;
-                                        object-fit: cover;  /* 居中裁剪，保持比例 */
-                                    }}
+                                        /* 强制1:1正方形图片容器 */
+                                        .img-container-{current_page}-{idx} {{
+                                            position: relative;
+                                            width: 100%;
+                                            aspect-ratio: 1/1;   /* 核心：1:1比例 */
+                                            overflow: hidden;
+                                            border-radius: 6px;
+                                            margin-bottom: 8px;
+                                        }}
+                                        /* 图片居中裁剪，不拉伸 */
+                                        .img-container-{current_page}-{idx} img {{
+                                            position: absolute;
+                                            top: 50%;
+                                            left: 50%;
+                                            transform: translate(-50%, -50%);
+                                            width: 100%;
+                                            height: 100%;
+                                            object-fit: cover;   /* 居中裁剪，保持比例 */
+                                        }}
                                     </style>
                                     <div class="img-container-{current_page}-{idx}">
                                         <img src="{img_url}" alt="Unsplash图片">
@@ -1440,33 +1494,33 @@ with tab1:
                                     # 核心：提升CSS优先级（必改！解决绿色不生效问题）
                                     st.markdown(f"""
                                     <style>
-                                    /* 双层选择器提升优先级，覆盖Streamlit内置样式 */
-                                    div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"] {{
-                                        width: 100% !important;          /* 与图片等宽 */
-                                        font-size: 0.65rem !important;   /* 小字体 */
-                                        padding: 0.25rem 0 !important;   /* 内边距 */
-                                        border-radius: 6px !important;   /* 圆角 */
-                                        border: 1px solid #d1d5db !important;
-                                        transition: all 0.2s ease !important;
-                                        box-sizing: border-box !important;
-                                    }}
-                                    /* 选中状态：强制绿色背景+白色文字 */
-                                    div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"].selected {{
-                                        background-color: #28a745 !important; /* 标准绿色 */
-                                        color: #ffffff !important;           /* 纯白色 */
-                                        border-color: #28a745 !important;
-                                    }}
-                                    /* 未选中状态 */
-                                    div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"]:not(.selected) {{
-                                        background-color: #f0f2f6 !important; /* 浅灰色 */
-                                        color: #333333 !important;           /* 深灰色 */
-                                    }}
-                                    /* hover效果 */
-                                    div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"]:hover {{
-                                        opacity: 0.9 !important;
-                                        box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
-                                        transform: none !important;
-                                    }}
+                                        /* 双层选择器提升优先级，覆盖Streamlit内置样式 */
+                                        div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"] {{
+                                            width: 100% !important;           /* 与图片等宽 */
+                                            font-size: 0.65rem !important;    /* 小字体 */
+                                            padding: 0.25rem 0 !important;    /* 内边距 */
+                                            border-radius: 6px !important;    /* 圆角 */
+                                            border: 1px solid #d1d5db !important;
+                                            transition: all 0.2s ease !important;
+                                            box-sizing: border-box !important;
+                                        }}
+                                        /* 选中状态：强制绿色背景+白色文字 */
+                                        div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"].selected {{
+                                            background-color: #28a745 !important;  /* 标准绿色 */
+                                            color: #ffffff !important;            /* 纯白色 */
+                                            border-color: #28a745 !important;
+                                        }}
+                                        /* 未选中状态 */
+                                        div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"]:not(.selected) {{
+                                            background-color: #f0f2f6 !important;  /* 浅灰色 */
+                                            color: #333333 !important;            /* 深灰色 */
+                                        }}
+                                        /* hover效果 */
+                                        div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"]:hover {{
+                                            opacity: 0.9 !important;
+                                            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+                                            transform: none !important;
+                                        }}
                                     </style>
                                     """, unsafe_allow_html=True)
 
@@ -1486,7 +1540,7 @@ with tab1:
                                         </script>
                                         """, unsafe_allow_html=True)
 
-                                    if st.button(button_label,** btn_kwargs):
+                                    if st.button(button_label, **btn_kwargs):
                                         with st.spinner("下载中..."):
                                             img = unsplash_api.download_photo(img_url)
                                             if img:
@@ -1531,7 +1585,7 @@ with tab1:
             product_count = len(product_files)
             st.success(f"已上传 {product_count} 张产品图")
             
-            st.markdown("**预览（最多显示12张）**")
+            st.markdown("预览（最多显示12张）")
             
             cols_per_row = min(4, product_count) if product_count > 0 else 4
             preview_count = min(12, product_count)
@@ -1568,16 +1622,15 @@ with tab1:
     
     if bg_files_combined and product_files:
         total_combinations = len(bg_files_combined) * len(product_files)
-        st.info(f"**准备合成:** {len(bg_files_combined)} 张背景图 × {len(product_files)} 张产品图 = **{total_combinations} 张合成图**")
+        st.info(f"准备合成 {len(bg_files_combined)} 张背景图 × {len(product_files)} 张产品图 = {total_combinations} 张合成图")
 
 # 标签页2：图片去重
 with tab2:
     st.header("🔄 图片去重")
-    st.markdown("""
-    <div class="highlight-box">
+    st.markdown(
+    """<div class="highlight-box">
         <p>通过微调图片像素，生成大量数据层不同的相似图片，可用于应对平台的重复检测。</p>
-    </div>
-    """, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
     
     # 使用两列布局
     col_left, col_right = st.columns([1, 1], gap="large")
@@ -1594,7 +1647,7 @@ with tab2:
         
         if uploaded_file:
             # 显示原图，但控制大小
-            st.markdown("**原始图片预览**")
+            st.markdown("原始图片预览")
             
             # 读取图片
             img = Image.open(uploaded_file)
@@ -1690,11 +1743,10 @@ with tab2:
 # 标签页3：视频抽帧
 with tab3:
     st.header("🎬 视频抽帧")
-    st.markdown("""
-    <div class="highlight-box">
+    st.markdown(
+    """<div class="highlight-box">
         <p>通过随机删除视频中的两帧，生成内容相似但数据不同的新视频，可用于应对平台的重复检测。</p>
-    </div>
-    """, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
     
     # 使用两列布局
     col_left_video, col_right_video = st.columns([1, 1], gap="large")
@@ -1726,7 +1778,7 @@ with tab3:
                     duration = total_frames / fps if fps > 0 else 0
                     cap.release()
                     
-                    st.markdown("**视频信息**")
+                    st.markdown("视频信息")
                     st.markdown(f"""
                     <div class="video-info-card">
                         <div class="video-info-title">📊 视频详情</div>
@@ -1742,7 +1794,7 @@ with tab3:
                     """, unsafe_allow_html=True)
                     
                     # 预览视频
-                    st.markdown("**视频预览**")
+                    st.markdown("视频预览")
                     st.video(video_file)
                 else:
                     st.warning("无法读取视频信息，请检查视频格式是否支持。")
@@ -1754,13 +1806,13 @@ with tab3:
             st.markdown("#### 2. 处理设置")
             
             # 显示处理说明
-            st.info("""
-            **处理说明：**
+            st.info(
+            """处理说明：
             - 工具将随机删除视频中的两帧
             - 保留原始音频和画质
             - 输出视频时长几乎不变
-            - 适合用于应对平台重复检测
-            """)
+            - 适合用于应对平台重复检测"""
+            )
             
             # 处理按钮
             if st.button("🎬 开始视频抽帧处理", type="primary", use_container_width=True, key="process_video"):
@@ -1815,7 +1867,7 @@ with tab3:
                         """, unsafe_allow_html=True)
                         
                         # 预览处理后的视频
-                        st.markdown("**处理后的视频预览**")
+                        st.markdown("处理后的视频预览")
                         st.video(video_data)
                         
                     except Exception as e:
@@ -1860,15 +1912,14 @@ with tab3:
 # 标签页4：AI文案（暂不可用）
 with tab4:
     st.header("📝 AI文案 - 阿里巴巴/MIC平台")
-    st.markdown("""
-    <div class="highlight-box">
+    st.markdown(
+    """<div class="highlight-box">
         <p><b>功能说明：</b>根据选择的产品，自动生成适用于阿里巴巴和国际站(MIC)的英文产品标题、关键词和属性词。</p>
         <ul>
             <li>标题长度：8-12个单词，85-128个字符，首字母大写，介词小写</li>
             <li>关键词：包含短尾核心词和长尾复合词</li>
         </ul>
-    </div>
-    """, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
     
     # 使用两列布局
     col_setting, col_preview = st.columns([1, 2], gap="large")
@@ -1922,7 +1973,7 @@ with tab4:
             
             # 标题部分
             st.markdown('<div class="section-title">📝 10个产品标题</div>', unsafe_allow_html=True)
-            st.markdown("**复制说明：** 以下标题可直接复制到阿里/MIC平台的产品标题字段")
+            st.markdown("复制说明： 以下标题可直接复制到阿里/MIC平台的产品标题字段")
             
             # 创建可复制的文本框
             titles_text = "\n".join(st.session_state.generated_titles)
@@ -1945,7 +1996,7 @@ with tab4:
             
             # 关键词部分
             st.markdown('<div class="section-title">🔑 10个关键词</div>', unsafe_allow_html=True)
-            st.markdown("**包含：** 短尾核心词 + 长尾复合词")
+            st.markdown("包含： 短尾核心词 + 长尾复合词")
             
             keywords_text = "\n".join(st.session_state.generated_keywords)
             st.text_area(
@@ -1967,7 +2018,7 @@ with tab4:
             
             # 属性词部分
             st.markdown('<div class="section-title">🏷️ 10个属性词</div>', unsafe_allow_html=True)
-            st.markdown("**分类说明：** 按材料、尺寸、性能、应用等分类")
+            st.markdown("分类说明： 按材料、尺寸、性能、应用等分类")
             
             st.text_area(
                 "属性词分类",
@@ -2022,7 +2073,7 @@ with tab4:
                     avg_word_count = sum(len(title.split()) for title in st.session_state.generated_titles) / len(st.session_state.generated_titles)
                     
                     st.info(f"""
-                    **文案统计信息：**
+                    文案统计信息：
                     - 标题数量: 10个
                     - 平均标题长度: {avg_title_length:.1f} 字符
                     - 平均单词数: {avg_word_count:.1f} 个
@@ -2034,8 +2085,8 @@ with tab4:
         else:
             # 未生成时的预览
             st.markdown("### 2. 文案预览区")
-            st.markdown("""
-            <div style="text-align: center; padding: 3rem; color: #666; background-color: #f8f9fa; border-radius: 10px;">
+            st.markdown(
+            """<div style="text-align: center; padding: 3rem; color: #666; background-color: #f8f9fa; border-radius: 10px;">
                 <h4>👈 请先在左侧选择产品</h4>
                 <p>选择产品类型和目标平台后，点击"开始生成AI文案"按钮</p>
                 <p>系统将为您生成：</p>
@@ -2044,8 +2095,7 @@ with tab4:
                     <li>10个SEO关键词</li>
                     <li>10个分类属性词</li>
                 </ul>
-            </div>
-            """, unsafe_allow_html=True)
+            </div>""", unsafe_allow_html=True)
 
 # 标签页5：Logo水印添加
 with tab5:
@@ -2063,11 +2113,10 @@ with tab5:
     }
     
     st.header("🖼️ Logo水印添加")
-    st.markdown("""
-    <div class="highlight-box">
+    st.markdown(
+    """<div class="highlight-box">
         <p>为单张图片添加Logo水印，支持自定义Logo位置、大小和透明度。</p>
-    </div>
-    """, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
     
     # 使用三列布局
     col_left, col_middle, col_right = st.columns([1, 1, 2], gap="medium")
@@ -2094,7 +2143,7 @@ with tab5:
             
             # 显示原图信息
             img = Image.open(uploaded_image)
-            st.markdown("**原图信息**")
+            st.markdown("原图信息")
             st.caption(f"文件名: {uploaded_image.name}")
             st.caption(f"尺寸: {img.width} × {img.height} 像素")
             st.caption(f"格式: {uploaded_image.type}")
@@ -2103,7 +2152,7 @@ with tab5:
         st.markdown("### 2. Logo设置")
         
         # Logo颜色选择
-        st.markdown("**Logo颜色**")
+        st.markdown("Logo颜色")
         logo_color = st.radio(
             "",
             ["黑色Logo", "白色Logo"],
@@ -2115,7 +2164,7 @@ with tab5:
         st.session_state.logo_adder_logo_color = logo_color
         
         # Logo透明度设置
-        st.markdown("**Logo透明度**")
+        st.markdown("Logo透明度")
         opacity = st.slider(
             "",
             min_value=0,
@@ -2130,7 +2179,7 @@ with tab5:
         st.markdown(f"当前值: {int(opacity/255*100)}%")
         
         # Logo大小设置
-        st.markdown("**Logo大小**")
+        st.markdown("Logo大小")
         size = st.slider(
             "",
             min_value=5,
@@ -2148,7 +2197,7 @@ with tab5:
         st.markdown("### 3. 位置设置")
         
         # 预设位置
-        st.markdown("**预设位置**")
+        st.markdown("预设位置")
         
         preset_options = ["自定义", "左上角", "右上角", "左下角", "右下角", "居中", "顶部居中", "底部居中", "左侧居中", "右侧居中"]
         
@@ -2173,7 +2222,7 @@ with tab5:
                 st.rerun()
         
         # 自定义位置
-        st.markdown("**自定义位置**")
+        st.markdown("自定义位置")
         
         col_x, col_y = st.columns(2)
         with col_x:
@@ -2221,7 +2270,7 @@ with tab5:
             
             if not logo_exists:
                 st.warning(f"⚠️ 未找到Logo文件: {logo_path}")
-                st.warning("请在 logos/ 文件夹中提供 b_logo.png 和 w_logo.png 文件")
+                st.warning("请在 logos 文件夹中提供 b_logo.png 和 w_logo.png 文件")
             else:
                 # 加载Logo
                 logo_img = Image.open(logo_path)
@@ -2310,26 +2359,25 @@ with tab5:
                     st.markdown("---")
                     col_tip1, col_tip2, col_tip3 = st.columns(3)
                     with col_tip1:
-                        st.markdown("**💡 小贴士**")
+                        st.markdown("💡 小贴士")
                         st.caption("• 调整设置后实时预览")
                     with col_tip2:
-                        st.markdown("**⚡ 快速操作**")
+                        st.markdown("⚡ 快速操作")
                         st.caption("• 使用预设位置快速定位")
                     with col_tip3:
-                        st.markdown("**🔧 高级设置**")
+                        st.markdown("🔧 高级设置")
                         st.caption("• 自定义位置精确定位")
         
         else:
             # 未上传图片时的提示
             st.markdown("### 4. 预览区域")
             st.markdown('<div class="logo-adder-preview">', unsafe_allow_html=True)
-            st.markdown("""
-            <div style="text-align: center; padding: 2rem; color: #666;">
+            st.markdown(
+            """<div style="text-align: center; padding: 2rem; color: #666;">
                 <h4>👈 请先在左侧上传图片</h4>
                 <p>上传图片后，可以调整Logo设置并实时预览效果</p>
                 <p>支持单张图片处理，直接下载JPG格式</p>
-            </div>
-            """, unsafe_allow_html=True)
+            </div>""", unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
 
 # ==================== 执行批处理 ====================
@@ -2364,7 +2412,12 @@ if process_button:
     output_size = st.session_state.get('output_size', 800)
     output_format = st.session_state.get('output_format', 'JPG')
     
-    if logo_color == "黑色Logo":
+    # 获取遮罩设置
+    dark_mask_enabled = st.session_state.get('dark_mask_enabled', False)
+    mask_opacity = st.session_state.get('mask_opacity', 20)
+    dark_mask_opacity = mask_opacity if dark_mask_enabled else 0
+    
+    if logo_color == '黑色Logo':
         logo_path = "logos/black_logo.png"
     else:
         logo_path = "logos/white_logo.png"
@@ -2374,8 +2427,12 @@ if process_button:
         st.info(f"🎨 使用{logo_color}进行合成")
     else:
         st.warning(f"⚠️ 未找到{logo_color}文件：{logo_path}")
-        st.warning("请在 logos/ 文件夹中提供 black_logo.png 和 white_logo.png 文件")
+        st.warning("请在 logos 文件夹中提供 black_logo.png 和 white_logo.png 文件")
         logo_to_use = None
+    
+    # 显示遮罩状态
+    if dark_mask_enabled and dark_mask_opacity > 0:
+        st.info(f"🌑 背景遮罩已启用，不透明度: {dark_mask_opacity}%")
     
     # 创建临时目录存放结果
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -2403,12 +2460,13 @@ if process_button:
                 processed += 1
                 progress = processed / total
                 progress_bar.progress(progress)
-                status_text.text(f"正在处理: {processed}/{total} ({progress*100:.1f}%)")
+                status_text.text(f"正在处理 {processed}/{total} ({progress*100:.1f}%)")
                 
-                # 调用合成函数
+                # 调用合成函数（添加遮罩参数）
                 result = compose_image(
                     bg_image, product_image, logo_to_use,
-                    product_size, product_position, output_size, output_format
+                    product_size, product_position, output_size, output_format,
+                    dark_mask_opacity=dark_mask_opacity
                 )
                 
                 # 保存结果
@@ -2502,64 +2560,60 @@ st.markdown("### 💡 使用说明")
 info_col1, info_col2, info_col3, info_col4, info_col5 = st.columns(5)
 
 with info_col1:
-    st.markdown("""
-    <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
+    st.markdown(
+    """<div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
         <h4>📝 图片合成</h4>
         <ul>
             <li>背景图：上传或Unsplash</li>
             <li>产品图：PNG透明背景最佳</li>
-            <li>Logo：系统已预置黑/白Logo</li>
+            <li>Logo：系统已预置黑白Logo</li>
+            <li>遮罩：可选黑色遮罩层</li>
         </ul>
-    </div>
-    """, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
 
 with info_col2:
-    st.markdown("""
-    <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
+    st.markdown(
+    """<div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
         <h4>🔄 图片去重</h4>
         <ul>
             <li>微调像素生成相似图片</li>
             <li>应对平台重复检测</li>
             <li>批量生成多张图片</li>
         </ul>
-    </div>
-    """, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
 
 with info_col3:
-    st.markdown("""
-    <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
+    st.markdown(
+    """<div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
         <h4>🎬 视频抽帧</h4>
         <ul>
             <li>随机删除视频中的两帧</li>
             <li>保留原始音频和画质</li>
             <li>改变视频哈希值</li>
         </ul>
-    </div>
-    """, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
 
 with info_col4:
-    st.markdown("""
-    <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
+    st.markdown(
+    """<div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
         <h4>📝 AI文案（暂不可用）</h4>
         <ul>
             <li>10个产品标题</li>
             <li>10个SEO关键词</li>
             <li>10个分类属性词</li>
         </ul>
-    </div>
-    """, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
 
 with info_col5:
-    st.markdown("""
-    <div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
+    st.markdown(
+    """<div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
         <h4>🖼️ Logo水印添加</h4>
         <ul>
             <li>批量添加Logo水印</li>
             <li>自定义位置大小</li>
             <li>实时预览效果</li>
         </ul>
-    </div>
-    """, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
 
 st.markdown("---")
 st.caption("© 2025 骏泰素材工作台")
