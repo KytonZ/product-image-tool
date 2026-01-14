@@ -502,12 +502,6 @@ if 'processed_video' not in st.session_state:
     st.session_state.processed_video = None
 if 'video_info' not in st.session_state:
     st.session_state.video_info = None
-if 'generated_titles' not in st.session_state:
-    st.session_state.generated_titles = None
-if 'generated_keywords' not in st.session_state:
-    st.session_state.generated_keywords = None
-if 'generated_attributes' not in st.session_state:
-    st.session_state.generated_attributes = None
 if 'unsplash_photos' not in st.session_state:
     st.session_state.unsplash_photos = []
 if 'unsplash_selected_bg' not in st.session_state:
@@ -854,228 +848,6 @@ def remove_random_frames(input_video_path, output_video_path, progress_bar=None,
     
     return output_video_path, video_info, frames_to_remove, saved_count
 
-def generate_product_content(product_name, platform):
-    """生成产品标题、关键词和属性词的核心函数"""
-    
-    # 产品词汇库
-    product_vocab = {
-        "MBBR Media": {
-            "variations": ["MBBR Media", "MBBR Biofilm Media", "Moving Bed Biofilm Reactor Media", "Plastic Bio Media"],
-            "materials": ["HDPE", "Polyethylene", "High-Density Polyethylene", "PP"],
-            "shapes": ["Carrier", "Cylinder", "Honeycomb", "Cross-Flow", "Ring-Type"],
-            "features": ["High Surface Area", "Biofilm Growth", "Wastewater Treatment", "Nitrogen Removal", "Anoxic Conditions"],
-            "applications": ["Wastewater Treatment Plant", "Sewage Treatment", "Industrial Effluent", "Municipal WWTP", "Aquaculture"]
-        },
-        "Disc Diffuser": {
-            "variations": ["Disc Diffuser", "Membrane Diffuser", "Fine Bubble Diffuser", "Aeration Disc"],
-            "materials": ["EPDM", "Silicone", "Polyurethane", "Rubber Membrane"],
-            "sizes": ["9 inch", "12 inch", "270mm", "350mm"],
-            "features": ["Fine Bubble", "Oxygen Transfer", "Energy Saving", "Anti-Clogging", "Uniform Aeration"],
-            "applications": ["Aeration Tank", "Activated Sludge", "SBR Reactor", "Aerobic Treatment"]
-        },
-        "Drum Filter": {
-            "variations": ["Drum Filter", "Rotary Drum Filter", "Microscreen Filter", "Drum Screen"],
-            "types": ["Solid-Liquid Separation", "Screening Equipment", "Mechanical Filtration"],
-            "materials": ["Stainless Steel 304", "Stainless Steel 316", "Polyester Screen", "Nylon Mesh"],
-            "features": ["Automatic Cleaning", "Continuous Operation", "Low Maintenance", "High Flow Rate"],
-            "applications": ["Aquaculture", "Wastewater Pretreatment", "Industrial Recycling", "Food Processing"]
-        },
-        "Bio Block": {
-            "variations": ["Bio Block", "Biological Filter Block", "Media Block", "Biofilm Carrier Block"],
-            "materials": ["Plastic Media", "PP", "PVC", "Composite Material"],
-            "shapes": ["Block", "Cube", "Rectangular", "Modular"],
-            "features": ["High Void Ratio", "Large Surface Area", "Easy Installation", "Stackable"],
-            "applications": ["Trickling Filter", "Biological Tower", "Biofilter System", "Water Recycling"]
-        },
-        "MBR": {
-            "variations": ["MBR", "Membrane Bioreactor", "Hollow Fiber MBR", "Flat Sheet MBR"],
-            "types": ["Submerged MBR", "External MBR", "Side-Stream MBR"],
-            "materials": ["PVDF", "PTFE", "Polyethersulfone", "Ceramic Membrane"],
-            "features": ["High Quality Effluent", "Small Footprint", "Low Sludge Production", "Automated Control"],
-            "applications": ["Water Reuse", "Wastewater Recycling", "Industrial Treatment", "Decentralized Treatment"]
-        },
-        "Screw Press Dewatering Machine": {
-            "variations": ["Screw Press", "Dewatering Machine", "Sludge Dewatering Press", "Screw Press Dewaterer"],
-            "types": ["Single Screw", "Twin Screw", "Multi-Disc", "Shaftless Screw"],
-            "materials": ["Stainless Steel", "Carbon Steel", "Wear-Resistant Material"],
-            "features": ["High Dryness", "Low Energy", "Automatic Operation", "Easy Maintenance"],
-            "applications": ["Sludge Treatment", "Municipal Sludge", "Industrial Sludge", "Waste Management"]
-        },
-        "Tube Settler": {
-            "variations": ["Tube Settler", "Lamella Clarifier", "Inclined Plate Settler", "Sedimentation Tube"],
-            "materials": ["PVC", "PP", "Fiberglass", "Stainless Steel"],
-            "angles": ["60 Degree", "55 Degree", "Inclined Design"],
-            "features": ["High Efficiency", "Small Footprint", "Easy Installation", "Modular Design"],
-            "applications": ["Water Treatment Plant", "Clarification", "Sedimentation Tank", "Precipitation"]
-        },
-        "Tube Diffuser": {
-            "variations": ["Tube Diffuser", "Aeration Tube", "Fine Bubble Tube", "Membrane Tube Diffuser"],
-            "materials": ["EPDM", "Silicone", "Polyurethane", "Ceramic"],
-            "sizes": ["1 meter", "2 meter", "Custom Length", "Standard Diameter"],
-            "features": ["Uniform Aeration", "High Oxygen Transfer", "Energy Efficient", "Flexible Installation"],
-            "applications": ["Aeration Basin", "Oxidation Ditch", "Wastewater Aeration", "Aquaculture Pond"]
-        }
-    }
-    
-    # 通用词汇
-    generic_words = {
-        "quality": ["High Quality", "Durable", "Reliable", "Efficient", "Professional Grade"],
-        "certification": ["ISO Certified", "CE Certified", "SGS Tested", "FDA Approved", "RoHS Compliant"],
-        "performance": ["Excellent Performance", "Superior Efficiency", "Optimal Results", "Maximum Output"],
-        "design": ["Advanced Design", "Innovative Technology", "Modern Structure", "Ergonomic Design"],
-        "benefits": ["Cost Effective", "Energy Saving", "Environment Friendly", "Easy to Operate"]
-    }
-    
-    # 生成10个标题
-    titles = []
-    product_info = product_vocab.get(product_name, product_vocab["MBBR Media"])
-    
-    # 标题模板
-    title_templates = [
-        "{product} {feature} for {application} with {certification}",
-        "{product} {material} {feature} {application} {standard}",
-        "Professional {product} {design} for {application} {benefit}",
-        "High Performance {product} {feature} {material} {application}",
-        "{product} {feature} {application} {certification} {quality}",
-        "{product} {size} {material} {feature} for {application}",
-        "{product} {type} {feature} {application} with {benefit}",
-        "{product} {shape} {feature} {material} {application} {certification}",
-        "{product} {design} {feature} for {application} {quality}",
-        "{product} {material} {shape} {feature} {application} {standard}"
-    ]
-    
-    for i in range(50):
-        # 随机选择模板
-        template = random.choice(title_templates)
-        
-        # 填充模板
-        title = template.format(
-            product=random.choice(product_info["variations"]),
-            feature=random.choice(product_info["features"]),
-            application=random.choice(product_info["applications"]),
-            material=random.choice(product_info.get("materials", ["Premium Material"])),
-            size=random.choice(product_info.get("sizes", ["Standard Size"])),
-            type=random.choice(product_info.get("types", ["Professional Type"])),
-            shape=random.choice(product_info.get("shapes", ["Optimized Shape"])),
-            design=random.choice(generic_words["design"]),
-            certification=random.choice(generic_words["certification"]),
-            quality=random.choice(generic_words["quality"]),
-            benefit=random.choice(generic_words["benefits"]),
-            standard=random.choice(["Standard", "Model", "System", "Equipment"])
-        )
-        
-        # 应用标题格式规则
-        title_parts = title.split()
-        formatted_parts = []
-        
-        for idx, word in enumerate(title_parts):
-            # 检查是否是介词（小写）
-            prepositions = ["in", "for", "with", "by", "on", "at", "to", "of", "and", "or", "the", "a", "an"]
-            if word.lower() in prepositions and idx > 0:
-                formatted_parts.append(word.lower())
-            else:
-                # 首字母大写
-                formatted_parts.append(word.title())
-        
-        formatted_title = " ".join(formatted_parts)
-        
-        # 检查字符长度
-        if 85 <= len(formatted_title) <= 128:
-            titles.append(formatted_title)
-    
-    # 生成10个关键词
-    keywords = []
-    
-    # 短尾关键词
-    short_tail = [
-        product_name,
-        *product_info["variations"],
-        *[f"{product_name} {material}" for material in product_info.get("materials", [])[:3]],
-        *[f"{product_name} {size}" for size in product_info.get("sizes", [])[:2]],
-        *[f"{product_name} {feature}" for feature in product_info["features"][:3]]
-    ]
-    
-    # 长尾关键词
-    long_tail = []
-    for variation in product_info["variations"][:2]:
-        for feature in product_info["features"][:3]:
-            for application in product_info["applications"][:2]:
-                long_tail.append(f"{variation} {feature} {application}")
-                long_tail.append(f"{feature} {variation} for {application}")
-    
-    for material in product_info.get("materials", [])[:2]:
-        for feature in product_info["features"][:2]:
-            long_tail.append(f"{material} {product_name} {feature}")
-    
-    # 组合关键词
-    keywords = list(set(short_tail + long_tail))
-    
-    # 如果不够10个，添加通用组合
-    while len(keywords) < 10:
-        base = random.choice(product_info["variations"])
-        attr1 = random.choice(product_info["features"] + generic_words["quality"])
-        attr2 = random.choice(product_info["applications"] + ["System", "Equipment", "Machine"])
-        keywords.append(f"{base} {attr1} {attr2}")
-        keywords = list(set(keywords))
-    
-    keywords = keywords[:10]
-    
-    # 生成10个属性词
-    attributes = []
-    
-    # 材料属性
-    if "materials" in product_info:
-        attributes.append("Material Type:")
-        for material in product_info["materials"][:5]:
-            attributes.append(f"  - {material}")
-    
-    # 尺寸属性
-    if "sizes" in product_info:
-        attributes.append("\nSize Specification:")
-        for size in product_info["sizes"][:5]:
-            attributes.append(f"  - {size}")
-    elif "shapes" in product_info:
-        attributes.append("\nShape Design:")
-        for shape in product_info["shapes"][:5]:
-            attributes.append(f"  - {shape}")
-    
-    # 性能属性
-    attributes.append("\nPerformance Features:")
-    for feature in product_info["features"][:8]:
-        attributes.append(f"  - {feature}")
-    
-    # 应用属性
-    attributes.append("\nApplication Scenarios:")
-    for app in product_info["applications"][:8]:
-        attributes.append(f"  - {app}")
-    
-    # 质量属性
-    attributes.append("\nQuality Standards:")
-    for standard in generic_words["certification"][:5]:
-        attributes.append(f"  - {standard}")
-    
-    # 设计属性
-    attributes.append("\nDesign Characteristics:")
-    for design in generic_words["design"][:5]:
-        attributes.append(f"  - {design}")
-    
-    # 通用属性
-    attributes.append("\nGeneral Properties:")
-    general_props = [
-        "High Durability", "Corrosion Resistant", "UV Resistant", "Chemical Resistant",
-        "Temperature Resistant", "Abrasion Resistant", "Long Service Life", "Low Maintenance",
-        "Easy Installation", "Modular Design", "Customizable", "Bulk Available",
-        "OEM Service", "Fast Delivery", "Competitive Price", "Technical Support"
-    ]
-    
-    for prop in general_props[:10]:
-        attributes.append(f"  - {prop}")
-    
-    # 确保属性词数量
-    attribute_text = "\n".join(attributes)
-    
-    return titles, keywords, attribute_text
-
 # ==================== Logo水印添加核心函数 ====================
 def add_logo_to_image(base_image, logo_image, x_percent, y_percent, size_percent, opacity):
     """将Logo添加到图片上的核心函数"""
@@ -1181,45 +953,39 @@ def create_zip_from_images(images, original_names, output_format='PNG'):
 with st.sidebar:
     st.markdown("### ⚙️ 合成设置")
     
-    # 1. Logo设置
+    # 1. Logo设置 - 简化
     st.markdown('<div class="settings-title">🖼️ Logo设置</div>', unsafe_allow_html=True)
     logo_color = st.radio(
-        "选择Logo颜色",
+        "",
         ["黑色Logo", "白色Logo"],
         horizontal=True,
-        help="根据背景颜色选择合适的Logo颜色以确保清晰可见",
         key="logo_color_select"
     )
     st.session_state.logo_color = logo_color
     
     st.markdown("---")
     
-    # 2. 产品图设置（删除产品图位置功能）
-    st.markdown('<div class="settings-title">📐 产品图设置</div>', unsafe_allow_html=True)
+    # 2. 产品图设置 - 简化
+    st.markdown('<div class="settings-title">📐 产品图最大边长</div>', unsafe_allow_html=True)
     product_size = st.slider(
-        "产品图最大边长", 
+        "", 
         min_value=500, 
         max_value=1000, 
         value=800, 
         step=50,
-        help="控制产品图在合成图中的大小",
         key="product_size_slider"
     )
     st.session_state.product_size = product_size
     
-    # 删除产品图位置设置
-    # 产品图位置固定为居中
-    
     st.markdown("---")
     
-    # 3. 背景遮罩设置
-    st.markdown('<div class="settings-title">🎨 背景遮罩（使产品更突出）</div>', unsafe_allow_html=True)
+    # 3. 背景遮罩设置 - 简化
+    st.markdown('<div class="settings-title">🎨 背景遮罩</div>', unsafe_allow_html=True)
     
     # 遮罩开关
     dark_mask_enabled = st.checkbox(
         '添加背景遮罩层',
         value=st.session_state.get('dark_mask_enabled', False),
-        help='在背景图上层添加颜色遮罩层，使产品图更突出',
         key='dark_mask_enabled_checkbox'
     )
     
@@ -1229,19 +995,18 @@ with st.sidebar:
     if dark_mask_enabled:
         # 遮罩不透明度滑块
         mask_opacity = st.slider(
-            '遮罩层不透明度',
+            '不透明度',
             min_value=0,
             max_value=100,
             value=st.session_state.get('mask_opacity', 20),
             step=5,
-            help='遮罩层的不透明度，值越大颜色越明显',
             key='mask_opacity_slider'
         )
         st.session_state.mask_opacity = mask_opacity
         
-        # 颜色选择类型
+        # 颜色选择类型 - 简化
         mask_color_type = st.radio(
-            "颜色选择方式",
+            "",
             ["预设颜色", "自定义颜色"],
             horizontal=True,
             index=0 if st.session_state.get('mask_color_type', '预设颜色') == '预设颜色' else 1,
@@ -1270,10 +1035,10 @@ with st.sidebar:
                 """, unsafe_allow_html=True)
             
             with col2:
-                # 颜色选择下拉框
+                # 颜色选择下拉框 - 简化
                 preset_options = list(PRESET_COLORS.keys())
                 selected_preset = st.selectbox(
-                    "选择预设颜色",
+                    "",
                     preset_options,
                     index=preset_options.index(current_preset) if current_preset in preset_options else 0,
                     key='mask_preset_select'
@@ -1287,7 +1052,7 @@ with st.sidebar:
         else:  # 自定义颜色
             # 自定义颜色选择器
             custom_color = st.color_picker(
-                "选择遮罩颜色",
+                "",
                 value=st.session_state.get('mask_custom_color', '#FFFFFF'),
                 key='mask_custom_color_picker'
             )
@@ -1312,19 +1077,18 @@ with st.sidebar:
                 """, unsafe_allow_html=True)
             
             with col2:
-                st.caption(f"颜色值: {current_hex}")
-                st.caption(f"RGB: {current_rgb}")
+                st.caption(f"{current_hex}")
         
         # 更新当前颜色
         current_color = get_current_mask_color()
         current_hex = rgb_to_hex(current_color)
         
-        # 显示遮罩信息（删除预览）
+        # 显示遮罩信息
         color_name = st.session_state.mask_preset_color if st.session_state.mask_color_type == '预设颜色' else '自定义颜色'
         st.markdown(f"""
         <div class="mask-info">
-            <strong>当前设置:</strong><br>
-            • 颜色: {color_name} ({current_hex})<br>
+            <strong>设置:</strong><br>
+            • 颜色: {color_name}<br>
             • 不透明度: {mask_opacity}%<br>
         </div>
         """, unsafe_allow_html=True)
@@ -1337,19 +1101,17 @@ with st.sidebar:
     col_size1, col_size2 = st.columns(2)
     with col_size1:
         output_size = st.selectbox(
-            "输出尺寸", 
+            "尺寸", 
             [400, 600, 800, 1000, 1200, 1500, 2000],
             index=2,
-            help="选择输出图片的尺寸",
             key="output_size_select"
         )
         st.session_state.output_size = output_size
     with col_size2:
         output_format = st.radio(
-            "输出格式", 
+            "格式", 
             ['JPG', 'PNG'],
             horizontal=True,
-            help="JPG适用于照片，PNG适用于需要透明背景的图片",
             key="output_format_radio"
         )
         st.session_state.output_format = output_format
@@ -1361,15 +1123,13 @@ with st.sidebar:
         "🚀 开始智能批量合成", 
         type="primary", 
         use_container_width=True,
-        help="点击开始处理所有图片",
         key="process_button"
     )
 
 # ==================== 主区域：标签页 ====================
-# 修改为4个标签页，删除了图片去重功能
-tab1, tab2, tab3, tab4 = st.tabs(["📤 产品图合成", "🎬 视频抽帧", "📝 AI文案(暂不可用)", "🖼️ Logo水印添加"])
+# 修改为3个标签页，删除了AI文案功能
+tab1, tab2, tab3 = st.tabs(["📤 产品图合成", "🎬 视频抽帧", "🖼️ Logo水印添加"])
 
-# ========== tab1 中 Unsplash 部分完整修正代码 ==========
 # ========== tab1 最终完整版：产品图合成（无偏移+响应快+间距紧凑） ==========
 with tab1:
     # 减小标题间距
@@ -1562,32 +1322,30 @@ with tab1:
                         if idx < len(photos):
                             with columns[col]:
                                 photo = photos[idx]
-                                # 优化：使用thumb缩略图，加载更快（比small更小，提速明显）
+                                # 优化：使用thumb缩略图，加载更快
                                 img_url = photo.get("urls", {}).get("thumb") or photo.get("urls", {}).get("small")
                                 
                                 if img_url:
-                                    # 最终优化CSS：紧凑间距+固定尺寸+无偏移
                                     st.markdown(f"""
                                     <style>
                                         /* 1. 外层卡片：紧凑高度+紧贴间距，无多余空白 */
                                         .unsplash-card-{current_page}-{idx} {{
                                             position: relative;
                                             width: 100%;
-                                            height: 180px; /* 最终紧凑高度：图片140px + 按钮36px + 4px间距 */
+                                            height: 180px;
                                             margin-bottom: 16px;
                                             display: flex;
                                             flex-direction: column;
                                             justify-content: flex-end;
-                                            gap: 4px; /* 图片与按钮间距4px，紧贴不拥挤（可改0px完全紧贴） */
+                                            gap: 4px;
                                         }}
                                         /* 2. 图片容器：紧凑高度+无底部外边距，缩短距离核心 */
                                         .img-container-{current_page}-{idx} {{
                                             position: relative;
                                             width: 100%;
-                                            height: 140px; /* 紧凑图片高度，加载更快 */
+                                            height: 140px;
                                             overflow: hidden;
                                             border-radius: 6px;
-                                            /* 移除所有底部外边距，彻底缩短与按钮的距离 */
                                         }}
                                         .img-container-{current_page}-{idx} img {{
                                             position: absolute;
@@ -1596,19 +1354,19 @@ with tab1:
                                             transform: translate(-50%, -50%);
                                             width: 100%;
                                             height: 100%;
-                                            object-fit: cover; /* 居中裁剪，保持比例不拉伸 */
+                                            object-fit: cover;
                                         }}
                                         /* 3. 按钮样式：固定尺寸+无差异，无偏移核心 */
                                         div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"] {{
                                             width: 100% !important;
-                                            height: 36px !important; /* 强制固定高度，无任何差异 */
+                                            height: 36px !important;
                                             font-size: 0.65rem !important;
-                                            padding: 0 !important; /* 清除内边距，避免尺寸变化 */
+                                            padding: 0 !important;
                                             border-radius: 6px !important;
                                             border: 1px solid #d1d5db !important;
                                             transition: background-color 0.2s ease !important;
                                             box-sizing: border-box !important;
-                                            line-height: 1 !important; /* 行高统一，无高度波动 */
+                                            line-height: 1 !important;
                                         }}
                                         /* 选中状态：仅改背景色，不改任何尺寸 */
                                         div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"].stButton-primary {{
@@ -1625,7 +1383,7 @@ with tab1:
                                         div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"]:hover {{
                                             opacity: 0.9 !important;
                                             box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
-                                            transform: none !important; /* 禁止任何位移 */
+                                            transform: none !important;
                                         }}
                                         /* 禁用聚焦样式：避免点击后边框变化导致视觉偏移 */
                                         div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"]:focus {{
@@ -1640,14 +1398,14 @@ with tab1:
                                     </div>
                                     """, unsafe_allow_html=True)
                                     
-                                    # 精准判断选中状态，增加容错，避免误判
+                                    # 精准判断选中状态
                                     is_selected = False
                                     selected_bg = st.session_state.get('unsplash_selected_bg')
                                     if selected_bg:
                                         is_selected = (getattr(selected_bg, 'page', -1) == current_page) and \
                                                       (getattr(selected_bg, 'idx', -1) == idx)
                                     
-                                    # 按钮配置 - 纯CSS控制，无JS注入，响应更快
+                                    # 按钮配置
                                     button_label = "选择背景图"
                                     btn_kwargs = {
                                         "key": f"select_{current_page}_{idx}",
@@ -1658,7 +1416,7 @@ with tab1:
                                     if is_selected:
                                         btn_kwargs["type"] = "primary"
                                     
-                                    # 按钮点击逻辑 - 非阻塞响应，无延迟，间距紧凑
+                                    # 按钮点击逻辑
                                     if st.button(button_label, **btn_kwargs):
                                         with tab1_global_status.container():
                                             with st.spinner("正在下载背景图..."):
@@ -1675,26 +1433,24 @@ with tab1:
                                                     mock_file = MockFile(img, idx)
                                                     st.session_state.unsplash_selected_bg = mock_file
                                                     
-                                                    # 关键优化：非阻塞toast提示，2秒后自动消失，无延迟
+                                                    # 非阻塞toast提示
                                                     st.toast("背景图选择成功！", icon="✅", duration=2)
-                                                    tab1_global_status.empty()  # 立即清空spinner，响应更快
-                                                    
-                                                    # 平滑重渲染，无布局扰动
+                                                    tab1_global_status.empty()
                                                     st.rerun()
 
     with col2:
-        # 产品图上传逻辑（保持原有功能，无修改）
+        # 产品图上传逻辑
         st.markdown("#### 产品图上传")
         
         # 添加占位单选按钮以对齐高度
         with st.container():
             st.radio(
-                "",  # 空标签
+                "",
                 ["上传图片"],
                 horizontal=True,
                 key="product_source_radio",
                 disabled=True,
-                label_visibility="collapsed"  # 隐藏标签
+                label_visibility="collapsed"
             )
         
         # 产品图上传
@@ -1737,7 +1493,7 @@ with tab1:
                                 width=display_width
                             )
     
-    # 上传状态汇总（保持原有功能，无修改）
+    # 上传状态汇总
     bg_files_combined = []
     
     if 'bg_files' in locals() and bg_files:
@@ -1750,7 +1506,7 @@ with tab1:
         total_combinations = len(bg_files_combined) * len(product_files)
         st.info(f"准备合成 {len(bg_files_combined)} 张背景图 × {len(product_files)} 张产品图 = {total_combinations} 张合成图")
 
-# 标签页2：视频抽帧（原来的tab3）
+# 标签页2：视频抽帧
 with tab2:
     st.header("🎬 视频抽帧")
     st.markdown(
@@ -1919,196 +1675,8 @@ with tab2:
                     st.session_state.video_info = None
                     st.rerun()
 
-# 标签页3：AI文案（原来的tab4）
+# 标签页3：Logo水印添加
 with tab3:
-    st.header("📝 AI文案 - 阿里巴巴/MIC平台")
-    st.markdown(
-    """<div class="highlight-box">
-        <p><b>功能说明：</b>根据选择的产品，自动生成适用于阿里巴巴和国际站(MIC)的英文产品标题、关键词和属性词。</p>
-        <ul>
-            <li>标题长度：8-12个单词，85-128个字符，首字母大写，介词小写</li>
-            <li>关键词：包含短尾核心词和长尾复合词</li>
-        </ul>
-    </div>""", unsafe_allow_html=True)
-    
-    # 使用两列布局
-    col_setting, col_preview = st.columns([1, 2], gap="large")
-    
-    with col_setting:
-        st.markdown("### 1. 产品设置")
-        
-        # 产品选择 - 修改产品名称格式
-        product_options = [
-            "MBBR Media", 
-            "Disc Diffuser", 
-            "Drum Filter", 
-            "Bio Block", 
-            "MBR", 
-            "Screw Press Dewatering Machine", 
-            "Tube Settler", 
-            "Tube Diffuser"
-        ]
-        
-        selected_product = st.selectbox(
-            "选择产品类型",
-            product_options,
-            help="选择需要生成文案的产品",
-            key="product_select"
-        )
-        
-        # 平台选择
-        platform = st.radio(
-            "目标平台",
-            ["阿里巴巴国际站", "Made-in-China.com"],
-            help="选择产品要发布的平台",
-            key="platform_select"
-        )
-        
-        # 生成按钮
-        if st.button("🤖 开始生成AI文案", type="primary", use_container_width=True, key="generate_content"):
-            with st.spinner(f'正在为 {selected_product} 生成AI文案...'):
-                # 调用生成函数
-                titles, keywords, attributes = generate_product_content(selected_product, platform)
-                
-                # 保存到session_state
-                st.session_state.generated_titles = titles
-                st.session_state.generated_keywords = keywords
-                st.session_state.generated_attributes = attributes
-                
-                st.success(f"✅ 成功为 {selected_product} 生成文案内容！")
-    
-    with col_preview:
-        if st.session_state.generated_titles:
-            st.markdown("### 2. 生成结果")
-            
-            # 标题部分
-            st.markdown('<div class="section-title">📝 10个产品标题</div>', unsafe_allow_html=True)
-            st.markdown("复制说明： 以下标题可直接复制到阿里/MIC平台的产品标题字段")
-            
-            # 创建可复制的文本框
-            titles_text = "\n".join(st.session_state.generated_titles)
-            st.text_area(
-                "产品标题 (共10个)",
-                titles_text,
-                height=200,
-                key="titles_area",
-                label_visibility="collapsed"
-            )
-            
-            # 复制按钮
-            st.download_button(
-                label="📋 复制所有标题",
-                data=titles_text,
-                file_name=f"{selected_product.replace(' ', '_')}_titles.txt",
-                mime="text/plain",
-                key="copy_titles"
-            )
-            
-            # 关键词部分
-            st.markdown('<div class="section-title">🔑 10个关键词</div>', unsafe_allow_html=True)
-            st.markdown("包含： 短尾核心词 + 长尾复合词")
-            
-            keywords_text = "\n".join(st.session_state.generated_keywords)
-            st.text_area(
-                "关键词列表",
-                keywords_text,
-                height=150,
-                key="keywords_area",
-                label_visibility="collapsed"
-            )
-            
-            # 复制按钮
-            st.download_button(
-                label="📋 复制所有关键词",
-                data=keywords_text,
-                file_name=f"{selected_product.replace(' ', '_')}_keywords.txt",
-                mime="text/plain",
-                key="copy_keywords"
-            )
-            
-            # 属性词部分
-            st.markdown('<div class="section-title">🏷️ 10个属性词</div>', unsafe_allow_html=True)
-            st.markdown("分类说明： 按材料、尺寸、性能、应用等分类")
-            
-            st.text_area(
-                "属性词分类",
-                st.session_state.generated_attributes,
-                height=250,
-                key="attributes_area",
-                label_visibility="collapsed"
-            )
-            
-            # 复制按钮
-            st.download_button(
-                label="📋 复制所有属性词",
-                data=st.session_state.generated_attributes,
-                file_name=f"{selected_product.replace(' ', '_')}_attributes.txt",
-                mime="text/plain",
-                key="copy_attributes"
-            )
-            
-            # 批量下载按钮
-            st.markdown("---")
-            col_dl1, col_dl2, col_dl3 = st.columns(3)
-            with col_dl1:
-                # 创建ZIP包包含所有内容
-                zip_buffer = BytesIO()
-                with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-                    zip_file.writestr(f"{selected_product}_titles.txt", titles_text)
-                    zip_file.writestr(f"{selected_product}_keywords.txt", keywords_text)
-                    zip_file.writestr(f"{selected_product}_attributes.txt", st.session_state.generated_attributes)
-                
-                zip_buffer.seek(0)
-                
-                st.download_button(
-                    label="📦 下载所有文案 (ZIP)",
-                    data=zip_buffer,
-                    file_name=f"{selected_product.replace(' ', '_')}_content_pack.zip",
-                    mime="application/zip",
-                    use_container_width=True,
-                    key="download_all"
-                )
-            
-            with col_dl2:
-                if st.button("🔄 重新生成", key="regenerate", use_container_width=True):
-                    st.session_state.generated_titles = None
-                    st.session_state.generated_keywords = None
-                    st.session_state.generated_attributes = None
-                    st.rerun()
-            
-            with col_dl3:
-                if st.button("📊 生成统计", key="stats", use_container_width=True):
-                    # 显示统计信息
-                    avg_title_length = sum(len(title) for title in st.session_state.generated_titles) / len(st.session_state.generated_titles)
-                    avg_word_count = sum(len(title.split()) for title in st.session_state.generated_titles) / len(st.session_state.generated_titles)
-                    
-                    st.info(f"""
-                    文案统计信息：
-                    - 标题数量: 10个
-                    - 平均标题长度: {avg_title_length:.1f} 字符
-                    - 平均单词数: {avg_word_count:.1f} 个
-                    - 关键词数量: 10个
-                    - 属性词数量: 10个
-                    - 目标平台: {platform}
-                    """)
-        
-        else:
-            # 未生成时的预览
-            st.markdown("### 2. 文案预览区")
-            st.markdown(
-            """<div style="text-align: center; padding: 3rem; color: #666; background-color: #f8f9fa; border-radius: 10px;">
-                <h4>👈 请先在左侧选择产品</h4>
-                <p>选择产品类型和目标平台后，点击"开始生成AI文案"按钮</p>
-                <p>系统将为您生成：</p>
-                <ul style="text-align: left; display: inline-block;">
-                    <li>10个优化产品标题</li>
-                    <li>10个SEO关键词</li>
-                    <li>10个分类属性词</li>
-                </ul>
-            </div>""", unsafe_allow_html=True)
-
-# 标签页4：Logo水印添加（原来的tab5）
-with tab4:
     # 预设位置映射表
     preset_map = {
         "左上角": (5, 5),
@@ -2532,7 +2100,7 @@ if process_button:
             
             # 每排6张，最多4排
             rows = min(4, (total_previews + 5) // 6)  # 计算需要的行数
-            preview_width = 180  # 每张预览图片的宽度
+            preview_width = 240  # 增加预览图片宽度，提高分辨率
             
             # 使用紧凑网格显示图片
             for row in range(rows):
@@ -2545,17 +2113,19 @@ if process_button:
                             file_path = preview_files[idx]
                             img = Image.open(file_path)
                             
-                            # 高质量调整大小，保持清晰度
+                            # 高质量调整大小，保持清晰度 - 提高预览分辨率
                             display_img = img.copy()
                             
                             # 计算显示尺寸，保持宽高比
                             display_height = int(preview_width * img.height / img.width)
+                            # 使用更高的质量进行缩略
                             display_img.thumbnail((preview_width * 2, display_height * 2), Image.Resampling.LANCZOS)
                             
                             # 显示图片和文件名
                             st.image(
                                 display_img, 
-                                width=preview_width
+                                width=preview_width,
+                                use_column_width=False  # 使用固定宽度确保清晰度
                             )
                             st.caption(
                                 os.path.basename(file_path)[:15] + "..." 
@@ -2569,8 +2139,8 @@ if process_button:
 st.markdown("---")
 st.markdown("### 💡 使用说明")
 
-# 使用四列布局显示说明（现在有四个主要功能）
-info_col1, info_col2, info_col3, info_col4 = st.columns(4)
+# 使用三列布局显示说明
+info_col1, info_col2, info_col3 = st.columns(3)
 
 with info_col1:
     st.markdown(
@@ -2596,17 +2166,6 @@ with info_col2:
     </div>""", unsafe_allow_html=True)
 
 with info_col3:
-    st.markdown(
-    """<div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
-        <h4>📝 AI文案（暂不可用）</h4>
-        <ul>
-            <li>10个产品标题</li>
-            <li>10个SEO关键词</li>
-            <li>10个分类属性词</li>
-        </ul>
-    </div>""", unsafe_allow_html=True)
-
-with info_col4:
     st.markdown(
     """<div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
         <h4>🖼️ Logo水印添加</h4>
