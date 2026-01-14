@@ -108,7 +108,7 @@ def get_custom_css():
         }
         
         section[data-testid="stSidebar"] > div:first-child {
-            padding-top: 2rem;
+            padding-top: 1rem;
         }
         
         /* 响应式调整 */
@@ -196,14 +196,17 @@ def get_custom_css():
         
         /* 设置组样式 */
         .settings-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 0.5rem;
         }
         
         .settings-title {
             font-weight: 600;
             color: #333;
-            margin-bottom: 0.8rem;
-            font-size: 1rem;
+            margin-bottom: 0.3rem;
+            font-size: 0.95rem;
+            padding: 0.3rem 0.5rem;
+            background-color: #f0f2f6;
+            border-radius: 5px;
         }
         
         /* Unsplash图片样式 */
@@ -357,7 +360,7 @@ def get_custom_css():
         
         /* 去掉控制组的外框，简化设计 */
         .stSlider, .stRadio, .stSelectbox {
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
         }
         
         /* 优化预设位置按钮 */
@@ -397,8 +400,9 @@ def get_custom_css():
         .stSlider label {
             font-weight: 600;
             color: #333;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.3rem;
             display: block;
+            font-size: 0.9rem;
         }
         
         /* 优化实时预览 */
@@ -429,23 +433,23 @@ def get_custom_css():
         .mask-info {
             background-color: #e8f4fd;
             border-left: 4px solid #4CAF50;
-            padding: 10px;
+            padding: 8px;
             border-radius: 5px;
-            margin-top: 10px;
-            font-size: 14px;
+            margin-top: 8px;
+            font-size: 12px;
         }
         
         /* 颜色预览框 */
         .color-preview-box {
-            width: 40px;
-            height: 40px;
-            border-radius: 6px;
+            width: 35px;
+            height: 35px;
+            border-radius: 5px;
             border: 2px solid #e0e0e0;
             margin: 0 auto;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
         }
         
@@ -453,21 +457,21 @@ def get_custom_css():
         .color-options-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            margin: 10px 0;
+            gap: 6px;
+            margin: 8px 0;
         }
         
         .color-option {
-            width: 40px;
-            height: 40px;
-            border-radius: 6px;
+            width: 35px;
+            height: 35px;
+            border-radius: 5px;
             border: 2px solid #e0e0e0;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
         }
         
@@ -480,6 +484,106 @@ def get_custom_css():
             border-color: #2196F3;
             border-width: 3px;
             box-shadow: 0 0 8px rgba(33, 150, 243, 0.4);
+        }
+        
+        /* 侧边栏紧凑布局优化 */
+        .sidebar-section {
+            margin-bottom: 1rem;
+        }
+        
+        .sidebar-section-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-section-title i {
+            margin-right: 8px;
+        }
+        
+        /* 紧凑的滑块标签 */
+        .compact-slider-label {
+            font-size: 0.85rem;
+            margin-bottom: 0.2rem;
+            color: #555;
+        }
+        
+        /* 紧凑的数值显示 */
+        .value-display {
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+            margin-top: 0.2rem;
+        }
+        
+        /* 颜色选择器紧凑布局 */
+        .color-picker-compact {
+            margin-bottom: 0.8rem;
+        }
+        
+        /* 开关样式优化 */
+        .stCheckbox label {
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        /* 输出设置紧凑布局 */
+        .output-settings-compact {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        /* 预设颜色网格 */
+        .preset-colors-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            margin: 8px 0;
+        }
+        
+        .preset-color-item {
+            width: 100%;
+            height: 35px;
+            border-radius: 5px;
+            border: 2px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .preset-color-item:hover {
+            transform: scale(1.05);
+            border-color: #2196F3;
+        }
+        
+        .preset-color-item.selected {
+            border-color: #2196F3;
+            border-width: 3px;
+            box-shadow: 0 0 8px rgba(33, 150, 243, 0.4);
+        }
+        
+        /* 紧凑的间距 */
+        .compact-spacing {
+            margin-bottom: 0.3rem !important;
+        }
+        
+        /* 侧边栏分割线 */
+        .sidebar-divider {
+            margin: 0.8rem 0;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        /* 设置项容器 */
+        .setting-item {
+            margin-bottom: 0.8rem;
         }
     </style>
     """
@@ -953,49 +1057,62 @@ def create_zip_from_images(images, original_names, output_format='PNG'):
 with st.sidebar:
     st.markdown("### ⚙️ 合成设置")
     
-    # 1. Logo设置 - 简化
-    st.markdown('<div class="settings-title">🖼️ Logo设置</div>', unsafe_allow_html=True)
-    logo_color = st.radio(
-        "",
-        ["黑色Logo", "白色Logo"],
-        horizontal=True,
-        key="logo_color_select"
-    )
-    st.session_state.logo_color = logo_color
+    # Logo颜色选择
+    st.markdown('<div class="sidebar-section-title">🖼️ Logo颜色</div>', unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("黑色", use_container_width=True, 
+                    type="primary" if st.session_state.get('logo_color', '黑色Logo') == "黑色Logo" else "secondary"):
+            st.session_state.logo_color = "黑色Logo"
+            st.rerun()
+    with col2:
+        if st.button("白色", use_container_width=True,
+                    type="primary" if st.session_state.get('logo_color', '黑色Logo') == "白色Logo" else "secondary"):
+            st.session_state.logo_color = "白色Logo"
+            st.rerun()
     
-    st.markdown("---")
+    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
     
-    # 2. 产品图设置 - 简化
-    st.markdown('<div class="settings-title">📐 产品图最大边长</div>', unsafe_allow_html=True)
+    # 产品图大小设置
+    st.markdown('<div class="sidebar-section-title">📏 产品图尺寸</div>', unsafe_allow_html=True)
     product_size = st.slider(
-        "", 
+        "最大边长 (像素)", 
         min_value=500, 
         max_value=1000, 
-        value=800, 
+        value=st.session_state.get('product_size', 800), 
         step=50,
         key="product_size_slider"
     )
     st.session_state.product_size = product_size
+    st.markdown(f'<div class="value-display">{product_size} px</div>', unsafe_allow_html=True)
     
-    st.markdown("---")
+    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
     
-    # 3. 背景遮罩设置 - 简化
-    st.markdown('<div class="settings-title">🎨 背景遮罩</div>', unsafe_allow_html=True)
+    # 背景遮罩设置
+    st.markdown('<div class="sidebar-section-title">🎨 背景遮罩</div>', unsafe_allow_html=True)
     
     # 遮罩开关
-    dark_mask_enabled = st.checkbox(
-        '添加背景遮罩层',
-        value=st.session_state.get('dark_mask_enabled', False),
-        key='dark_mask_enabled_checkbox'
-    )
+    col_enable, col_info = st.columns([2, 1])
+    with col_enable:
+        dark_mask_enabled = st.checkbox(
+            '启用遮罩',
+            value=st.session_state.get('dark_mask_enabled', False),
+            key='dark_mask_enabled_checkbox'
+        )
+    
+    with col_info:
+        if dark_mask_enabled:
+            st.markdown('<span style="color: #4CAF50; font-size: 0.8rem;">已启用</span>', unsafe_allow_html=True)
+        else:
+            st.markdown('<span style="color: #999; font-size: 0.8rem;">已关闭</span>', unsafe_allow_html=True)
     
     st.session_state.dark_mask_enabled = dark_mask_enabled
     
     # 遮罩设置（如果启用）
     if dark_mask_enabled:
-        # 遮罩不透明度滑块
+        # 遮罩不透明度
         mask_opacity = st.slider(
-            '不透明度',
+            '不透明度 (%)',
             min_value=0,
             max_value=100,
             value=st.session_state.get('mask_opacity', 20),
@@ -1004,55 +1121,60 @@ with st.sidebar:
         )
         st.session_state.mask_opacity = mask_opacity
         
-        # 颜色选择类型 - 简化
-        mask_color_type = st.radio(
-            "",
-            ["预设颜色", "自定义颜色"],
-            horizontal=True,
-            index=0 if st.session_state.get('mask_color_type', '预设颜色') == '预设颜色' else 1,
-            key='mask_color_type_radio'
-        )
-        st.session_state.mask_color_type = mask_color_type
+        # 颜色选择类型
+        color_type_col1, color_type_col2 = st.columns(2)
+        with color_type_col1:
+            if st.button("预设颜色", use_container_width=True,
+                        type="primary" if st.session_state.get('mask_color_type', '预设颜色') == '预设颜色' else "secondary"):
+                st.session_state.mask_color_type = "预设颜色"
+                st.rerun()
         
-        if mask_color_type == "预设颜色":
-            # 当前选择的预设颜色
-            current_preset = st.session_state.get('mask_preset_color', '白色')
+        with color_type_col2:
+            if st.button("自定义", use_container_width=True,
+                        type="primary" if st.session_state.get('mask_color_type', '预设颜色') == '自定义颜色' else "secondary"):
+                st.session_state.mask_color_type = "自定义颜色"
+                st.rerun()
+        
+        if st.session_state.mask_color_type == "预设颜色":
+            # 预设颜色选择
+            st.markdown('<div class="compact-slider-label">选择颜色</div>', unsafe_allow_html=True)
             
-            # 显示颜色预览
-            current_hex = PRESET_COLORS[current_preset]
-            current_rgb = hex_to_rgb(current_hex)
+            # 常用颜色快速选择
+            common_colors = ["白色", "黑色", "深灰", "浅灰", "深蓝", "蓝色", "深绿", "浅绿", "深红", "红色"]
             
-            # 显示颜色预览和选择器
-            col1, col2 = st.columns([1, 3])
-            with col1:
-                # 颜色预览框
-                brightness = get_color_brightness(current_rgb)
-                text_color = "white" if brightness < 128 else "black"
-                st.markdown(f"""
-                <div class="color-preview-box" style="background-color: {current_hex}; color: {text_color};">
-                    {current_preset[0]}
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with col2:
-                # 颜色选择下拉框 - 简化
-                preset_options = list(PRESET_COLORS.keys())
-                selected_preset = st.selectbox(
-                    "",
-                    preset_options,
-                    index=preset_options.index(current_preset) if current_preset in preset_options else 0,
-                    key='mask_preset_select'
-                )
-                
-                if selected_preset != st.session_state.get('mask_preset_color', '白色'):
-                    st.session_state.mask_preset_color = selected_preset
-                    st.session_state.mask_color_rgb = hex_to_rgb(PRESET_COLORS[selected_preset])
-                    st.rerun()
+            # 创建颜色网格
+            cols = st.columns(5)
+            for idx, color_name in enumerate(common_colors):
+                with cols[idx % 5]:
+                    hex_color = PRESET_COLORS[color_name]
+                    is_selected = st.session_state.get('mask_preset_color', '白色') == color_name
+                    
+                    # 显示颜色方块
+                    brightness = get_color_brightness(hex_to_rgb(hex_color))
+                    text_color = "white" if brightness < 128 else "black"
+                    
+                    if st.button(
+                        "",
+                        key=f"color_{color_name}",
+                        help=color_name
+                    ):
+                        st.session_state.mask_preset_color = color_name
+                        st.session_state.mask_color_rgb = hex_to_rgb(hex_color)
+                        st.rerun()
+                    
+                    # 显示颜色名称
+                    st.markdown(f"""
+                    <div style="text-align: center; margin-top: -5px;">
+                        <div style="width: 100%; height: 25px; background-color: {hex_color}; 
+                             border-radius: 4px; border: {'2px solid #2196F3' if is_selected else '1px solid #ddd'};
+                             margin-bottom: 2px;"></div>
+                        <div style="font-size: 0.7rem; color: #666;">{color_name}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
         
         else:  # 自定义颜色
-            # 自定义颜色选择器
             custom_color = st.color_picker(
-                "",
+                "选择颜色",
                 value=st.session_state.get('mask_custom_color', '#FFFFFF'),
                 key='mask_custom_color_picker'
             )
@@ -1062,63 +1184,43 @@ with st.sidebar:
                 st.session_state.mask_color_rgb = hex_to_rgb(custom_color)
                 st.rerun()
             
-            # 显示颜色预览
-            current_hex = custom_color
+            # 显示当前颜色
             current_rgb = hex_to_rgb(custom_color)
-            
-            col1, col2 = st.columns([1, 3])
-            with col1:
-                brightness = get_color_brightness(current_rgb)
-                text_color = "white" if brightness < 128 else "black"
-                st.markdown(f"""
-                <div class="color-preview-box" style="background-color: {current_hex}; color: {text_color};">
-                    自定
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with col2:
-                st.caption(f"{current_hex}")
-        
-        # 更新当前颜色
-        current_color = get_current_mask_color()
-        current_hex = rgb_to_hex(current_color)
-        
-        # 显示遮罩信息
-        color_name = st.session_state.mask_preset_color if st.session_state.mask_color_type == '预设颜色' else '自定义颜色'
-        st.markdown(f"""
-        <div class="mask-info">
-            <strong>设置:</strong><br>
-            • 颜色: {color_name}<br>
-            • 不透明度: {mask_opacity}%<br>
-        </div>
-        """, unsafe_allow_html=True)
+            brightness = get_color_brightness(current_rgb)
+            st.markdown(f"""
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.5rem;">
+                <div style="font-size: 0.8rem; color: #666;">当前颜色:</div>
+                <div style="width: 30px; height: 30px; background-color: {custom_color}; 
+                     border-radius: 4px; border: 1px solid #ddd;"></div>
+            </div>
+            """, unsafe_allow_html=True)
     
-    st.markdown("---")
+    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
     
-    # 4. 输出设置
-    st.markdown('<div class="settings-title">📦 输出设置</div>', unsafe_allow_html=True)
+    # 输出设置
+    st.markdown('<div class="sidebar-section-title">📦 输出设置</div>', unsafe_allow_html=True)
     
-    col_size1, col_size2 = st.columns(2)
-    with col_size1:
-        output_size = st.selectbox(
-            "尺寸", 
-            [400, 600, 800, 1000, 1200, 1500, 2000],
-            index=2,
-            key="output_size_select"
-        )
-        st.session_state.output_size = output_size
-    with col_size2:
-        output_format = st.radio(
-            "格式", 
-            ['JPG', 'PNG'],
-            horizontal=True,
-            key="output_format_radio"
-        )
-        st.session_state.output_format = output_format
+    # 输出尺寸
+    output_size = st.selectbox(
+        "输出尺寸", 
+        [400, 600, 800, 1000, 1200, 1500, 2000],
+        index=2,
+        key="output_size_select"
+    )
+    st.session_state.output_size = output_size
     
-    st.markdown("---")
+    # 输出格式
+    output_format = st.radio(
+        "输出格式", 
+        ['JPG', 'PNG'],
+        horizontal=True,
+        key="output_format_radio"
+    )
+    st.session_state.output_format = output_format
     
-    # 5. 处理按钮
+    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
+    
+    # 处理按钮
     process_button = st.button(
         "🚀 开始智能批量合成", 
         type="primary", 
@@ -1985,7 +2087,7 @@ if process_button:
     
     # 从session_state获取设置值
     logo_color = st.session_state.get('logo_color', '黑色Logo')
-    product_size = st.session_state.get('product_size', 600)
+    product_size = st.session_state.get('product_size', 800)
     output_size = st.session_state.get('output_size', 800)
     output_format = st.session_state.get('output_format', 'JPG')
     
@@ -2010,7 +2112,7 @@ if process_button:
     # 显示遮罩状态
     if dark_mask_enabled:
         mask_hex = rgb_to_hex(mask_color_rgb)
-        mask_color_name = st.session_state.get('mask_preset_color', '自定义颜色')
+        mask_color_name = st.session_state.get('mask_preset_color', '白色')
         st.info(f"🖌️ 背景遮罩已启用 | 颜色: {mask_color_name} ({mask_hex}) | 不透明度: {mask_opacity}%")
     
     # 创建临时目录存放结果
