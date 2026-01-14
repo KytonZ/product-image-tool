@@ -12,9 +12,6 @@ import cv2
 import numpy as np
 from moviepy.editor import VideoFileClip, AudioFileClip
 import requests
-from colormath.color_objects import sRGBColor, LabColor
-from colormath.color_conversions import convert_color
-from colormath.color_diff import delta_e_cie2000
 
 # 设置页面配置
 st.set_page_config(
@@ -485,34 +482,6 @@ def get_custom_css():
             box-shadow: 0 0 8px rgba(33, 150, 243, 0.4);
         }
         
-        /* 颜色对比度指示器 */
-        .contrast-indicator {
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-top: 5px;
-            text-align: center;
-        }
-        
-        .contrast-good {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .contrast-warning {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-        
-        .contrast-poor {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
         /* 遮罩效果预览 */
         .mask-preview-container {
             border: 1px solid #e0e0e0;
@@ -726,39 +695,6 @@ def get_color_brightness(rgb):
     r, g, b = rgb
     return (r * 299 + g * 587 + b * 114) / 1000
 
-def get_contrast_ratio(color1, color2):
-    """计算两个颜色的对比度比率"""
-    def get_luminance(rgb):
-        r, g, b = rgb
-        rs = r / 255.0
-        gs = g / 255.0
-        bs = b / 255.0
-        
-        # 伽马校正
-        r = rs / 12.92 if rs <= 0.03928 else ((rs + 0.055) / 1.055) ** 2.4
-        g = gs / 12.92 if gs <= 0.03928 else ((gs + 0.055) / 1.055) ** 2.4
-        b = bs / 12.92 if bs <= 0.03928 else ((bs + 0.055) / 1.055) ** 2.4
-        
-        return 0.2126 * r + 0.7152 * g + 0.0722 * b
-    
-    L1 = get_luminance(color1)
-    L2 = get_luminance(color2)
-    
-    # 确保L1是较亮的颜色
-    if L1 < L2:
-        L1, L2 = L2, L1
-    
-    return (L1 + 0.05) / (L2 + 0.05)
-
-def get_contrast_rating(ratio):
-    """根据对比度比率获取评级"""
-    if ratio >= 7:
-        return "优秀", "contrast-good"
-    elif ratio >= 4.5:
-        return "良好", "contrast-warning"
-    else:
-        return "较差", "contrast-poor"
-
 def get_current_mask_color():
     """获取当前设置的遮罩颜色RGB"""
     if st.session_state.mask_color_type == "预设颜色":
@@ -768,10 +704,6 @@ def get_current_mask_color():
         # 自定义颜色
         hex_color = st.session_state.mask_custom_color
         return hex_to_rgb(hex_color)
-
-def update_mask_color_rgb():
-    """更新遮罩颜色的RGB值到session_state"""
-    st.session_state.mask_color_rgb = get_current_mask_color()
 
 # ==================== 核心函数定义 ====================
 def compose_image(bg_img, product_img, logo_img, product_size, product_position, output_size, output_format, 
@@ -839,68 +771,6 @@ def compose_image(bg_img, product_img, logo_img, product_size, product_position,
         final_image = bg
     
     return final_image
-
-def generate_modified_images(uploaded_file, num_copies, num_pixels_to_change=1):
-    """生成多张经过像素微调的图片"""
-    try:
-        # 1. 读取原始图片
-        original_img = Image.open(uploaded_file).convert('RGB')
-        width, height = original_img.size
-        
-        # 存储生成的图片用于预览
-        preview_images = []
-        
-        # 2. 准备一个内存中的Zip文件
-        zip_buffer = BytesIO()
-        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-            # 3. 循环生成指定数量的图片
-            for i in range(num_copies):
-                # 复制原始图片，避免在原图上修改
-                modified_img = original_img.copy()
-                pixels = modified_img.load()  # 获取像素访问对象
-                
-                # 4. 随机修改指定数量的像素点
-                for _ in range(num_pixels_to_change):
-                    # 随机选择一个像素位置
-                    x = random.randint(0, width - 1)
-                    y = random.randint(0, height - 1)
-                    
-                    # 获取原像素颜色
-                    original_r, original_g, original_b = pixels[x, y]
-                    
-                    # 在每个颜色通道上进行微小随机调整（±2范围内）
-                    new_r = max(0, min(255, original_r + random.randint(-2, 2)))
-                    new_g = max(0, min(255, original_g + random.randint(-2, 2)))
-                    new_b = max(0, min(255, original_b + random.randint(-2, 2)))
-                    
-                    # 应用新颜色
-                    pixels[x, y] = (new_r, new_g, new_b)
-                
-                # 5. 将修改后的图片保存到内存，并加入Zip
-                img_buffer = BytesIO()
-                # 根据原格式保存，保持质量
-                if uploaded_file.type in ['image/jpeg', 'image/jpg']:
-                    modified_img.save(img_buffer, format='JPEG', quality=95)
-                    ext = '.jpg'
-                else:
-                    modified_img.save(img_buffer, format='PNG')
-                    ext = '.png'
-                
-                img_buffer.seek(0)
-                # 生成文件名：原名称_序号
-                file_name = f"{os.path.splitext(uploaded_file.name)[0]}_modified_{i+1:03d}{ext}"
-                zip_file.writestr(file_name, img_buffer.getvalue())
-                
-                # 存储前3张用于预览
-                if i < 3:
-                    preview_images.append(modified_img.copy())
-        
-        zip_buffer.seek(0)
-        return zip_buffer, preview_images
-        
-    except Exception as e:
-        st.error(f"处理图片时发生错误: {e}")
-        return None, []
 
 def remove_random_frames(input_video_path, output_video_path, progress_bar=None, status_text=None):
     """
@@ -1397,8 +1267,8 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # 3. 背景遮罩设置 - 升级版
-    st.markdown('<div class="settings-title">🖼️ 背景遮罩</div>', unsafe_allow_html=True)
+    # 3. 背景遮罩设置 - 修复版本
+    st.markdown('<div class="settings-title">🎨 背景遮罩（可选颜色）</div>', unsafe_allow_html=True)
     
     # 遮罩开关
     dark_mask_enabled = st.checkbox(
@@ -1424,78 +1294,85 @@ with st.sidebar:
         )
         st.session_state.mask_opacity = mask_opacity
         
-        # 颜色类型选择
+        # 颜色选择类型
         mask_color_type = st.radio(
             "颜色选择方式",
             ["预设颜色", "自定义颜色"],
             horizontal=True,
             index=0 if st.session_state.get('mask_color_type', '预设颜色') == '预设颜色' else 1,
-            help="选择预设颜色或自定义颜色",
             key='mask_color_type_radio'
         )
         st.session_state.mask_color_type = mask_color_type
         
         if mask_color_type == "预设颜色":
-            # 预设颜色选择
-            preset_options = list(PRESET_COLORS.keys())
-            default_idx = preset_options.index(st.session_state.get('mask_preset_color', '白色')) if st.session_state.get('mask_preset_color', '白色') in preset_options else 0
+            # 当前选择的预设颜色
+            current_preset = st.session_state.get('mask_preset_color', '白色')
             
-            # 创建颜色选择器
-            st.markdown("预设颜色")
-            # 创建两列用于显示颜色
-            cols = st.columns(5)
-            for idx, (color_name, hex_color) in enumerate(PRESET_COLORS.items()):
-                col_idx = idx % 5
-                with cols[col_idx]:
-                    is_selected = (st.session_state.get('mask_preset_color', '白色') == color_name)
-                    
-                    # 显示颜色预览
-                    st.markdown(f"""
-                    <div class="color-option {'selected' if is_selected else ''}" 
-                         style="background-color: {hex_color}; color: {'white' if get_color_brightness(hex_to_rgb(hex_color)) < 128 else 'black'};"
-                         onclick="this.parentElement.querySelector('input[type=radio]').click()">
-                        {color_name[0]}
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    # 添加隐藏的单选按钮
-                    if st.radio(
-                        "",
-                        [color_name],
-                        key=f"preset_color_{idx}",
-                        index=0 if is_selected else None,
-                        label_visibility="collapsed"
-                    ):
-                        st.session_state.mask_preset_color = color_name
-                        st.session_state.mask_color_rgb = hex_to_rgb(hex_color)
-                        
-        else:
+            # 显示颜色预览
+            current_hex = PRESET_COLORS[current_preset]
+            current_rgb = hex_to_rgb(current_hex)
+            
+            # 显示颜色预览和选择器
+            col1, col2 = st.columns([1, 3])
+            with col1:
+                # 颜色预览框
+                brightness = get_color_brightness(current_rgb)
+                text_color = "white" if brightness < 128 else "black"
+                st.markdown(f"""
+                <div class="color-preview-box" style="background-color: {current_hex}; color: {text_color};">
+                    {current_preset[0]}
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                # 颜色选择下拉框
+                preset_options = list(PRESET_COLORS.keys())
+                selected_preset = st.selectbox(
+                    "选择预设颜色",
+                    preset_options,
+                    index=preset_options.index(current_preset) if current_preset in preset_options else 0,
+                    key='mask_preset_select'
+                )
+                
+                if selected_preset != st.session_state.get('mask_preset_color', '白色'):
+                    st.session_state.mask_preset_color = selected_preset
+                    st.session_state.mask_color_rgb = hex_to_rgb(PRESET_COLORS[selected_preset])
+                    st.rerun()
+        
+        else:  # 自定义颜色
             # 自定义颜色选择器
             custom_color = st.color_picker(
                 "选择遮罩颜色",
                 value=st.session_state.get('mask_custom_color', '#FFFFFF'),
                 key='mask_custom_color_picker'
             )
-            st.session_state.mask_custom_color = custom_color
-            st.session_state.mask_color_rgb = hex_to_rgb(custom_color)
+            
+            if custom_color != st.session_state.get('mask_custom_color', '#FFFFFF'):
+                st.session_state.mask_custom_color = custom_color
+                st.session_state.mask_color_rgb = hex_to_rgb(custom_color)
+                st.rerun()
+            
+            # 显示颜色预览
+            current_hex = custom_color
+            current_rgb = hex_to_rgb(custom_color)
+            
+            col1, col2 = st.columns([1, 3])
+            with col1:
+                brightness = get_color_brightness(current_rgb)
+                text_color = "white" if brightness < 128 else "black"
+                st.markdown(f"""
+                <div class="color-preview-box" style="background-color: {current_hex}; color: {text_color};">
+                    自定
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                st.caption(f"颜色值: {current_hex}")
+                st.caption(f"RGB: {current_rgb}")
         
-        # 显示当前颜色预览和对比度信息
-        current_color = st.session_state.mask_color_rgb
+        # 更新当前颜色
+        current_color = get_current_mask_color()
         current_hex = rgb_to_hex(current_color)
-        
-        # 颜色预览
-        col1, col2 = st.columns([1, 3])
-        with col1:
-            brightness = get_color_brightness(current_color)
-            text_color = "white" if brightness < 128 else "black"
-            st.markdown(f"""
-            <div class="color-preview-box" style="background-color: {current_hex}; color: {text_color};">
-                {st.session_state.mask_preset_color if st.session_state.mask_color_type == '预设颜色' else '自定'}
-            </div>
-            """, unsafe_allow_html=True)
-        with col2:
-            st.caption(f"当前颜色: {current_hex}")
-            st.caption(f"RGB: {current_color}")
         
         # 显示遮罩效果预览
         if mask_opacity > 0:
@@ -1516,23 +1393,13 @@ with st.sidebar:
             """
             st.markdown(preview_html, unsafe_allow_html=True)
             
-            # 对比度信息
-            white_rgb = (255, 255, 255)
-            black_rgb = (0, 0, 0)
-            
-            # 与白色对比度
-            contrast_with_white = get_contrast_ratio(current_color, white_rgb)
-            rating_white, class_white = get_contrast_rating(contrast_with_white)
-            
-            # 与黑色对比度
-            contrast_with_black = get_contrast_ratio(current_color, black_rgb)
-            rating_black, class_black = get_contrast_rating(contrast_with_black)
-            
+            # 显示颜色信息
+            color_name = st.session_state.mask_preset_color if st.session_state.mask_color_type == '预设颜色' else '自定义颜色'
             st.markdown(f"""
             <div class="mask-info">
-                <strong>对比度分析:</strong><br>
-                • 与白色对比: {contrast_with_white:.1f}:1 <span class="{class_white}">{rating_white}</span><br>
-                • 与黑色对比: {contrast_with_black:.1f}:1 <span class="{class_black}">{rating_black}</span><br>
+                <strong>当前设置:</strong><br>
+                • 颜色: {color_name} ({current_hex})<br>
+                • 不透明度: {mask_opacity}%<br>
                 <small>提示: 选择与产品图形成良好对比的颜色</small>
             </div>
             """, unsafe_allow_html=True)
@@ -1576,8 +1443,8 @@ with st.sidebar:
     )
 
 # ==================== 主区域：标签页 ====================
-# 修改为5个标签页，添加Logo水印添加
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["📤 产品图合成", "🔄 图片去重", "🎬 视频抽帧", "📝 AI文案(暂不可用)", "🖼️ Logo水印添加"])
+# 修改为4个标签页，删除了图片去重功能
+tab1, tab2, tab3, tab4 = st.tabs(["📤 产品图合成", "🎬 视频抽帧", "📝 AI文案(暂不可用)", "🖼️ Logo水印添加"])
 
 # ========== tab1 中 Unsplash 部分完整修正代码 ==========
 with tab1:
@@ -1956,124 +1823,8 @@ with tab1:
         total_combinations = len(bg_files_combined) * len(product_files)
         st.info(f"准备合成 {len(bg_files_combined)} 张背景图 × {len(product_files)} 张产品图 = {total_combinations} 张合成图")
 
-# 标签页2：图片去重
+# 标签页2：视频抽帧（原来的tab3）
 with tab2:
-    st.header("🔄 图片去重")
-    st.markdown(
-    """<div class="highlight-box">
-        <p>通过微调图片像素，生成大量数据层不同的相似图片，可用于应对平台的重复检测。</p>
-    </div>""", unsafe_allow_html=True)
-    
-    # 使用两列布局
-    col_left, col_right = st.columns([1, 1], gap="large")
-    
-    with col_left:
-        st.markdown("#### 1. 上传图片")
-        uploaded_file = st.file_uploader(
-            "选择需要处理的图片", 
-            type=['png', 'jpg', 'jpeg'], 
-            key="unique_uploader",
-            help="支持JPG和PNG格式",
-            label_visibility="collapsed"
-        )
-        
-        if uploaded_file:
-            # 显示原图，但控制大小
-            st.markdown("原始图片预览")
-            
-            # 读取图片
-            img = Image.open(uploaded_file)
-            
-            # 根据图片大小自适应显示
-            max_display_size = 400  # 最大显示尺寸
-            
-            # 计算显示尺寸，保持宽高比
-            display_width = min(max_display_size, img.width)
-            display_height = int(img.height * (display_width / img.width))
-            
-            # 高质量调整大小
-            display_img = img.copy()
-            display_img.thumbnail((display_width, display_height), Image.Resampling.LANCZOS)
-            
-            # 显示调整后的图片
-            st.image(display_img, caption=f"原图: {uploaded_file.name}", width=display_width)
-            
-            # 显示图片信息
-            st.caption(f"尺寸: {img.width} × {img.height} 像素 | 格式: {uploaded_file.type}")
-    
-    with col_right:
-        if uploaded_file:
-            st.markdown("#### 2. 生成设置")
-            
-            # 参数设置
-            num_copies = st.slider(
-                "生成图片数量", 
-                min_value=1, 
-                max_value=100, 
-                value=10, 
-                step=1,
-                help="生成多少张经过微调的图片"
-            )
-            
-            num_pixels_to_change = st.slider(
-                "修改的像素点数量", 
-                min_value=1, 
-                max_value=10, 
-                value=2, 
-                step=1,
-                help="每张图片随机修改多少个像素点的颜色。数量越多，数据差异越大。"
-            )
-            
-            # 生成按钮
-            if st.button("🚀 开始批量生成", type="primary", use_container_width=True, key="generate_unique"):
-                with st.spinner(f'正在批量生成 {num_copies} 张图片...'):
-                    # 调用核心处理函数
-                    zip_buffer, preview_images = generate_modified_images(
-                        uploaded_file, num_copies, num_pixels_to_change
-                    )
-                    
-                    if zip_buffer:
-                        st.session_state.processed_images = preview_images
-                        st.session_state.last_zip_buffer = zip_buffer
-                        
-                        st.success(f"✅ 成功生成 {num_copies} 张图片！")
-                        
-                        # 显示生成预览
-                        if preview_images:
-                            st.markdown("#### 生成预览（前3张）")
-                            
-                            # 使用网格布局显示预览
-                            preview_cols = st.columns(3)
-                            for idx, preview_img in enumerate(preview_images):
-                                with preview_cols[idx]:
-                                    # 高质量调整大小
-                                    display_img = preview_img.copy()
-                                    display_width = 150
-                                    ratio = display_width / display_img.width
-                                    display_height = int(display_img.height * ratio)
-                                    display_img.thumbnail((display_width, display_height), Image.Resampling.LANCZOS)
-                                    
-                                    st.image(
-                                        display_img, 
-                                        caption=f"微调图 {idx+1}",
-                                        width=display_width
-                                    )
-                                    st.caption(f"尺寸: {preview_img.width} × {preview_img.height}")
-            
-            # 如果之前已经生成了图片，显示下载按钮
-            if st.session_state.last_zip_buffer and uploaded_file:
-                st.markdown("#### 3. 下载结果")
-                st.download_button(
-                    label=f"📥 下载生成的图片 (ZIP压缩包)",
-                    data=st.session_state.last_zip_buffer,
-                    file_name=f"{os.path.splitext(uploaded_file.name)[0]}_modified_{num_copies}copies.zip",
-                    mime="application/zip",
-                    use_container_width=True,
-                    key="download_unique"
-                )
-
-# 标签页3：视频抽帧
-with tab3:
     st.header("🎬 视频抽帧")
     st.markdown(
     """<div class="highlight-box">
@@ -2241,8 +1992,8 @@ with tab3:
                     st.session_state.video_info = None
                     st.rerun()
 
-# 标签页4：AI文案（暂不可用）
-with tab4:
+# 标签页3：AI文案（原来的tab4）
+with tab3:
     st.header("📝 AI文案 - 阿里巴巴/MIC平台")
     st.markdown(
     """<div class="highlight-box">
@@ -2429,8 +2180,8 @@ with tab4:
                 </ul>
             </div>""", unsafe_allow_html=True)
 
-# 标签页5：Logo水印添加
-with tab5:
+# 标签页4：Logo水印添加（原来的tab5）
+with tab4:
     # 预设位置映射表
     preset_map = {
         "左上角": (5, 5),
@@ -2892,8 +2643,8 @@ if process_button:
 st.markdown("---")
 st.markdown("### 💡 使用说明")
 
-# 使用五列布局显示说明（现在有五个主要功能）
-info_col1, info_col2, info_col3, info_col4, info_col5 = st.columns(5)
+# 使用四列布局显示说明（现在有四个主要功能）
+info_col1, info_col2, info_col3, info_col4 = st.columns(4)
 
 with info_col1:
     st.markdown(
@@ -2910,17 +2661,6 @@ with info_col1:
 with info_col2:
     st.markdown(
     """<div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
-        <h4>🔄 图片去重</h4>
-        <ul>
-            <li>微调像素生成相似图片</li>
-            <li>应对平台重复检测</li>
-            <li>批量生成多张图片</li>
-        </ul>
-    </div>""", unsafe_allow_html=True)
-
-with info_col3:
-    st.markdown(
-    """<div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
         <h4>🎬 视频抽帧</h4>
         <ul>
             <li>随机删除视频中的两帧</li>
@@ -2929,7 +2669,7 @@ with info_col3:
         </ul>
     </div>""", unsafe_allow_html=True)
 
-with info_col4:
+with info_col3:
     st.markdown(
     """<div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
         <h4>📝 AI文案（暂不可用）</h4>
@@ -2940,7 +2680,7 @@ with info_col4:
         </ul>
     </div>""", unsafe_allow_html=True)
 
-with info_col5:
+with info_col4:
     st.markdown(
     """<div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
         <h4>🖼️ Logo水印添加</h4>
