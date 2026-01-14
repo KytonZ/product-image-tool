@@ -1213,7 +1213,7 @@ with st.sidebar:
     st.markdown("---")
     
     # 3. 背景遮罩设置
-    st.markdown('<div class="settings-title">🎨 背景遮罩（可选颜色）</div>', unsafe_allow_html=True)
+    st.markdown('<div class="settings-title">🎨 背景遮罩（使产品更突出）</div>', unsafe_allow_html=True)
     
     # 遮罩开关
     dark_mask_enabled = st.checkbox(
