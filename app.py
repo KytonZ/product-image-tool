@@ -12,6 +12,9 @@ import cv2
 import numpy as np
 from moviepy.editor import VideoFileClip, AudioFileClip
 import requests
+from colormath.color_objects import sRGBColor, LabColor
+from colormath.color_conversions import convert_color
+from colormath.color_diff import delta_e_cie2000
 
 # 设置页面配置
 st.set_page_config(
@@ -434,9 +437,126 @@ def get_custom_css():
             margin-top: 10px;
             font-size: 14px;
         }
+        
+        /* 颜色预览框 */
+        .color-preview-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            border: 2px solid #e0e0e0;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        /* 颜色选项容器 */
+        .color-options-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            border: 2px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .color-option:hover {
+            transform: scale(1.05);
+            border-color: #2196F3;
+        }
+        
+        .color-option.selected {
+            border-color: #2196F3;
+            border-width: 3px;
+            box-shadow: 0 0 8px rgba(33, 150, 243, 0.4);
+        }
+        
+        /* 颜色对比度指示器 */
+        .contrast-indicator {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 5px;
+            text-align: center;
+        }
+        
+        .contrast-good {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .contrast-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .contrast-poor {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        /* 遮罩效果预览 */
+        .mask-preview-container {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 15px 0;
+            background: white;
+            text-align: center;
+        }
+        
+        .mask-preview-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .mask-preview-example {
+            width: 100%;
+            height: 60px;
+            border-radius: 6px;
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #333;
+            font-weight: bold;
+            background: linear-gradient(45deg, #f0f0f0 25%, transparent 25%, transparent 50%, #f0f0f0 50%, #f0f0f0 75%, transparent 75%, transparent);
+            background-size: 20px 20px;
+        }
+        
+        .mask-preview-overlay {
+            width: 100%;
+            height: 60px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
     </style>
     """
-    
 
 # 应用CSS样式
 st.markdown(get_custom_css(), unsafe_allow_html=True)
@@ -468,7 +588,6 @@ if 'unsplash_selected_bg' not in st.session_state:
     st.session_state.unsplash_selected_bg = None
 if 'unsplash_search_query' not in st.session_state:
     st.session_state.unsplash_search_query = "white background"
-# 添加这些到初始化会话状态的部分
 if 'unsplash_search_trigger' not in st.session_state:
     st.session_state.unsplash_search_trigger = False
 if 'unsplash_current_page' not in st.session_state:
@@ -503,6 +622,34 @@ if 'dark_mask_enabled' not in st.session_state:
     st.session_state.dark_mask_enabled = False
 if 'mask_opacity' not in st.session_state:
     st.session_state.mask_opacity = 20
+# 添加遮罩颜色相关的会话状态
+if 'mask_color_type' not in st.session_state:
+    st.session_state.mask_color_type = "预设颜色"  # 预设颜色或自定义颜色
+if 'mask_preset_color' not in st.session_state:
+    st.session_state.mask_preset_color = "白色"  # 默认从黑色改为白色
+if 'mask_custom_color' not in st.session_state:
+    st.session_state.mask_custom_color = "#FFFFFF"  # 默认白色
+if 'mask_color_rgb' not in st.session_state:
+    st.session_state.mask_color_rgb = (255, 255, 255)  # 默认白色RGB
+
+# 预设颜色选项
+PRESET_COLORS = {
+    "白色": "#FFFFFF",
+    "黑色": "#000000",
+    "深灰": "#333333",
+    "浅灰": "#CCCCCC",
+    "深蓝": "#003366",
+    "蓝色": "#0066CC",
+    "深绿": "#006633",
+    "浅绿": "#66CC99",
+    "深红": "#990000",
+    "红色": "#CC3333",
+    "深紫": "#663366",
+    "紫色": "#9966CC",
+    "金色": "#FFD700",
+    "橙色": "#FF9900",
+    "棕色": "#996633"
+}
 
 # ==================== Unsplash API类 ====================
 class UnsplashAPI:
@@ -564,10 +711,75 @@ class UnsplashAPI:
             st.error(f"下载图片失败: {e}")
         return None
 
+# ==================== 颜色辅助函数 ====================
+def hex_to_rgb(hex_color):
+    """将十六进制颜色转换为RGB元组"""
+    hex_color = hex_color.lstrip('#')
+    return tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+
+def rgb_to_hex(rgb):
+    """将RGB元组转换为十六进制颜色"""
+    return '#{:02x}{:02x}{:02x}'.format(*rgb)
+
+def get_color_brightness(rgb):
+    """计算颜色亮度（0-255）"""
+    r, g, b = rgb
+    return (r * 299 + g * 587 + b * 114) / 1000
+
+def get_contrast_ratio(color1, color2):
+    """计算两个颜色的对比度比率"""
+    def get_luminance(rgb):
+        r, g, b = rgb
+        rs = r / 255.0
+        gs = g / 255.0
+        bs = b / 255.0
+        
+        # 伽马校正
+        r = rs / 12.92 if rs <= 0.03928 else ((rs + 0.055) / 1.055) ** 2.4
+        g = gs / 12.92 if gs <= 0.03928 else ((gs + 0.055) / 1.055) ** 2.4
+        b = bs / 12.92 if bs <= 0.03928 else ((bs + 0.055) / 1.055) ** 2.4
+        
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b
+    
+    L1 = get_luminance(color1)
+    L2 = get_luminance(color2)
+    
+    # 确保L1是较亮的颜色
+    if L1 < L2:
+        L1, L2 = L2, L1
+    
+    return (L1 + 0.05) / (L2 + 0.05)
+
+def get_contrast_rating(ratio):
+    """根据对比度比率获取评级"""
+    if ratio >= 7:
+        return "优秀", "contrast-good"
+    elif ratio >= 4.5:
+        return "良好", "contrast-warning"
+    else:
+        return "较差", "contrast-poor"
+
+def get_current_mask_color():
+    """获取当前设置的遮罩颜色RGB"""
+    if st.session_state.mask_color_type == "预设颜色":
+        hex_color = PRESET_COLORS[st.session_state.mask_preset_color]
+        return hex_to_rgb(hex_color)
+    else:
+        # 自定义颜色
+        hex_color = st.session_state.mask_custom_color
+        return hex_to_rgb(hex_color)
+
+def update_mask_color_rgb():
+    """更新遮罩颜色的RGB值到session_state"""
+    st.session_state.mask_color_rgb = get_current_mask_color()
+
 # ==================== 核心函数定义 ====================
-def compose_image(bg_img, product_img, logo_img, product_size, product_position, output_size, output_format, dark_mask_opacity=0):
+def compose_image(bg_img, product_img, logo_img, product_size, product_position, output_size, output_format, 
+                  mask_enabled=False, mask_color=(255, 255, 255), mask_opacity=20):
     """合成单张图片的核心函数
-    dark_mask_opacity: 背景遮罩层不透明度（0-100）
+    mask_enabled: 是否启用遮罩
+    mask_color: 遮罩颜色RGB元组
+    mask_opacity: 遮罩层不透明度（0-100）
     """
     # 1. 处理背景：调整到输出尺寸（智能裁剪铺满）
     bg = bg_img.convert('RGBA')
@@ -583,13 +795,14 @@ def compose_image(bg_img, product_img, logo_img, product_size, product_position,
     bottom = top + output_size
     bg = bg.crop((left, top, right, bottom))
     
-    # 2. 添加黑色遮罩层（如果启用）
-    if dark_mask_opacity > 0:
-        # 创建黑色遮罩层
-        mask_opacity = int(dark_mask_opacity * 255 / 100)  # 转换为0-255范围
-        dark_layer = Image.new('RGBA', bg.size, (0, 0, 0, mask_opacity))
-        # 将黑色遮罩层与背景图叠加
-        bg = Image.alpha_composite(bg, dark_layer)
+    # 2. 添加颜色遮罩层（如果启用）
+    if mask_enabled and mask_opacity > 0:
+        # 创建颜色遮罩层
+        mask_opacity_int = int(mask_opacity * 255 / 100)  # 转换为0-255范围
+        r, g, b = mask_color
+        color_layer = Image.new('RGBA', bg.size, (r, g, b, mask_opacity_int))
+        # 将颜色遮罩层与背景图叠加
+        bg = Image.alpha_composite(bg, color_layer)
     
     # 3. 处理产品图：调整大小并放置
     product = product_img.convert('RGBA')
@@ -1184,34 +1397,147 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # 3. 背景遮罩设置 - 修复这里
+    # 3. 背景遮罩设置 - 升级版
     st.markdown('<div class="settings-title">🖼️ 背景遮罩</div>', unsafe_allow_html=True)
     
     # 遮罩开关
     dark_mask_enabled = st.checkbox(
         '添加背景遮罩层',
         value=st.session_state.get('dark_mask_enabled', False),
-        help='在背景图上层添加黑色遮罩层，使产品图更突出',
+        help='在背景图上层添加颜色遮罩层，使产品图更突出',
         key='dark_mask_enabled_checkbox'
     )
     
     st.session_state.dark_mask_enabled = dark_mask_enabled
     
-    # 遮罩不透明度滑块
+    # 遮罩设置（如果启用）
     if dark_mask_enabled:
+        # 遮罩不透明度滑块
         mask_opacity = st.slider(
             '遮罩层不透明度',
             min_value=0,
             max_value=100,
             value=st.session_state.get('mask_opacity', 20),
             step=5,
-            help='遮罩层的不透明度，值越大背景越暗',
+            help='遮罩层的不透明度，值越大颜色越明显',
             key='mask_opacity_slider'
         )
         st.session_state.mask_opacity = mask_opacity
         
+        # 颜色类型选择
+        mask_color_type = st.radio(
+            "颜色选择方式",
+            ["预设颜色", "自定义颜色"],
+            horizontal=True,
+            index=0 if st.session_state.get('mask_color_type', '预设颜色') == '预设颜色' else 1,
+            help="选择预设颜色或自定义颜色",
+            key='mask_color_type_radio'
+        )
+        st.session_state.mask_color_type = mask_color_type
+        
+        if mask_color_type == "预设颜色":
+            # 预设颜色选择
+            preset_options = list(PRESET_COLORS.keys())
+            default_idx = preset_options.index(st.session_state.get('mask_preset_color', '白色')) if st.session_state.get('mask_preset_color', '白色') in preset_options else 0
+            
+            # 创建颜色选择器
+            st.markdown("预设颜色")
+            # 创建两列用于显示颜色
+            cols = st.columns(5)
+            for idx, (color_name, hex_color) in enumerate(PRESET_COLORS.items()):
+                col_idx = idx % 5
+                with cols[col_idx]:
+                    is_selected = (st.session_state.get('mask_preset_color', '白色') == color_name)
+                    
+                    # 显示颜色预览
+                    st.markdown(f"""
+                    <div class="color-option {'selected' if is_selected else ''}" 
+                         style="background-color: {hex_color}; color: {'white' if get_color_brightness(hex_to_rgb(hex_color)) < 128 else 'black'};"
+                         onclick="this.parentElement.querySelector('input[type=radio]').click()">
+                        {color_name[0]}
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # 添加隐藏的单选按钮
+                    if st.radio(
+                        "",
+                        [color_name],
+                        key=f"preset_color_{idx}",
+                        index=0 if is_selected else None,
+                        label_visibility="collapsed"
+                    ):
+                        st.session_state.mask_preset_color = color_name
+                        st.session_state.mask_color_rgb = hex_to_rgb(hex_color)
+                        
+        else:
+            # 自定义颜色选择器
+            custom_color = st.color_picker(
+                "选择遮罩颜色",
+                value=st.session_state.get('mask_custom_color', '#FFFFFF'),
+                key='mask_custom_color_picker'
+            )
+            st.session_state.mask_custom_color = custom_color
+            st.session_state.mask_color_rgb = hex_to_rgb(custom_color)
+        
+        # 显示当前颜色预览和对比度信息
+        current_color = st.session_state.mask_color_rgb
+        current_hex = rgb_to_hex(current_color)
+        
+        # 颜色预览
+        col1, col2 = st.columns([1, 3])
+        with col1:
+            brightness = get_color_brightness(current_color)
+            text_color = "white" if brightness < 128 else "black"
+            st.markdown(f"""
+            <div class="color-preview-box" style="background-color: {current_hex}; color: {text_color};">
+                {st.session_state.mask_preset_color if st.session_state.mask_color_type == '预设颜色' else '自定'}
+            </div>
+            """, unsafe_allow_html=True)
+        with col2:
+            st.caption(f"当前颜色: {current_hex}")
+            st.caption(f"RGB: {current_color}")
+        
+        # 显示遮罩效果预览
         if mask_opacity > 0:
-            st.markdown(f'<div class="mask-info">遮罩效果：背景变暗 {mask_opacity}%，产品图更突出</div>', unsafe_allow_html=True)
+            st.markdown('<div class="mask-preview-container">', unsafe_allow_html=True)
+            st.markdown('<div class="mask-preview-title">遮罩效果预览</div>', unsafe_allow_html=True)
+            
+            # 创建遮罩预览
+            preview_html = f"""
+            <div style="position: relative; width: 100%; height: 60px; border-radius: 6px; margin: 5px 0;">
+                <div class="mask-preview-example" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+                    背景示例
+                </div>
+                <div class="mask-preview-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+                     background-color: {current_hex}; opacity: {mask_opacity/100}; border-radius: 6px;">
+                    遮罩层 ({mask_opacity}%)
+                </div>
+            </div>
+            """
+            st.markdown(preview_html, unsafe_allow_html=True)
+            
+            # 对比度信息
+            white_rgb = (255, 255, 255)
+            black_rgb = (0, 0, 0)
+            
+            # 与白色对比度
+            contrast_with_white = get_contrast_ratio(current_color, white_rgb)
+            rating_white, class_white = get_contrast_rating(contrast_with_white)
+            
+            # 与黑色对比度
+            contrast_with_black = get_contrast_ratio(current_color, black_rgb)
+            rating_black, class_black = get_contrast_rating(contrast_with_black)
+            
+            st.markdown(f"""
+            <div class="mask-info">
+                <strong>对比度分析:</strong><br>
+                • 与白色对比: {contrast_with_white:.1f}:1 <span class="{class_white}">{rating_white}</span><br>
+                • 与黑色对比: {contrast_with_black:.1f}:1 <span class="{class_black}">{rating_black}</span><br>
+                <small>提示: 选择与产品图形成良好对比的颜色</small>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown("---")
     
@@ -2418,9 +2744,10 @@ if process_button:
     output_size = st.session_state.get('output_size', 800)
     output_format = st.session_state.get('output_format', 'JPG')
     
-    # 获取遮罩设置 - 直接从session_state获取
+    # 获取遮罩设置
     dark_mask_enabled = st.session_state.get('dark_mask_enabled', False)
     mask_opacity = st.session_state.get('mask_opacity', 20)
+    mask_color_rgb = st.session_state.get('mask_color_rgb', (255, 255, 255))  # 默认白色
     
     if logo_color == '黑色Logo':
         logo_path = "logos/black_logo.png"
@@ -2437,7 +2764,9 @@ if process_button:
     
     # 显示遮罩状态
     if dark_mask_enabled:
-        st.info(f"🌑 背景遮罩已启用，不透明度: {mask_opacity}%")
+        mask_hex = rgb_to_hex(mask_color_rgb)
+        mask_color_name = st.session_state.get('mask_preset_color', '自定义颜色')
+        st.info(f"🖌️ 背景遮罩已启用 | 颜色: {mask_color_name} ({mask_hex}) | 不透明度: {mask_opacity}%")
     
     # 创建临时目录存放结果
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -2471,7 +2800,9 @@ if process_button:
                 result = compose_image(
                     bg_image, product_image, logo_to_use,
                     product_size, product_position, output_size, output_format,
-                    dark_mask_opacity=mask_opacity if dark_mask_enabled else 0
+                    mask_enabled=dark_mask_enabled,
+                    mask_color=mask_color_rgb,
+                    mask_opacity=mask_opacity
                 )
                 
                 # 保存结果
@@ -2572,7 +2903,7 @@ with info_col1:
             <li>背景图：上传或Unsplash</li>
             <li>产品图：PNG透明背景最佳</li>
             <li>Logo：系统已预置黑白Logo</li>
-            <li>遮罩：可选黑色遮罩层</li>
+            <li>遮罩：可选颜色和透明度</li>
         </ul>
     </div>""", unsafe_allow_html=True)
 
