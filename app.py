@@ -502,12 +502,6 @@ if 'processed_video' not in st.session_state:
     st.session_state.processed_video = None
 if 'video_info' not in st.session_state:
     st.session_state.video_info = None
-if 'generated_titles' not in st.session_state:
-    st.session_state.generated_titles = None
-if 'generated_keywords' not in st.session_state:
-    st.session_state.generated_keywords = None
-if 'generated_attributes' not in st.session_state:
-    st.session_state.generated_attributes = None
 if 'unsplash_photos' not in st.session_state:
     st.session_state.unsplash_photos = []
 if 'unsplash_selected_bg' not in st.session_state:
@@ -854,228 +848,6 @@ def remove_random_frames(input_video_path, output_video_path, progress_bar=None,
     
     return output_video_path, video_info, frames_to_remove, saved_count
 
-def generate_product_content(product_name, platform):
-    """生成产品标题、关键词和属性词的核心函数"""
-    
-    # 产品词汇库
-    product_vocab = {
-        "MBBR Media": {
-            "variations": ["MBBR Media", "MBBR Biofilm Media", "Moving Bed Biofilm Reactor Media", "Plastic Bio Media"],
-            "materials": ["HDPE", "Polyethylene", "High-Density Polyethylene", "PP"],
-            "shapes": ["Carrier", "Cylinder", "Honeycomb", "Cross-Flow", "Ring-Type"],
-            "features": ["High Surface Area", "Biofilm Growth", "Wastewater Treatment", "Nitrogen Removal", "Anoxic Conditions"],
-            "applications": ["Wastewater Treatment Plant", "Sewage Treatment", "Industrial Effluent", "Municipal WWTP", "Aquaculture"]
-        },
-        "Disc Diffuser": {
-            "variations": ["Disc Diffuser", "Membrane Diffuser", "Fine Bubble Diffuser", "Aeration Disc"],
-            "materials": ["EPDM", "Silicone", "Polyurethane", "Rubber Membrane"],
-            "sizes": ["9 inch", "12 inch", "270mm", "350mm"],
-            "features": ["Fine Bubble", "Oxygen Transfer", "Energy Saving", "Anti-Clogging", "Uniform Aeration"],
-            "applications": ["Aeration Tank", "Activated Sludge", "SBR Reactor", "Aerobic Treatment"]
-        },
-        "Drum Filter": {
-            "variations": ["Drum Filter", "Rotary Drum Filter", "Microscreen Filter", "Drum Screen"],
-            "types": ["Solid-Liquid Separation", "Screening Equipment", "Mechanical Filtration"],
-            "materials": ["Stainless Steel 304", "Stainless Steel 316", "Polyester Screen", "Nylon Mesh"],
-            "features": ["Automatic Cleaning", "Continuous Operation", "Low Maintenance", "High Flow Rate"],
-            "applications": ["Aquaculture", "Wastewater Pretreatment", "Industrial Recycling", "Food Processing"]
-        },
-        "Bio Block": {
-            "variations": ["Bio Block", "Biological Filter Block", "Media Block", "Biofilm Carrier Block"],
-            "materials": ["Plastic Media", "PP", "PVC", "Composite Material"],
-            "shapes": ["Block", "Cube", "Rectangular", "Modular"],
-            "features": ["High Void Ratio", "Large Surface Area", "Easy Installation", "Stackable"],
-            "applications": ["Trickling Filter", "Biological Tower", "Biofilter System", "Water Recycling"]
-        },
-        "MBR": {
-            "variations": ["MBR", "Membrane Bioreactor", "Hollow Fiber MBR", "Flat Sheet MBR"],
-            "types": ["Submerged MBR", "External MBR", "Side-Stream MBR"],
-            "materials": ["PVDF", "PTFE", "Polyethersulfone", "Ceramic Membrane"],
-            "features": ["High Quality Effluent", "Small Footprint", "Low Sludge Production", "Automated Control"],
-            "applications": ["Water Reuse", "Wastewater Recycling", "Industrial Treatment", "Decentralized Treatment"]
-        },
-        "Screw Press Dewatering Machine": {
-            "variations": ["Screw Press", "Dewatering Machine", "Sludge Dewatering Press", "Screw Press Dewaterer"],
-            "types": ["Single Screw", "Twin Screw", "Multi-Disc", "Shaftless Screw"],
-            "materials": ["Stainless Steel", "Carbon Steel", "Wear-Resistant Material"],
-            "features": ["High Dryness", "Low Energy", "Automatic Operation", "Easy Maintenance"],
-            "applications": ["Sludge Treatment", "Municipal Sludge", "Industrial Sludge", "Waste Management"]
-        },
-        "Tube Settler": {
-            "variations": ["Tube Settler", "Lamella Clarifier", "Inclined Plate Settler", "Sedimentation Tube"],
-            "materials": ["PVC", "PP", "Fiberglass", "Stainless Steel"],
-            "angles": ["60 Degree", "55 Degree", "Inclined Design"],
-            "features": ["High Efficiency", "Small Footprint", "Easy Installation", "Modular Design"],
-            "applications": ["Water Treatment Plant", "Clarification", "Sedimentation Tank", "Precipitation"]
-        },
-        "Tube Diffuser": {
-            "variations": ["Tube Diffuser", "Aeration Tube", "Fine Bubble Tube", "Membrane Tube Diffuser"],
-            "materials": ["EPDM", "Silicone", "Polyurethane", "Ceramic"],
-            "sizes": ["1 meter", "2 meter", "Custom Length", "Standard Diameter"],
-            "features": ["Uniform Aeration", "High Oxygen Transfer", "Energy Efficient", "Flexible Installation"],
-            "applications": ["Aeration Basin", "Oxidation Ditch", "Wastewater Aeration", "Aquaculture Pond"]
-        }
-    }
-    
-    # 通用词汇
-    generic_words = {
-        "quality": ["High Quality", "Durable", "Reliable", "Efficient", "Professional Grade"],
-        "certification": ["ISO Certified", "CE Certified", "SGS Tested", "FDA Approved", "RoHS Compliant"],
-        "performance": ["Excellent Performance", "Superior Efficiency", "Optimal Results", "Maximum Output"],
-        "design": ["Advanced Design", "Innovative Technology", "Modern Structure", "Ergonomic Design"],
-        "benefits": ["Cost Effective", "Energy Saving", "Environment Friendly", "Easy to Operate"]
-    }
-    
-    # 生成10个标题
-    titles = []
-    product_info = product_vocab.get(product_name, product_vocab["MBBR Media"])
-    
-    # 标题模板
-    title_templates = [
-        "{product} {feature} for {application} with {certification}",
-        "{product} {material} {feature} {application} {standard}",
-        "Professional {product} {design} for {application} {benefit}",
-        "High Performance {product} {feature} {material} {application}",
-        "{product} {feature} {application} {certification} {quality}",
-        "{product} {size} {material} {feature} for {application}",
-        "{product} {type} {feature} {application} with {benefit}",
-        "{product} {shape} {feature} {material} {application} {certification}",
-        "{product} {design} {feature} for {application} {quality}",
-        "{product} {material} {shape} {feature} {application} {standard}"
-    ]
-    
-    for i in range(50):
-        # 随机选择模板
-        template = random.choice(title_templates)
-        
-        # 填充模板
-        title = template.format(
-            product=random.choice(product_info["variations"]),
-            feature=random.choice(product_info["features"]),
-            application=random.choice(product_info["applications"]),
-            material=random.choice(product_info.get("materials", ["Premium Material"])),
-            size=random.choice(product_info.get("sizes", ["Standard Size"])),
-            type=random.choice(product_info.get("types", ["Professional Type"])),
-            shape=random.choice(product_info.get("shapes", ["Optimized Shape"])),
-            design=random.choice(generic_words["design"]),
-            certification=random.choice(generic_words["certification"]),
-            quality=random.choice(generic_words["quality"]),
-            benefit=random.choice(generic_words["benefits"]),
-            standard=random.choice(["Standard", "Model", "System", "Equipment"])
-        )
-        
-        # 应用标题格式规则
-        title_parts = title.split()
-        formatted_parts = []
-        
-        for idx, word in enumerate(title_parts):
-            # 检查是否是介词（小写）
-            prepositions = ["in", "for", "with", "by", "on", "at", "to", "of", "and", "or", "the", "a", "an"]
-            if word.lower() in prepositions and idx > 0:
-                formatted_parts.append(word.lower())
-            else:
-                # 首字母大写
-                formatted_parts.append(word.title())
-        
-        formatted_title = " ".join(formatted_parts)
-        
-        # 检查字符长度
-        if 85 <= len(formatted_title) <= 128:
-            titles.append(formatted_title)
-    
-    # 生成10个关键词
-    keywords = []
-    
-    # 短尾关键词
-    short_tail = [
-        product_name,
-        *product_info["variations"],
-        *[f"{product_name} {material}" for material in product_info.get("materials", [])[:3]],
-        *[f"{product_name} {size}" for size in product_info.get("sizes", [])[:2]],
-        *[f"{product_name} {feature}" for feature in product_info["features"][:3]]
-    ]
-    
-    # 长尾关键词
-    long_tail = []
-    for variation in product_info["variations"][:2]:
-        for feature in product_info["features"][:3]:
-            for application in product_info["applications"][:2]:
-                long_tail.append(f"{variation} {feature} {application}")
-                long_tail.append(f"{feature} {variation} for {application}")
-    
-    for material in product_info.get("materials", [])[:2]:
-        for feature in product_info["features"][:2]:
-            long_tail.append(f"{material} {product_name} {feature}")
-    
-    # 组合关键词
-    keywords = list(set(short_tail + long_tail))
-    
-    # 如果不够10个，添加通用组合
-    while len(keywords) < 10:
-        base = random.choice(product_info["variations"])
-        attr1 = random.choice(product_info["features"] + generic_words["quality"])
-        attr2 = random.choice(product_info["applications"] + ["System", "Equipment", "Machine"])
-        keywords.append(f"{base} {attr1} {attr2}")
-        keywords = list(set(keywords))
-    
-    keywords = keywords[:10]
-    
-    # 生成10个属性词
-    attributes = []
-    
-    # 材料属性
-    if "materials" in product_info:
-        attributes.append("Material Type:")
-        for material in product_info["materials"][:5]:
-            attributes.append(f"  - {material}")
-    
-    # 尺寸属性
-    if "sizes" in product_info:
-        attributes.append("\nSize Specification:")
-        for size in product_info["sizes"][:5]:
-            attributes.append(f"  - {size}")
-    elif "shapes" in product_info:
-        attributes.append("\nShape Design:")
-        for shape in product_info["shapes"][:5]:
-            attributes.append(f"  - {shape}")
-    
-    # 性能属性
-    attributes.append("\nPerformance Features:")
-    for feature in product_info["features"][:8]:
-        attributes.append(f"  - {feature}")
-    
-    # 应用属性
-    attributes.append("\nApplication Scenarios:")
-    for app in product_info["applications"][:8]:
-        attributes.append(f"  - {app}")
-    
-    # 质量属性
-    attributes.append("\nQuality Standards:")
-    for standard in generic_words["certification"][:5]:
-        attributes.append(f"  - {standard}")
-    
-    # 设计属性
-    attributes.append("\nDesign Characteristics:")
-    for design in generic_words["design"][:5]:
-        attributes.append(f"  - {design}")
-    
-    # 通用属性
-    attributes.append("\nGeneral Properties:")
-    general_props = [
-        "High Durability", "Corrosion Resistant", "UV Resistant", "Chemical Resistant",
-        "Temperature Resistant", "Abrasion Resistant", "Long Service Life", "Low Maintenance",
-        "Easy Installation", "Modular Design", "Customizable", "Bulk Available",
-        "OEM Service", "Fast Delivery", "Competitive Price", "Technical Support"
-    ]
-    
-    for prop in general_props[:10]:
-        attributes.append(f"  - {prop}")
-    
-    # 确保属性词数量
-    attribute_text = "\n".join(attributes)
-    
-    return titles, keywords, attribute_text
-
 # ==================== Logo水印添加核心函数 ====================
 def add_logo_to_image(base_image, logo_image, x_percent, y_percent, size_percent, opacity):
     """将Logo添加到图片上的核心函数"""
@@ -1366,8 +1138,8 @@ with st.sidebar:
     )
 
 # ==================== 主区域：标签页 ====================
-# 修改为4个标签页，删除了图片去重功能
-tab1, tab2, tab3, tab4 = st.tabs(["📤 产品图合成", "🎬 视频抽帧", "📝 AI文案(暂不可用)", "🖼️ Logo水印添加"])
+# 修改为3个标签页，删除了AI文案功能
+tab1, tab2, tab3 = st.tabs(["📤 产品图合成", "🎬 视频抽帧", "🖼️ Logo水印添加"])
 
 # ========== tab1 中 Unsplash 部分完整修正代码 ==========
 with tab1:
@@ -1746,7 +1518,7 @@ with tab1:
         total_combinations = len(bg_files_combined) * len(product_files)
         st.info(f"准备合成 {len(bg_files_combined)} 张背景图 × {len(product_files)} 张产品图 = {total_combinations} 张合成图")
 
-# 标签页2：视频抽帧（原来的tab3）
+# 标签页2：视频抽帧
 with tab2:
     st.header("🎬 视频抽帧")
     st.markdown(
@@ -1915,196 +1687,8 @@ with tab2:
                     st.session_state.video_info = None
                     st.rerun()
 
-# 标签页3：AI文案（原来的tab4）
+# 标签页3：Logo水印添加
 with tab3:
-    st.header("📝 AI文案 - 阿里巴巴/MIC平台")
-    st.markdown(
-    """<div class="highlight-box">
-        <p><b>功能说明：</b>根据选择的产品，自动生成适用于阿里巴巴和国际站(MIC)的英文产品标题、关键词和属性词。</p>
-        <ul>
-            <li>标题长度：8-12个单词，85-128个字符，首字母大写，介词小写</li>
-            <li>关键词：包含短尾核心词和长尾复合词</li>
-        </ul>
-    </div>""", unsafe_allow_html=True)
-    
-    # 使用两列布局
-    col_setting, col_preview = st.columns([1, 2], gap="large")
-    
-    with col_setting:
-        st.markdown("### 1. 产品设置")
-        
-        # 产品选择 - 修改产品名称格式
-        product_options = [
-            "MBBR Media", 
-            "Disc Diffuser", 
-            "Drum Filter", 
-            "Bio Block", 
-            "MBR", 
-            "Screw Press Dewatering Machine", 
-            "Tube Settler", 
-            "Tube Diffuser"
-        ]
-        
-        selected_product = st.selectbox(
-            "选择产品类型",
-            product_options,
-            help="选择需要生成文案的产品",
-            key="product_select"
-        )
-        
-        # 平台选择
-        platform = st.radio(
-            "目标平台",
-            ["阿里巴巴国际站", "Made-in-China.com"],
-            help="选择产品要发布的平台",
-            key="platform_select"
-        )
-        
-        # 生成按钮
-        if st.button("🤖 开始生成AI文案", type="primary", use_container_width=True, key="generate_content"):
-            with st.spinner(f'正在为 {selected_product} 生成AI文案...'):
-                # 调用生成函数
-                titles, keywords, attributes = generate_product_content(selected_product, platform)
-                
-                # 保存到session_state
-                st.session_state.generated_titles = titles
-                st.session_state.generated_keywords = keywords
-                st.session_state.generated_attributes = attributes
-                
-                st.success(f"✅ 成功为 {selected_product} 生成文案内容！")
-    
-    with col_preview:
-        if st.session_state.generated_titles:
-            st.markdown("### 2. 生成结果")
-            
-            # 标题部分
-            st.markdown('<div class="section-title">📝 10个产品标题</div>', unsafe_allow_html=True)
-            st.markdown("复制说明： 以下标题可直接复制到阿里/MIC平台的产品标题字段")
-            
-            # 创建可复制的文本框
-            titles_text = "\n".join(st.session_state.generated_titles)
-            st.text_area(
-                "产品标题 (共10个)",
-                titles_text,
-                height=200,
-                key="titles_area",
-                label_visibility="collapsed"
-            )
-            
-            # 复制按钮
-            st.download_button(
-                label="📋 复制所有标题",
-                data=titles_text,
-                file_name=f"{selected_product.replace(' ', '_')}_titles.txt",
-                mime="text/plain",
-                key="copy_titles"
-            )
-            
-            # 关键词部分
-            st.markdown('<div class="section-title">🔑 10个关键词</div>', unsafe_allow_html=True)
-            st.markdown("包含： 短尾核心词 + 长尾复合词")
-            
-            keywords_text = "\n".join(st.session_state.generated_keywords)
-            st.text_area(
-                "关键词列表",
-                keywords_text,
-                height=150,
-                key="keywords_area",
-                label_visibility="collapsed"
-            )
-            
-            # 复制按钮
-            st.download_button(
-                label="📋 复制所有关键词",
-                data=keywords_text,
-                file_name=f"{selected_product.replace(' ', '_')}_keywords.txt",
-                mime="text/plain",
-                key="copy_keywords"
-            )
-            
-            # 属性词部分
-            st.markdown('<div class="section-title">🏷️ 10个属性词</div>', unsafe_allow_html=True)
-            st.markdown("分类说明： 按材料、尺寸、性能、应用等分类")
-            
-            st.text_area(
-                "属性词分类",
-                st.session_state.generated_attributes,
-                height=250,
-                key="attributes_area",
-                label_visibility="collapsed"
-            )
-            
-            # 复制按钮
-            st.download_button(
-                label="📋 复制所有属性词",
-                data=st.session_state.generated_attributes,
-                file_name=f"{selected_product.replace(' ', '_')}_attributes.txt",
-                mime="text/plain",
-                key="copy_attributes"
-            )
-            
-            # 批量下载按钮
-            st.markdown("---")
-            col_dl1, col_dl2, col_dl3 = st.columns(3)
-            with col_dl1:
-                # 创建ZIP包包含所有内容
-                zip_buffer = BytesIO()
-                with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-                    zip_file.writestr(f"{selected_product}_titles.txt", titles_text)
-                    zip_file.writestr(f"{selected_product}_keywords.txt", keywords_text)
-                    zip_file.writestr(f"{selected_product}_attributes.txt", st.session_state.generated_attributes)
-                
-                zip_buffer.seek(0)
-                
-                st.download_button(
-                    label="📦 下载所有文案 (ZIP)",
-                    data=zip_buffer,
-                    file_name=f"{selected_product.replace(' ', '_')}_content_pack.zip",
-                    mime="application/zip",
-                    use_container_width=True,
-                    key="download_all"
-                )
-            
-            with col_dl2:
-                if st.button("🔄 重新生成", key="regenerate", use_container_width=True):
-                    st.session_state.generated_titles = None
-                    st.session_state.generated_keywords = None
-                    st.session_state.generated_attributes = None
-                    st.rerun()
-            
-            with col_dl3:
-                if st.button("📊 生成统计", key="stats", use_container_width=True):
-                    # 显示统计信息
-                    avg_title_length = sum(len(title) for title in st.session_state.generated_titles) / len(st.session_state.generated_titles)
-                    avg_word_count = sum(len(title.split()) for title in st.session_state.generated_titles) / len(st.session_state.generated_titles)
-                    
-                    st.info(f"""
-                    文案统计信息：
-                    - 标题数量: 10个
-                    - 平均标题长度: {avg_title_length:.1f} 字符
-                    - 平均单词数: {avg_word_count:.1f} 个
-                    - 关键词数量: 10个
-                    - 属性词数量: 10个
-                    - 目标平台: {platform}
-                    """)
-        
-        else:
-            # 未生成时的预览
-            st.markdown("### 2. 文案预览区")
-            st.markdown(
-            """<div style="text-align: center; padding: 3rem; color: #666; background-color: #f8f9fa; border-radius: 10px;">
-                <h4>👈 请先在左侧选择产品</h4>
-                <p>选择产品类型和目标平台后，点击"开始生成AI文案"按钮</p>
-                <p>系统将为您生成：</p>
-                <ul style="text-align: left; display: inline-block;">
-                    <li>10个优化产品标题</li>
-                    <li>10个SEO关键词</li>
-                    <li>10个分类属性词</li>
-                </ul>
-            </div>""", unsafe_allow_html=True)
-
-# 标签页4：Logo水印添加（原来的tab5）
-with tab4:
     # 预设位置映射表
     preset_map = {
         "左上角": (5, 5),
@@ -2565,8 +2149,8 @@ if process_button:
 st.markdown("---")
 st.markdown("### 💡 使用说明")
 
-# 使用四列布局显示说明（现在有四个主要功能）
-info_col1, info_col2, info_col3, info_col4 = st.columns(4)
+# 使用三列布局显示说明（现在有三个主要功能）
+info_col1, info_col2, info_col3 = st.columns(3)
 
 with info_col1:
     st.markdown(
@@ -2592,17 +2176,6 @@ with info_col2:
     </div>""", unsafe_allow_html=True)
 
 with info_col3:
-    st.markdown(
-    """<div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
-        <h4>📝 AI文案（暂不可用）</h4>
-        <ul>
-            <li>10个产品标题</li>
-            <li>10个SEO关键词</li>
-            <li>10个分类属性词</li>
-        </ul>
-    </div>""", unsafe_allow_html=True)
-
-with info_col4:
     st.markdown(
     """<div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
         <h4>🖼️ Logo水印添加</h4>
