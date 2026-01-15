@@ -108,7 +108,7 @@ def get_custom_css():
         }
         
         section[data-testid="stSidebar"] > div:first-child {
-            padding-top: 2rem;
+            padding-top: 1rem;
         }
         
         /* 响应式调整 */
@@ -196,14 +196,17 @@ def get_custom_css():
         
         /* 设置组样式 */
         .settings-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 0.5rem;
         }
         
         .settings-title {
             font-weight: 600;
             color: #333;
-            margin-bottom: 0.8rem;
-            font-size: 1rem;
+            margin-bottom: 0.3rem;
+            font-size: 0.95rem;
+            padding: 0.3rem 0.5rem;
+            background-color: #f0f2f6;
+            border-radius: 5px;
         }
         
         /* Unsplash图片样式 */
@@ -357,7 +360,7 @@ def get_custom_css():
         
         /* 去掉控制组的外框，简化设计 */
         .stSlider, .stRadio, .stSelectbox {
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
         }
         
         /* 优化预设位置按钮 */
@@ -397,8 +400,9 @@ def get_custom_css():
         .stSlider label {
             font-weight: 600;
             color: #333;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.3rem;
             display: block;
+            font-size: 0.9rem;
         }
         
         /* 优化实时预览 */
@@ -429,23 +433,23 @@ def get_custom_css():
         .mask-info {
             background-color: #e8f4fd;
             border-left: 4px solid #4CAF50;
-            padding: 10px;
+            padding: 8px;
             border-radius: 5px;
-            margin-top: 10px;
-            font-size: 14px;
+            margin-top: 8px;
+            font-size: 12px;
         }
         
         /* 颜色预览框 */
         .color-preview-box {
-            width: 40px;
-            height: 40px;
-            border-radius: 6px;
+            width: 35px;
+            height: 35px;
+            border-radius: 5px;
             border: 2px solid #e0e0e0;
             margin: 0 auto;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
         }
         
@@ -453,21 +457,21 @@ def get_custom_css():
         .color-options-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
-            margin: 10px 0;
+            gap: 6px;
+            margin: 8px 0;
         }
         
         .color-option {
-            width: 40px;
-            height: 40px;
-            border-radius: 6px;
+            width: 35px;
+            height: 35px;
+            border-radius: 5px;
             border: 2px solid #e0e0e0;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
         }
         
@@ -480,6 +484,106 @@ def get_custom_css():
             border-color: #2196F3;
             border-width: 3px;
             box-shadow: 0 0 8px rgba(33, 150, 243, 0.4);
+        }
+        
+        /* 侧边栏紧凑布局优化 */
+        .sidebar-section {
+            margin-bottom: 1rem;
+        }
+        
+        .sidebar-section-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-section-title i {
+            margin-right: 8px;
+        }
+        
+        /* 紧凑的滑块标签 */
+        .compact-slider-label {
+            font-size: 0.85rem;
+            margin-bottom: 0.2rem;
+            color: #555;
+        }
+        
+        /* 紧凑的数值显示 */
+        .value-display {
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+            margin-top: 0.2rem;
+        }
+        
+        /* 颜色选择器紧凑布局 */
+        .color-picker-compact {
+            margin-bottom: 0.8rem;
+        }
+        
+        /* 开关样式优化 */
+        .stCheckbox label {
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        /* 输出设置紧凑布局 */
+        .output-settings-compact {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        /* 预设颜色网格 */
+        .preset-colors-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+            margin: 8px 0;
+        }
+        
+        .preset-color-item {
+            width: 100%;
+            height: 35px;
+            border-radius: 5px;
+            border: 2px solid #e0e0e0;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .preset-color-item:hover {
+            transform: scale(1.05);
+            border-color: #2196F3;
+        }
+        
+        .preset-color-item.selected {
+            border-color: #2196F3;
+            border-width: 3px;
+            box-shadow: 0 0 8px rgba(33, 150, 243, 0.4);
+        }
+        
+        /* 紧凑的间距 */
+        .compact-spacing {
+            margin-bottom: 0.3rem !important;
+        }
+        
+        /* 侧边栏分割线 */
+        .sidebar-divider {
+            margin: 0.8rem 0;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        /* 设置项容器 */
+        .setting-item {
+            margin-bottom: 0.8rem;
         }
     </style>
     """
@@ -502,12 +606,6 @@ if 'processed_video' not in st.session_state:
     st.session_state.processed_video = None
 if 'video_info' not in st.session_state:
     st.session_state.video_info = None
-if 'generated_titles' not in st.session_state:
-    st.session_state.generated_titles = None
-if 'generated_keywords' not in st.session_state:
-    st.session_state.generated_keywords = None
-if 'generated_attributes' not in st.session_state:
-    st.session_state.generated_attributes = None
 if 'unsplash_photos' not in st.session_state:
     st.session_state.unsplash_photos = []
 if 'unsplash_selected_bg' not in st.session_state:
@@ -854,228 +952,6 @@ def remove_random_frames(input_video_path, output_video_path, progress_bar=None,
     
     return output_video_path, video_info, frames_to_remove, saved_count
 
-def generate_product_content(product_name, platform):
-    """生成产品标题、关键词和属性词的核心函数"""
-    
-    # 产品词汇库
-    product_vocab = {
-        "MBBR Media": {
-            "variations": ["MBBR Media", "MBBR Biofilm Media", "Moving Bed Biofilm Reactor Media", "Plastic Bio Media"],
-            "materials": ["HDPE", "Polyethylene", "High-Density Polyethylene", "PP"],
-            "shapes": ["Carrier", "Cylinder", "Honeycomb", "Cross-Flow", "Ring-Type"],
-            "features": ["High Surface Area", "Biofilm Growth", "Wastewater Treatment", "Nitrogen Removal", "Anoxic Conditions"],
-            "applications": ["Wastewater Treatment Plant", "Sewage Treatment", "Industrial Effluent", "Municipal WWTP", "Aquaculture"]
-        },
-        "Disc Diffuser": {
-            "variations": ["Disc Diffuser", "Membrane Diffuser", "Fine Bubble Diffuser", "Aeration Disc"],
-            "materials": ["EPDM", "Silicone", "Polyurethane", "Rubber Membrane"],
-            "sizes": ["9 inch", "12 inch", "270mm", "350mm"],
-            "features": ["Fine Bubble", "Oxygen Transfer", "Energy Saving", "Anti-Clogging", "Uniform Aeration"],
-            "applications": ["Aeration Tank", "Activated Sludge", "SBR Reactor", "Aerobic Treatment"]
-        },
-        "Drum Filter": {
-            "variations": ["Drum Filter", "Rotary Drum Filter", "Microscreen Filter", "Drum Screen"],
-            "types": ["Solid-Liquid Separation", "Screening Equipment", "Mechanical Filtration"],
-            "materials": ["Stainless Steel 304", "Stainless Steel 316", "Polyester Screen", "Nylon Mesh"],
-            "features": ["Automatic Cleaning", "Continuous Operation", "Low Maintenance", "High Flow Rate"],
-            "applications": ["Aquaculture", "Wastewater Pretreatment", "Industrial Recycling", "Food Processing"]
-        },
-        "Bio Block": {
-            "variations": ["Bio Block", "Biological Filter Block", "Media Block", "Biofilm Carrier Block"],
-            "materials": ["Plastic Media", "PP", "PVC", "Composite Material"],
-            "shapes": ["Block", "Cube", "Rectangular", "Modular"],
-            "features": ["High Void Ratio", "Large Surface Area", "Easy Installation", "Stackable"],
-            "applications": ["Trickling Filter", "Biological Tower", "Biofilter System", "Water Recycling"]
-        },
-        "MBR": {
-            "variations": ["MBR", "Membrane Bioreactor", "Hollow Fiber MBR", "Flat Sheet MBR"],
-            "types": ["Submerged MBR", "External MBR", "Side-Stream MBR"],
-            "materials": ["PVDF", "PTFE", "Polyethersulfone", "Ceramic Membrane"],
-            "features": ["High Quality Effluent", "Small Footprint", "Low Sludge Production", "Automated Control"],
-            "applications": ["Water Reuse", "Wastewater Recycling", "Industrial Treatment", "Decentralized Treatment"]
-        },
-        "Screw Press Dewatering Machine": {
-            "variations": ["Screw Press", "Dewatering Machine", "Sludge Dewatering Press", "Screw Press Dewaterer"],
-            "types": ["Single Screw", "Twin Screw", "Multi-Disc", "Shaftless Screw"],
-            "materials": ["Stainless Steel", "Carbon Steel", "Wear-Resistant Material"],
-            "features": ["High Dryness", "Low Energy", "Automatic Operation", "Easy Maintenance"],
-            "applications": ["Sludge Treatment", "Municipal Sludge", "Industrial Sludge", "Waste Management"]
-        },
-        "Tube Settler": {
-            "variations": ["Tube Settler", "Lamella Clarifier", "Inclined Plate Settler", "Sedimentation Tube"],
-            "materials": ["PVC", "PP", "Fiberglass", "Stainless Steel"],
-            "angles": ["60 Degree", "55 Degree", "Inclined Design"],
-            "features": ["High Efficiency", "Small Footprint", "Easy Installation", "Modular Design"],
-            "applications": ["Water Treatment Plant", "Clarification", "Sedimentation Tank", "Precipitation"]
-        },
-        "Tube Diffuser": {
-            "variations": ["Tube Diffuser", "Aeration Tube", "Fine Bubble Tube", "Membrane Tube Diffuser"],
-            "materials": ["EPDM", "Silicone", "Polyurethane", "Ceramic"],
-            "sizes": ["1 meter", "2 meter", "Custom Length", "Standard Diameter"],
-            "features": ["Uniform Aeration", "High Oxygen Transfer", "Energy Efficient", "Flexible Installation"],
-            "applications": ["Aeration Basin", "Oxidation Ditch", "Wastewater Aeration", "Aquaculture Pond"]
-        }
-    }
-    
-    # 通用词汇
-    generic_words = {
-        "quality": ["High Quality", "Durable", "Reliable", "Efficient", "Professional Grade"],
-        "certification": ["ISO Certified", "CE Certified", "SGS Tested", "FDA Approved", "RoHS Compliant"],
-        "performance": ["Excellent Performance", "Superior Efficiency", "Optimal Results", "Maximum Output"],
-        "design": ["Advanced Design", "Innovative Technology", "Modern Structure", "Ergonomic Design"],
-        "benefits": ["Cost Effective", "Energy Saving", "Environment Friendly", "Easy to Operate"]
-    }
-    
-    # 生成10个标题
-    titles = []
-    product_info = product_vocab.get(product_name, product_vocab["MBBR Media"])
-    
-    # 标题模板
-    title_templates = [
-        "{product} {feature} for {application} with {certification}",
-        "{product} {material} {feature} {application} {standard}",
-        "Professional {product} {design} for {application} {benefit}",
-        "High Performance {product} {feature} {material} {application}",
-        "{product} {feature} {application} {certification} {quality}",
-        "{product} {size} {material} {feature} for {application}",
-        "{product} {type} {feature} {application} with {benefit}",
-        "{product} {shape} {feature} {material} {application} {certification}",
-        "{product} {design} {feature} for {application} {quality}",
-        "{product} {material} {shape} {feature} {application} {standard}"
-    ]
-    
-    for i in range(50):
-        # 随机选择模板
-        template = random.choice(title_templates)
-        
-        # 填充模板
-        title = template.format(
-            product=random.choice(product_info["variations"]),
-            feature=random.choice(product_info["features"]),
-            application=random.choice(product_info["applications"]),
-            material=random.choice(product_info.get("materials", ["Premium Material"])),
-            size=random.choice(product_info.get("sizes", ["Standard Size"])),
-            type=random.choice(product_info.get("types", ["Professional Type"])),
-            shape=random.choice(product_info.get("shapes", ["Optimized Shape"])),
-            design=random.choice(generic_words["design"]),
-            certification=random.choice(generic_words["certification"]),
-            quality=random.choice(generic_words["quality"]),
-            benefit=random.choice(generic_words["benefits"]),
-            standard=random.choice(["Standard", "Model", "System", "Equipment"])
-        )
-        
-        # 应用标题格式规则
-        title_parts = title.split()
-        formatted_parts = []
-        
-        for idx, word in enumerate(title_parts):
-            # 检查是否是介词（小写）
-            prepositions = ["in", "for", "with", "by", "on", "at", "to", "of", "and", "or", "the", "a", "an"]
-            if word.lower() in prepositions and idx > 0:
-                formatted_parts.append(word.lower())
-            else:
-                # 首字母大写
-                formatted_parts.append(word.title())
-        
-        formatted_title = " ".join(formatted_parts)
-        
-        # 检查字符长度
-        if 85 <= len(formatted_title) <= 128:
-            titles.append(formatted_title)
-    
-    # 生成10个关键词
-    keywords = []
-    
-    # 短尾关键词
-    short_tail = [
-        product_name,
-        *product_info["variations"],
-        *[f"{product_name} {material}" for material in product_info.get("materials", [])[:3]],
-        *[f"{product_name} {size}" for size in product_info.get("sizes", [])[:2]],
-        *[f"{product_name} {feature}" for feature in product_info["features"][:3]]
-    ]
-    
-    # 长尾关键词
-    long_tail = []
-    for variation in product_info["variations"][:2]:
-        for feature in product_info["features"][:3]:
-            for application in product_info["applications"][:2]:
-                long_tail.append(f"{variation} {feature} {application}")
-                long_tail.append(f"{feature} {variation} for {application}")
-    
-    for material in product_info.get("materials", [])[:2]:
-        for feature in product_info["features"][:2]:
-            long_tail.append(f"{material} {product_name} {feature}")
-    
-    # 组合关键词
-    keywords = list(set(short_tail + long_tail))
-    
-    # 如果不够10个，添加通用组合
-    while len(keywords) < 10:
-        base = random.choice(product_info["variations"])
-        attr1 = random.choice(product_info["features"] + generic_words["quality"])
-        attr2 = random.choice(product_info["applications"] + ["System", "Equipment", "Machine"])
-        keywords.append(f"{base} {attr1} {attr2}")
-        keywords = list(set(keywords))
-    
-    keywords = keywords[:10]
-    
-    # 生成10个属性词
-    attributes = []
-    
-    # 材料属性
-    if "materials" in product_info:
-        attributes.append("Material Type:")
-        for material in product_info["materials"][:5]:
-            attributes.append(f"  - {material}")
-    
-    # 尺寸属性
-    if "sizes" in product_info:
-        attributes.append("\nSize Specification:")
-        for size in product_info["sizes"][:5]:
-            attributes.append(f"  - {size}")
-    elif "shapes" in product_info:
-        attributes.append("\nShape Design:")
-        for shape in product_info["shapes"][:5]:
-            attributes.append(f"  - {shape}")
-    
-    # 性能属性
-    attributes.append("\nPerformance Features:")
-    for feature in product_info["features"][:8]:
-        attributes.append(f"  - {feature}")
-    
-    # 应用属性
-    attributes.append("\nApplication Scenarios:")
-    for app in product_info["applications"][:8]:
-        attributes.append(f"  - {app}")
-    
-    # 质量属性
-    attributes.append("\nQuality Standards:")
-    for standard in generic_words["certification"][:5]:
-        attributes.append(f"  - {standard}")
-    
-    # 设计属性
-    attributes.append("\nDesign Characteristics:")
-    for design in generic_words["design"][:5]:
-        attributes.append(f"  - {design}")
-    
-    # 通用属性
-    attributes.append("\nGeneral Properties:")
-    general_props = [
-        "High Durability", "Corrosion Resistant", "UV Resistant", "Chemical Resistant",
-        "Temperature Resistant", "Abrasion Resistant", "Long Service Life", "Low Maintenance",
-        "Easy Installation", "Modular Design", "Customizable", "Bulk Available",
-        "OEM Service", "Fast Delivery", "Competitive Price", "Technical Support"
-    ]
-    
-    for prop in general_props[:10]:
-        attributes.append(f"  - {prop}")
-    
-    # 确保属性词数量
-    attribute_text = "\n".join(attributes)
-    
-    return titles, keywords, attribute_text
-
 # ==================== Logo水印添加核心函数 ====================
 def add_logo_to_image(base_image, logo_image, x_percent, y_percent, size_percent, opacity):
     """将Logo添加到图片上的核心函数"""
@@ -1181,113 +1057,124 @@ def create_zip_from_images(images, original_names, output_format='PNG'):
 with st.sidebar:
     st.markdown("### ⚙️ 合成设置")
     
-    # 1. Logo设置
-    st.markdown('<div class="settings-title">🖼️ Logo设置</div>', unsafe_allow_html=True)
-    logo_color = st.radio(
-        "选择Logo颜色",
-        ["黑色Logo", "白色Logo"],
-        horizontal=True,
-        help="根据背景颜色选择合适的Logo颜色以确保清晰可见",
-        key="logo_color_select"
-    )
-    st.session_state.logo_color = logo_color
+    # Logo颜色选择
+    st.markdown('<div class="sidebar-section-title">🖼️ Logo颜色</div>', unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("黑色", use_container_width=True, 
+                    type="primary" if st.session_state.get('logo_color', '黑色Logo') == "黑色Logo" else "secondary"):
+            st.session_state.logo_color = "黑色Logo"
+            st.rerun()
+    with col2:
+        if st.button("白色", use_container_width=True,
+                    type="primary" if st.session_state.get('logo_color', '黑色Logo') == "白色Logo" else "secondary"):
+            st.session_state.logo_color = "白色Logo"
+            st.rerun()
     
-    st.markdown("---")
+    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
     
-    # 2. 产品图设置（删除产品图位置功能）
-    st.markdown('<div class="settings-title">📐 产品图设置</div>', unsafe_allow_html=True)
+    # 产品图大小设置
+    st.markdown('<div class="sidebar-section-title">📏 产品图尺寸</div>', unsafe_allow_html=True)
     product_size = st.slider(
-        "产品图最大边长", 
+        "最大边长 (像素)", 
         min_value=500, 
         max_value=1000, 
-        value=800, 
+        value=st.session_state.get('product_size', 800), 
         step=50,
-        help="控制产品图在合成图中的大小",
         key="product_size_slider"
     )
     st.session_state.product_size = product_size
+    st.markdown(f'<div class="value-display">{product_size} px</div>', unsafe_allow_html=True)
     
-    # 删除产品图位置设置
-    # 产品图位置固定为居中
+    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
     
-    st.markdown("---")
-    
-    # 3. 背景遮罩设置
-    st.markdown('<div class="settings-title">🎨 背景遮罩（可选颜色）</div>', unsafe_allow_html=True)
+    # 背景遮罩设置
+    st.markdown('<div class="sidebar-section-title">🎨 背景遮罩</div>', unsafe_allow_html=True)
     
     # 遮罩开关
-    dark_mask_enabled = st.checkbox(
-        '添加背景遮罩层',
-        value=st.session_state.get('dark_mask_enabled', False),
-        help='在背景图上层添加颜色遮罩层，使产品图更突出',
-        key='dark_mask_enabled_checkbox'
-    )
+    col_enable, col_info = st.columns([2, 1])
+    with col_enable:
+        dark_mask_enabled = st.checkbox(
+            '启用遮罩',
+            value=st.session_state.get('dark_mask_enabled', False),
+            key='dark_mask_enabled_checkbox'
+        )
+    
+    with col_info:
+        if dark_mask_enabled:
+            st.markdown('<span style="color: #4CAF50; font-size: 0.8rem;">已启用</span>', unsafe_allow_html=True)
+        else:
+            st.markdown('<span style="color: #999; font-size: 0.8rem;">已关闭</span>', unsafe_allow_html=True)
     
     st.session_state.dark_mask_enabled = dark_mask_enabled
     
     # 遮罩设置（如果启用）
     if dark_mask_enabled:
-        # 遮罩不透明度滑块
+        # 遮罩不透明度
         mask_opacity = st.slider(
-            '遮罩层不透明度',
+            '不透明度 (%)',
             min_value=0,
             max_value=100,
             value=st.session_state.get('mask_opacity', 20),
             step=5,
-            help='遮罩层的不透明度，值越大颜色越明显',
             key='mask_opacity_slider'
         )
         st.session_state.mask_opacity = mask_opacity
         
         # 颜色选择类型
-        mask_color_type = st.radio(
-            "颜色选择方式",
-            ["预设颜色", "自定义颜色"],
-            horizontal=True,
-            index=0 if st.session_state.get('mask_color_type', '预设颜色') == '预设颜色' else 1,
-            key='mask_color_type_radio'
-        )
-        st.session_state.mask_color_type = mask_color_type
+        color_type_col1, color_type_col2 = st.columns(2)
+        with color_type_col1:
+            if st.button("预设颜色", use_container_width=True,
+                        type="primary" if st.session_state.get('mask_color_type', '预设颜色') == '预设颜色' else "secondary"):
+                st.session_state.mask_color_type = "预设颜色"
+                st.rerun()
         
-        if mask_color_type == "预设颜色":
-            # 当前选择的预设颜色
-            current_preset = st.session_state.get('mask_preset_color', '白色')
+        with color_type_col2:
+            if st.button("自定义", use_container_width=True,
+                        type="primary" if st.session_state.get('mask_color_type', '预设颜色') == '自定义颜色' else "secondary"):
+                st.session_state.mask_color_type = "自定义颜色"
+                st.rerun()
+        
+        if st.session_state.mask_color_type == "预设颜色":
+            # 预设颜色选择
+            st.markdown('<div class="compact-slider-label">选择颜色</div>', unsafe_allow_html=True)
             
-            # 显示颜色预览
-            current_hex = PRESET_COLORS[current_preset]
-            current_rgb = hex_to_rgb(current_hex)
+            # 常用颜色快速选择
+            common_colors = ["白色", "黑色", "深灰", "浅灰", "深蓝", "蓝色", "深绿", "浅绿", "深红", "红色"]
             
-            # 显示颜色预览和选择器
-            col1, col2 = st.columns([1, 3])
-            with col1:
-                # 颜色预览框
-                brightness = get_color_brightness(current_rgb)
-                text_color = "white" if brightness < 128 else "black"
-                st.markdown(f"""
-                <div class="color-preview-box" style="background-color: {current_hex}; color: {text_color};">
-                    {current_preset[0]}
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with col2:
-                # 颜色选择下拉框
-                preset_options = list(PRESET_COLORS.keys())
-                selected_preset = st.selectbox(
-                    "选择预设颜色",
-                    preset_options,
-                    index=preset_options.index(current_preset) if current_preset in preset_options else 0,
-                    key='mask_preset_select'
-                )
-                
-                if selected_preset != st.session_state.get('mask_preset_color', '白色'):
-                    st.session_state.mask_preset_color = selected_preset
-                    st.session_state.mask_color_rgb = hex_to_rgb(PRESET_COLORS[selected_preset])
-                    st.rerun()
+            # 创建颜色网格
+            cols = st.columns(5)
+            for idx, color_name in enumerate(common_colors):
+                with cols[idx % 5]:
+                    hex_color = PRESET_COLORS[color_name]
+                    is_selected = st.session_state.get('mask_preset_color', '白色') == color_name
+                    
+                    # 显示颜色方块
+                    brightness = get_color_brightness(hex_to_rgb(hex_color))
+                    text_color = "white" if brightness < 128 else "black"
+                    
+                    if st.button(
+                        "",
+                        key=f"color_{color_name}",
+                        help=color_name
+                    ):
+                        st.session_state.mask_preset_color = color_name
+                        st.session_state.mask_color_rgb = hex_to_rgb(hex_color)
+                        st.rerun()
+                    
+                    # 显示颜色名称
+                    st.markdown(f"""
+                    <div style="text-align: center; margin-top: -5px;">
+                        <div style="width: 100%; height: 25px; background-color: {hex_color}; 
+                             border-radius: 4px; border: {'2px solid #2196F3' if is_selected else '1px solid #ddd'};
+                             margin-bottom: 2px;"></div>
+                        <div style="font-size: 0.7rem; color: #666;">{color_name}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
         
         else:  # 自定义颜色
-            # 自定义颜色选择器
             custom_color = st.color_picker(
-                "选择遮罩颜色",
+                "选择颜色",
                 value=st.session_state.get('mask_custom_color', '#FFFFFF'),
                 key='mask_custom_color_picker'
             )
@@ -1297,86 +1184,65 @@ with st.sidebar:
                 st.session_state.mask_color_rgb = hex_to_rgb(custom_color)
                 st.rerun()
             
-            # 显示颜色预览
-            current_hex = custom_color
+            # 显示当前颜色
             current_rgb = hex_to_rgb(custom_color)
-            
-            col1, col2 = st.columns([1, 3])
-            with col1:
-                brightness = get_color_brightness(current_rgb)
-                text_color = "white" if brightness < 128 else "black"
-                st.markdown(f"""
-                <div class="color-preview-box" style="background-color: {current_hex}; color: {text_color};">
-                    自定
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with col2:
-                st.caption(f"颜色值: {current_hex}")
-                st.caption(f"RGB: {current_rgb}")
-        
-        # 更新当前颜色
-        current_color = get_current_mask_color()
-        current_hex = rgb_to_hex(current_color)
-        
-        # 显示遮罩信息（删除预览）
-        color_name = st.session_state.mask_preset_color if st.session_state.mask_color_type == '预设颜色' else '自定义颜色'
-        st.markdown(f"""
-        <div class="mask-info">
-            <strong>当前设置:</strong><br>
-            • 颜色: {color_name} ({current_hex})<br>
-            • 不透明度: {mask_opacity}%<br>
-        </div>
-        """, unsafe_allow_html=True)
+            brightness = get_color_brightness(current_rgb)
+            st.markdown(f"""
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.5rem;">
+                <div style="font-size: 0.8rem; color: #666;">当前颜色:</div>
+                <div style="width: 30px; height: 30px; background-color: {custom_color}; 
+                     border-radius: 4px; border: 1px solid #ddd;"></div>
+            </div>
+            """, unsafe_allow_html=True)
     
-    st.markdown("---")
+    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
     
-    # 4. 输出设置
-    st.markdown('<div class="settings-title">📦 输出设置</div>', unsafe_allow_html=True)
+    # 输出设置
+    st.markdown('<div class="sidebar-section-title">📦 输出设置</div>', unsafe_allow_html=True)
     
-    col_size1, col_size2 = st.columns(2)
-    with col_size1:
-        output_size = st.selectbox(
-            "输出尺寸", 
-            [400, 600, 800, 1000, 1200, 1500, 2000],
-            index=2,
-            help="选择输出图片的尺寸",
-            key="output_size_select"
-        )
-        st.session_state.output_size = output_size
-    with col_size2:
-        output_format = st.radio(
-            "输出格式", 
-            ['JPG', 'PNG'],
-            horizontal=True,
-            help="JPG适用于照片，PNG适用于需要透明背景的图片",
-            key="output_format_radio"
-        )
-        st.session_state.output_format = output_format
+    # 输出尺寸
+    output_size = st.selectbox(
+        "输出尺寸", 
+        [400, 600, 800, 1000, 1200, 1500, 2000],
+        index=2,
+        key="output_size_select"
+    )
+    st.session_state.output_size = output_size
     
-    st.markdown("---")
+    # 输出格式
+    output_format = st.radio(
+        "输出格式", 
+        ['JPG', 'PNG'],
+        horizontal=True,
+        key="output_format_radio"
+    )
+    st.session_state.output_format = output_format
     
-    # 5. 处理按钮
+    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
+    
+    # 处理按钮
     process_button = st.button(
         "🚀 开始智能批量合成", 
         type="primary", 
         use_container_width=True,
-        help="点击开始处理所有图片",
         key="process_button"
     )
 
 # ==================== 主区域：标签页 ====================
-# 修改为4个标签页，删除了图片去重功能
-tab1, tab2, tab3, tab4 = st.tabs(["📤 产品图合成", "🎬 视频抽帧", "📝 AI文案(暂不可用)", "🖼️ Logo水印添加"])
+# 修改为3个标签页，删除了AI文案功能
+tab1, tab2, tab3 = st.tabs(["📤 产品图合成", "🎬 视频抽帧", "🖼️ Logo水印添加"])
 
-# ========== tab1 中 Unsplash 部分完整修正代码 ==========
+# ========== tab1 最终完整版：产品图合成（无偏移+响应快+间距紧凑） ==========
 with tab1:
     # 减小标题间距
     st.header("📤 产品图合成")
     st.markdown(
     """<div class="highlight-box">
         <p>上传合适的背景图或unsplash图库中搜索，再上传透明产品图，左侧合成带LOGO产品图</p>
-    </div>""", unsafe_allow_html=True)    
+    </div>""", unsafe_allow_html=True)
+    
+    # 全局状态容器（用于显示下载spinner，不挤压列内布局）
+    tab1_global_status = st.empty()
 
     # 使用两列布局
     col1, col2 = st.columns([1, 1], gap="large")
@@ -1394,7 +1260,7 @@ with tab1:
         )
         
         if bg_source == "上传图片":
-            # 上传背景图逻辑（保持不变）
+            # 上传背景图逻辑（保持原有功能，无修改）
             bg_files = st.file_uploader(
                 "拖拽或选择背景图片",
                 type=['png', 'jpg', 'jpeg'],
@@ -1434,14 +1300,12 @@ with tab1:
                                     width=display_width
                                 )
         
-        else:  # Unsplash图库
-            # 初始化Unsplash API（提前初始化，避免重复定义）
+        else:  # Unsplash图库（最终优化版：无偏移+响应快+间距紧凑）
+            # 初始化Unsplash API
             unsplash_api = UnsplashAPI()
             
-            # 1. 先渲染搜索框和按钮（定义变量）
+            # 1. 搜索框和按钮布局（保持原有功能）
             st.markdown('<div class="search-container">', unsafe_allow_html=True)
-            
-            # 使用两列布局：搜索框和按钮
             search_col1, search_col2 = st.columns([3, 2])
             
             with search_col1:
@@ -1458,7 +1322,6 @@ with tab1:
                 # 搜索和翻页按钮在同一行
                 btn_col1, btn_col2, btn_col3 = st.columns(3)
                 with btn_col1:
-                    # 先定义搜索按钮
                     search_btn = st.button(
                         "搜索", 
                         type="primary", 
@@ -1467,85 +1330,76 @@ with tab1:
                     )
                 
                 with btn_col2:
-                    # 先获取最新状态（避免变量未定义）
+                    # 上一页按钮 - 容错处理
                     has_photos = len(st.session_state.get('unsplash_photos', [])) > 0
                     current_page = st.session_state.get('unsplash_current_page', 1)
                     total_pages = st.session_state.get('unsplash_total_pages', 0)
-                    
-                    # 上一页按钮 - 总是显示但可能禁用
                     prev_disabled = not has_photos or current_page <= 1
-            
                     prev_label = "◀️ 上一页"
                     prev_btn = st.button(prev_label, key="unsplash_prev", use_container_width=True, disabled=prev_disabled)
 
                 with btn_col3:
-                    # 下一页按钮 - 先定义禁用条件，再渲染
+                    # 下一页按钮 - 容错处理
                     next_disabled = not has_photos or (current_page >= total_pages) or (total_pages == 0)
-            
                     next_label = "下一页 ▶️"
                     next_btn = st.button(next_label, key="unsplash_next", use_container_width=True, disabled=next_disabled)
 
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # 2. 检查按钮点击事件（变量已定义）
+            # 2. 搜索按钮点击逻辑（保持原有功能）
             need_search = False
-            
-            # 搜索按钮点击
             if search_btn:
                 if not unsplash_api.access_key:
                     st.error("请先配置Unsplash API密钥")
                 else:
-                    # 重置到第一页
                     st.session_state.unsplash_current_page = 1
                     st.session_state.unsplash_search_query = search_query
                     st.session_state.unsplash_search_trigger = True
                     need_search = True
             
-            # 上一页按钮点击
             if prev_btn and not prev_disabled:
                 st.session_state.unsplash_current_page -= 1
                 st.session_state.unsplash_search_trigger = True
                 need_search = True
             
-            # 下一页按钮点击
             if next_btn and not next_disabled:
                 st.session_state.unsplash_current_page += 1
                 st.session_state.unsplash_search_trigger = True
                 need_search = True
             
-            # 搜索触发标志
             if st.session_state.get('unsplash_search_trigger', False):
                 need_search = True
             
-            # 3. 执行搜索逻辑（变量已定义，且按钮点击已判断）
+            # 3. 执行搜索逻辑（保持原有功能）
             if need_search:
                 if not unsplash_api.access_key:
                     st.error("⚠️ 未找到Unsplash API密钥，请在Streamlit Secrets中配置UNSPLASH_ACCESS_KEY")
                 else:
-                    with st.spinner(f'正在搜索{st.session_state.unsplash_search_query}...'):
-                        photos, total_pages, total_results = unsplash_api.search_photos(
-                            st.session_state.unsplash_search_query, 
-                            page=st.session_state.unsplash_current_page, 
-                            per_page=12
-                        )
-                        
-                        if photos:
-                            st.session_state.unsplash_photos = photos
-                            st.session_state.unsplash_total_pages = total_pages
-                            st.session_state.unsplash_total_results = total_results
+                    with tab1_global_status.container():  # 全局spinner，不挤压列内
+                        with st.spinner(f'正在搜索{st.session_state.unsplash_search_query}...'):
+                            photos, total_pages, total_results = unsplash_api.search_photos(
+                                st.session_state.unsplash_search_query, 
+                                page=st.session_state.unsplash_current_page, 
+                                per_page=12
+                            )
                             
-                            if st.session_state.unsplash_current_page == 1:
-                                st.success(f"找到 {total_results} 张图片，共{total_pages}页")
-                        else:
-                            if total_results == 0:
-                                st.warning(f"未找到与'{st.session_state.unsplash_search_query}'相关的图片")
+                            if photos:
+                                st.session_state.unsplash_photos = photos
+                                st.session_state.unsplash_total_pages = total_pages
+                                st.session_state.unsplash_total_results = total_results
+                                
+                                if st.session_state.unsplash_current_page == 1:
+                                    st.success(f"找到 {total_results} 张图片，共{total_pages}页")
                             else:
-                                st.error("搜索失败，请尝试其他关键词")
-                        
-                        # 重置搜索触发标志
-                        st.session_state.unsplash_search_trigger = False
+                                if total_results == 0:
+                                    st.warning(f"未找到与'{st.session_state.unsplash_search_query}'相关的图片")
+                                else:
+                                    st.error("搜索失败，请尝试其他关键词")
+                            
+                            # 重置搜索触发标志
+                            st.session_state.unsplash_search_trigger = False
             
-            # 4. 显示搜索结果
+            # 4. 显示搜索结果（最终优化：无偏移+响应快+间距紧凑）
             if st.session_state.unsplash_photos:
                 # 显示当前页信息
                 total_pages = st.session_state.get('unsplash_total_pages', 0)
@@ -1557,12 +1411,12 @@ with tab1:
         
                 photos = st.session_state.unsplash_photos
                 
-                # 每排6个，显示2排（共12个）
+                # 每排6个，显示2排（共12个）- 固定布局
                 rows = 2
                 cols_per_row = 6
                 
                 for row in range(rows):
-                    # 创建6列
+                    # 创建6列 - 固定宽度
                     columns = st.columns(cols_per_row)
                     
                     for col in range(cols_per_row):
@@ -1570,22 +1424,31 @@ with tab1:
                         if idx < len(photos):
                             with columns[col]:
                                 photo = photos[idx]
-                                img_url = photo.get("urls", {}).get("small")
+                                # 优化：使用thumb缩略图，加载更快
+                                img_url = photo.get("urls", {}).get("thumb") or photo.get("urls", {}).get("small")
                                 
                                 if img_url:
-                                    # 1:1 正方形图片容器（关键）
                                     st.markdown(f"""
                                     <style>
-                                        /* 强制1:1正方形图片容器 */
+                                        /* 1. 外层卡片：紧凑高度+紧贴间距，无多余空白 */
+                                        .unsplash-card-{current_page}-{idx} {{
+                                            position: relative;
+                                            width: 100%;
+                                            height: 180px;
+                                            margin-bottom: 16px;
+                                            display: flex;
+                                            flex-direction: column;
+                                            justify-content: flex-end;
+                                            gap: 4px;
+                                        }}
+                                        /* 2. 图片容器：紧凑高度+无底部外边距，缩短距离核心 */
                                         .img-container-{current_page}-{idx} {{
                                             position: relative;
                                             width: 100%;
-                                            aspect-ratio: 1/1;   /* 核心：1:1比例 */
+                                            height: 140px;
                                             overflow: hidden;
                                             border-radius: 6px;
-                                            margin-bottom: 8px;
                                         }}
-                                        /* 图片居中裁剪，不拉伸 */
                                         .img-container-{current_page}-{idx} img {{
                                             position: absolute;
                                             top: 50%;
@@ -1593,104 +1456,103 @@ with tab1:
                                             transform: translate(-50%, -50%);
                                             width: 100%;
                                             height: 100%;
-                                            object-fit: cover;   /* 居中裁剪，保持比例 */
+                                            object-fit: cover;
                                         }}
-                                    </style>
-                                    <div class="img-container-{current_page}-{idx}">
-                                        <img src="{img_url}" alt="Unsplash图片">
-                                    </div>
-                                    """, unsafe_allow_html=True)
-                                    
-                                    # 单个选择按钮（与图片等宽 + 选中变绿 + 小字体 + 无emoji）
-                                    # 检查是否已选择当前图片（增加容错判断，避免报错）
-                                    is_selected = False
-                                    if st.session_state.get('unsplash_selected_bg'):
-                                        selected_idx = getattr(st.session_state.unsplash_selected_bg, 'idx', -1)
-                                        selected_page = getattr(st.session_state.unsplash_selected_bg, 'page', -1)
-                                        # 精准匹配：页码+索引都一致才判定为选中
-                                        is_selected = (selected_page == current_page) and (selected_idx == idx)
-
-                                    # 设置按钮文字（移除✅ emoji）
-                                    button_label = "选择背景图" if is_selected else "选择背景图"
-
-                                    # 核心：提升CSS优先级（必改！解决绿色不生效问题）
-                                    st.markdown(f"""
-                                    <style>
-                                        /* 双层选择器提升优先级，覆盖Streamlit内置样式 */
+                                        /* 3. 按钮样式：固定尺寸+无差异，无偏移核心 */
                                         div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"] {{
-                                            width: 100% !important;           /* 与图片等宽 */
-                                            font-size: 0.65rem !important;    /* 小字体 */
-                                            padding: 0.25rem 0 !important;    /* 内边距 */
-                                            border-radius: 6px !important;    /* 圆角 */
+                                            width: 100% !important;
+                                            height: 36px !important;
+                                            font-size: 0.65rem !important;
+                                            padding: 0 !important;
+                                            border-radius: 6px !important;
                                             border: 1px solid #d1d5db !important;
-                                            transition: all 0.2s ease !important;
+                                            transition: background-color 0.2s ease !important;
                                             box-sizing: border-box !important;
+                                            line-height: 1 !important;
                                         }}
-                                        /* 选中状态：强制绿色背景+白色文字 */
-                                        div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"].selected {{
-                                            background-color: #28a745 !important;  /* 标准绿色 */
-                                            color: #ffffff !important;            /* 纯白色 */
+                                        /* 选中状态：仅改背景色，不改任何尺寸 */
+                                        div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"].stButton-primary {{
+                                            background-color: #28a745 !important;
+                                            color: #ffffff !important;
                                             border-color: #28a745 !important;
                                         }}
-                                        /* 未选中状态 */
-                                        div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"]:not(.selected) {{
-                                            background-color: #f0f2f6 !important;  /* 浅灰色 */
-                                            color: #333333 !important;            /* 深灰色 */
+                                        /* 未选中状态：固定样式，无尺寸变化 */
+                                        div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"]:not(.stButton-primary) {{
+                                            background-color: #f0f2f6 !important;
+                                            color: #333333 !important;
                                         }}
-                                        /* hover效果 */
+                                        /* hover效果：仅改透明度，无位移无尺寸变化 */
                                         div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"]:hover {{
                                             opacity: 0.9 !important;
                                             box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
                                             transform: none !important;
                                         }}
+                                        /* 禁用聚焦样式：避免点击后边框变化导致视觉偏移 */
+                                        div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"]:focus {{
+                                            outline: none !important;
+                                            box-shadow: none !important;
+                                        }}
                                     </style>
+                                    <div class="unsplash-card-{current_page}-{idx}">
+                                        <div class="img-container-{current_page}-{idx}">
+                                            <img src="{img_url}" alt="Unsplash图片">
+                                        </div>
+                                    </div>
                                     """, unsafe_allow_html=True)
-
-                                    # 渲染按钮（通过动态class控制选中状态）
+                                    
+                                    # 精准判断选中状态
+                                    is_selected = False
+                                    selected_bg = st.session_state.get('unsplash_selected_bg')
+                                    if selected_bg:
+                                        is_selected = (getattr(selected_bg, 'page', -1) == current_page) and \
+                                                      (getattr(selected_bg, 'idx', -1) == idx)
+                                    
+                                    # 按钮配置
+                                    button_label = "选择背景图"
                                     btn_kwargs = {
                                         "key": f"select_{current_page}_{idx}",
                                         "use_container_width": True,
                                         "help": ""
                                     }
-                                    # 动态添加class（核心：让CSS识别选中状态）
+                                    # 选中状态仅设置type=primary，不改尺寸
                                     if is_selected:
-                                        btn_kwargs["type"] = "primary"  # 触发Streamlit原生primary样式，辅助生效
-                                        # 强制注入class（备用方案）
-                                        st.markdown(f"""
-                                        <script>
-                                        document.querySelector('button[data-key="select_{current_page}_{idx}"]').classList.add('selected');
-                                        </script>
-                                        """, unsafe_allow_html=True)
-
+                                        btn_kwargs["type"] = "primary"
+                                    
+                                    # 按钮点击逻辑
                                     if st.button(button_label, **btn_kwargs):
-                                        with st.spinner("下载中..."):
-                                            img = unsplash_api.download_photo(img_url)
-                                            if img:
-                                                class MockFile:
-                                                    def __init__(self, img, idx):
-                                                        self.name = f"unsplash_bg_{current_page}_{idx}.jpg"
-                                                        self.type = "image/jpeg"
-                                                        self.image = img
-                                                        self.idx = idx  # 记录索引
-                                                        self.page = current_page  # 记录页码
-                                                
-                                                mock_file = MockFile(img, idx)
-                                                st.session_state.unsplash_selected_bg = mock_file
-                                                st.rerun()  # 刷新更新状态
+                                        with tab1_global_status.container():
+                                            with st.spinner("正在下载背景图..."):
+                                                img = unsplash_api.download_photo(img_url)
+                                                if img:
+                                                    class MockFile:
+                                                        def __init__(self, img, idx):
+                                                            self.name = f"unsplash_bg_{current_page}_{idx}.jpg"
+                                                            self.type = "image/jpeg"
+                                                            self.image = img
+                                                            self.idx = idx
+                                                            self.page = current_page
+                                                    
+                                                    mock_file = MockFile(img, idx)
+                                                    st.session_state.unsplash_selected_bg = mock_file
+                                                    
+                                                    # 非阻塞toast提示
+                                                    st.toast("背景图选择成功！", icon="✅", duration=2)
+                                                    tab1_global_status.empty()
+                                                    st.rerun()
 
     with col2:
-        # 产品图上传逻辑（保持不变）
+        # 产品图上传逻辑
         st.markdown("#### 产品图上传")
         
         # 添加占位单选按钮以对齐高度
         with st.container():
             st.radio(
-                "",  # 空标签
+                "",
                 ["上传图片"],
                 horizontal=True,
                 key="product_source_radio",
                 disabled=True,
-                label_visibility="collapsed"  # 隐藏标签
+                label_visibility="collapsed"
             )
         
         # 产品图上传
@@ -1746,7 +1608,7 @@ with tab1:
         total_combinations = len(bg_files_combined) * len(product_files)
         st.info(f"准备合成 {len(bg_files_combined)} 张背景图 × {len(product_files)} 张产品图 = {total_combinations} 张合成图")
 
-# 标签页2：视频抽帧（原来的tab3）
+# 标签页2：视频抽帧
 with tab2:
     st.header("🎬 视频抽帧")
     st.markdown(
@@ -1915,196 +1777,8 @@ with tab2:
                     st.session_state.video_info = None
                     st.rerun()
 
-# 标签页3：AI文案（原来的tab4）
+# 标签页3：Logo水印添加
 with tab3:
-    st.header("📝 AI文案 - 阿里巴巴/MIC平台")
-    st.markdown(
-    """<div class="highlight-box">
-        <p><b>功能说明：</b>根据选择的产品，自动生成适用于阿里巴巴和国际站(MIC)的英文产品标题、关键词和属性词。</p>
-        <ul>
-            <li>标题长度：8-12个单词，85-128个字符，首字母大写，介词小写</li>
-            <li>关键词：包含短尾核心词和长尾复合词</li>
-        </ul>
-    </div>""", unsafe_allow_html=True)
-    
-    # 使用两列布局
-    col_setting, col_preview = st.columns([1, 2], gap="large")
-    
-    with col_setting:
-        st.markdown("### 1. 产品设置")
-        
-        # 产品选择 - 修改产品名称格式
-        product_options = [
-            "MBBR Media", 
-            "Disc Diffuser", 
-            "Drum Filter", 
-            "Bio Block", 
-            "MBR", 
-            "Screw Press Dewatering Machine", 
-            "Tube Settler", 
-            "Tube Diffuser"
-        ]
-        
-        selected_product = st.selectbox(
-            "选择产品类型",
-            product_options,
-            help="选择需要生成文案的产品",
-            key="product_select"
-        )
-        
-        # 平台选择
-        platform = st.radio(
-            "目标平台",
-            ["阿里巴巴国际站", "Made-in-China.com"],
-            help="选择产品要发布的平台",
-            key="platform_select"
-        )
-        
-        # 生成按钮
-        if st.button("🤖 开始生成AI文案", type="primary", use_container_width=True, key="generate_content"):
-            with st.spinner(f'正在为 {selected_product} 生成AI文案...'):
-                # 调用生成函数
-                titles, keywords, attributes = generate_product_content(selected_product, platform)
-                
-                # 保存到session_state
-                st.session_state.generated_titles = titles
-                st.session_state.generated_keywords = keywords
-                st.session_state.generated_attributes = attributes
-                
-                st.success(f"✅ 成功为 {selected_product} 生成文案内容！")
-    
-    with col_preview:
-        if st.session_state.generated_titles:
-            st.markdown("### 2. 生成结果")
-            
-            # 标题部分
-            st.markdown('<div class="section-title">📝 10个产品标题</div>', unsafe_allow_html=True)
-            st.markdown("复制说明： 以下标题可直接复制到阿里/MIC平台的产品标题字段")
-            
-            # 创建可复制的文本框
-            titles_text = "\n".join(st.session_state.generated_titles)
-            st.text_area(
-                "产品标题 (共10个)",
-                titles_text,
-                height=200,
-                key="titles_area",
-                label_visibility="collapsed"
-            )
-            
-            # 复制按钮
-            st.download_button(
-                label="📋 复制所有标题",
-                data=titles_text,
-                file_name=f"{selected_product.replace(' ', '_')}_titles.txt",
-                mime="text/plain",
-                key="copy_titles"
-            )
-            
-            # 关键词部分
-            st.markdown('<div class="section-title">🔑 10个关键词</div>', unsafe_allow_html=True)
-            st.markdown("包含： 短尾核心词 + 长尾复合词")
-            
-            keywords_text = "\n".join(st.session_state.generated_keywords)
-            st.text_area(
-                "关键词列表",
-                keywords_text,
-                height=150,
-                key="keywords_area",
-                label_visibility="collapsed"
-            )
-            
-            # 复制按钮
-            st.download_button(
-                label="📋 复制所有关键词",
-                data=keywords_text,
-                file_name=f"{selected_product.replace(' ', '_')}_keywords.txt",
-                mime="text/plain",
-                key="copy_keywords"
-            )
-            
-            # 属性词部分
-            st.markdown('<div class="section-title">🏷️ 10个属性词</div>', unsafe_allow_html=True)
-            st.markdown("分类说明： 按材料、尺寸、性能、应用等分类")
-            
-            st.text_area(
-                "属性词分类",
-                st.session_state.generated_attributes,
-                height=250,
-                key="attributes_area",
-                label_visibility="collapsed"
-            )
-            
-            # 复制按钮
-            st.download_button(
-                label="📋 复制所有属性词",
-                data=st.session_state.generated_attributes,
-                file_name=f"{selected_product.replace(' ', '_')}_attributes.txt",
-                mime="text/plain",
-                key="copy_attributes"
-            )
-            
-            # 批量下载按钮
-            st.markdown("---")
-            col_dl1, col_dl2, col_dl3 = st.columns(3)
-            with col_dl1:
-                # 创建ZIP包包含所有内容
-                zip_buffer = BytesIO()
-                with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-                    zip_file.writestr(f"{selected_product}_titles.txt", titles_text)
-                    zip_file.writestr(f"{selected_product}_keywords.txt", keywords_text)
-                    zip_file.writestr(f"{selected_product}_attributes.txt", st.session_state.generated_attributes)
-                
-                zip_buffer.seek(0)
-                
-                st.download_button(
-                    label="📦 下载所有文案 (ZIP)",
-                    data=zip_buffer,
-                    file_name=f"{selected_product.replace(' ', '_')}_content_pack.zip",
-                    mime="application/zip",
-                    use_container_width=True,
-                    key="download_all"
-                )
-            
-            with col_dl2:
-                if st.button("🔄 重新生成", key="regenerate", use_container_width=True):
-                    st.session_state.generated_titles = None
-                    st.session_state.generated_keywords = None
-                    st.session_state.generated_attributes = None
-                    st.rerun()
-            
-            with col_dl3:
-                if st.button("📊 生成统计", key="stats", use_container_width=True):
-                    # 显示统计信息
-                    avg_title_length = sum(len(title) for title in st.session_state.generated_titles) / len(st.session_state.generated_titles)
-                    avg_word_count = sum(len(title.split()) for title in st.session_state.generated_titles) / len(st.session_state.generated_titles)
-                    
-                    st.info(f"""
-                    文案统计信息：
-                    - 标题数量: 10个
-                    - 平均标题长度: {avg_title_length:.1f} 字符
-                    - 平均单词数: {avg_word_count:.1f} 个
-                    - 关键词数量: 10个
-                    - 属性词数量: 10个
-                    - 目标平台: {platform}
-                    """)
-        
-        else:
-            # 未生成时的预览
-            st.markdown("### 2. 文案预览区")
-            st.markdown(
-            """<div style="text-align: center; padding: 3rem; color: #666; background-color: #f8f9fa; border-radius: 10px;">
-                <h4>👈 请先在左侧选择产品</h4>
-                <p>选择产品类型和目标平台后，点击"开始生成AI文案"按钮</p>
-                <p>系统将为您生成：</p>
-                <ul style="text-align: left; display: inline-block;">
-                    <li>10个优化产品标题</li>
-                    <li>10个SEO关键词</li>
-                    <li>10个分类属性词</li>
-                </ul>
-            </div>""", unsafe_allow_html=True)
-
-# 标签页4：Logo水印添加（原来的tab5）
-with tab4:
     # 预设位置映射表
     preset_map = {
         "左上角": (5, 5),
@@ -2413,7 +2087,7 @@ if process_button:
     
     # 从session_state获取设置值
     logo_color = st.session_state.get('logo_color', '黑色Logo')
-    product_size = st.session_state.get('product_size', 600)
+    product_size = st.session_state.get('product_size', 800)
     output_size = st.session_state.get('output_size', 800)
     output_format = st.session_state.get('output_format', 'JPG')
     
@@ -2438,7 +2112,7 @@ if process_button:
     # 显示遮罩状态
     if dark_mask_enabled:
         mask_hex = rgb_to_hex(mask_color_rgb)
-        mask_color_name = st.session_state.get('mask_preset_color', '自定义颜色')
+        mask_color_name = st.session_state.get('mask_preset_color', '白色')
         st.info(f"🖌️ 背景遮罩已启用 | 颜色: {mask_color_name} ({mask_hex}) | 不透明度: {mask_opacity}%")
     
     # 创建临时目录存放结果
@@ -2528,7 +2202,7 @@ if process_button:
             
             # 每排6张，最多4排
             rows = min(4, (total_previews + 5) // 6)  # 计算需要的行数
-            preview_width = 180  # 每张预览图片的宽度
+            preview_width = 240  # 增加预览图片宽度，提高分辨率
             
             # 使用紧凑网格显示图片
             for row in range(rows):
@@ -2541,17 +2215,19 @@ if process_button:
                             file_path = preview_files[idx]
                             img = Image.open(file_path)
                             
-                            # 高质量调整大小，保持清晰度
+                            # 高质量调整大小，保持清晰度 - 提高预览分辨率
                             display_img = img.copy()
                             
                             # 计算显示尺寸，保持宽高比
                             display_height = int(preview_width * img.height / img.width)
+                            # 使用更高的质量进行缩略
                             display_img.thumbnail((preview_width * 2, display_height * 2), Image.Resampling.LANCZOS)
                             
                             # 显示图片和文件名
                             st.image(
                                 display_img, 
-                                width=preview_width
+                                width=preview_width,
+                                use_column_width=False  # 使用固定宽度确保清晰度
                             )
                             st.caption(
                                 os.path.basename(file_path)[:15] + "..." 
@@ -2565,8 +2241,8 @@ if process_button:
 st.markdown("---")
 st.markdown("### 💡 使用说明")
 
-# 使用四列布局显示说明（现在有四个主要功能）
-info_col1, info_col2, info_col3, info_col4 = st.columns(4)
+# 使用三列布局显示说明
+info_col1, info_col2, info_col3 = st.columns(3)
 
 with info_col1:
     st.markdown(
@@ -2592,17 +2268,6 @@ with info_col2:
     </div>""", unsafe_allow_html=True)
 
 with info_col3:
-    st.markdown(
-    """<div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
-        <h4>📝 AI文案（暂不可用）</h4>
-        <ul>
-            <li>10个产品标题</li>
-            <li>10个SEO关键词</li>
-            <li>10个分类属性词</li>
-        </ul>
-    </div>""", unsafe_allow_html=True)
-
-with info_col4:
     st.markdown(
     """<div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
         <h4>🖼️ Logo水印添加</h4>
