@@ -69,7 +69,7 @@ def get_custom_css():
 
         /* 按钮样式 */
         .stButton > button {
-            border-radius: 8px;
+            border-radius: 32px;
             padding: 0.6rem 1.2rem;
             font-weight: 600;
             transition: all 0.3s ease;
