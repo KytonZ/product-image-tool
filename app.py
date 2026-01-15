@@ -67,7 +67,7 @@ def get_custom_css():
             padding: 0.2rem 0.5rem;
         }
 
-        /* 按钮样式 */
+        /* 按钮样式（全局通用，移除了原Unsplash专属按钮样式） */
         .stButton > button {
             border-radius: 32px;
             padding: 0.6rem 1.2rem;
@@ -206,7 +206,7 @@ def get_custom_css():
             font-size: 1rem;
         }
         
-        /* Unsplash图片样式 */
+        /* Unsplash图片样式 - 核心修改：图片可点击+红框选中 */
         .unsplash-image-card {
             border: 1px solid #e0e0e0;
             border-radius: 6px;
@@ -216,6 +216,7 @@ def get_custom_css():
             transition: all 0.3s ease;
             position: relative;
         }
+        
         /* 调整按钮容器，使两个按钮并排且紧凑 */
         .button-container {
             display: flex;
@@ -246,6 +247,7 @@ def get_custom_css():
             border-radius: 4px;
             font-size: 11px;
         }
+        
         /* 紧凑布局 */
         .stTabs [data-baseweb="tab"] {
             padding: 8px 16px;
@@ -254,7 +256,6 @@ def get_custom_css():
         .stTabs [data-baseweb="tab-list"] {
             gap: 5px;
         }
-
         
         /* 选项卡样式 */
         .bg-tab-container {
@@ -481,6 +482,54 @@ def get_custom_css():
             border-width: 3px;
             box-shadow: 0 0 8px rgba(33, 150, 243, 0.4);
         }
+        
+        /* 新增：Unsplash图片可点击+红框选中样式（核心） */
+        .unsplash-clickable-img {
+            position: relative;          /* 相对定位，用于红框和隐藏按钮定位 */
+            width: 100%;
+            aspect-ratio: 1/1;           /* 保持1:1正方形 */
+            overflow: hidden;
+            border-radius: 6px;
+            cursor: pointer !important;             /* 手型光标，提示可点击 */
+            transition: all 0.2s ease;   /* 过渡效果，提升交互流畅度 */
+        }
+        
+        /* 未选中状态 - 默认样式（透明边框避免布局偏移） */
+        .unsplash-clickable-img.unselected {
+            border: 2px solid transparent;
+        }
+        
+        /* 选中状态 - 红框凸显（粗红边+阴影增强视觉） */
+        .unsplash-clickable-img.selected {
+            border: 3px solid #dc3545;     /* 标准红框，可自定义颜色 */
+            box-shadow: 0 0 12px rgba(220, 53, 69, 0.6);  /* 红框阴影，凸显选中 */
+        }
+        
+        /* 图片居中裁剪，不拉伸（保持原有显示效果） */
+        .unsplash-clickable-img img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            pointer-events: none;
+        }
+        
+        /* 隐藏按钮 - 覆盖整个图片，透明无视觉效果 */
+        .unsplash-hidden-btn {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;                   /* 完全透明，不可见 */
+            cursor: pointer;
+            border: none;
+            background: none;
+            z-index: 10;                  /* 确保在图片上方，优先触发点击 */
+        }
     </style>
     """
 
@@ -514,6 +563,10 @@ if 'unsplash_current_page' not in st.session_state:
     st.session_state.unsplash_current_page = 1
 if 'unsplash_total_pages' not in st.session_state:
     st.session_state.unsplash_total_pages = 0
+if 'unsplash_selected_page' not in st.session_state:
+    st.session_state.unsplash_selected_page = 1  # 选中图片的页码
+if 'unsplash_selected_idx' not in st.session_state:
+    st.session_state.unsplash_selected_idx = -1  # 选中图片的索引（-1表示未选中）
 
 # Logo水印添加相关的会话状态
 if 'logo_adder_images' not in st.session_state:
@@ -954,29 +1007,30 @@ with st.sidebar:
     st.markdown("### ⚙️ 合成设置")
     
     # 1. Logo设置
-    st.markdown('<div class="settings-title">🖼️ Logo设置</div>', unsafe_allow_html=True)
+    st.markdown('<div class="settings-title">🖼️ Logo选择</div>', unsafe_allow_html=True)
     logo_color = st.radio(
-        "选择Logo颜色",
+        "",
         ["黑色Logo", "白色Logo"],
         horizontal=True,
-        help="根据背景颜色选择合适的Logo颜色以确保清晰可见",
         key="logo_color_select"
     )
     st.session_state.logo_color = logo_color
     
     st.markdown("---")
     
-    # 2. 产品图设置（删除产品图位置功能）
-    st.markdown('<div class="settings-title">📐 产品图设置</div>', unsafe_allow_html=True)
+    # 2. 产品图最大边长
+    st.markdown('<div class="settings-title">📐 产品图最大边长</div>', unsafe_allow_html=True)
+    # 用自定义div包裹滑块，添加专属类名
+    st.markdown('<div class="compact-slider">', unsafe_allow_html=True)
     product_size = st.slider(
-        "产品图最大边长", 
+        "",
         min_value=500, 
         max_value=1000, 
         value=800, 
         step=50,
-        help="控制产品图在合成图中的大小",
-        key="product_size_slider"
+        key="product_size_slider",
     )
+    st.markdown('</div>', unsafe_allow_html=True)
     st.session_state.product_size = product_size
     
     # 删除产品图位置设置
@@ -1247,14 +1301,14 @@ with tab1:
                     # 上一页按钮 - 总是显示但可能禁用
                     prev_disabled = not has_photos or current_page <= 1
             
-                    prev_label = "◀️ 上一页"
+                    prev_label = "◀上一页"
                     prev_btn = st.button(prev_label, key="unsplash_prev", use_container_width=True, disabled=prev_disabled)
 
                 with btn_col3:
                     # 下一页按钮 - 先定义禁用条件，再渲染
                     next_disabled = not has_photos or (current_page >= total_pages) or (total_pages == 0)
             
-                    next_label = "下一页 ▶️"
+                    next_label = "下一页▶"
                     next_btn = st.button(next_label, key="unsplash_next", use_container_width=True, disabled=next_disabled)
 
             st.markdown('</div>', unsafe_allow_html=True)
@@ -1326,13 +1380,13 @@ with tab1:
                 
                 if total_results > 0:
                     st.info(f"📊 共找到 {total_results} 张图片 - 第 {current_page} / {total_pages} 页 - 关键词: {st.session_state.unsplash_search_query}")
-        
+
                 photos = st.session_state.unsplash_photos
                 
                 # 每排6个，显示2排（共12个）
                 rows = 2
                 cols_per_row = 6
-                
+
                 for row in range(rows):
                     # 创建6列
                     columns = st.columns(cols_per_row)
@@ -1345,110 +1399,96 @@ with tab1:
                                 img_url = photo.get("urls", {}).get("small")
                                 
                                 if img_url:
-                                    # 1:1 正方形图片容器（关键）
+                                    # 判断当前图片是否为选中状态（页码+索引精准匹配）
+                                    is_selected = (st.session_state.unsplash_selected_page == current_page) and \
+                                                (st.session_state.unsplash_selected_idx == idx)
+                                    
+                                    # 定义图片容器的类名（选中/未选中）
+                                    img_container_class = "unsplash-clickable-img selected" if is_selected else "unsplash-clickable-img unselected"
+                                    
+                                    # 按钮key包含页码和索引，确保唯一性
+                                    btn_key = f"unsplash_img_click_{current_page}_{idx}"
+                                    
+                                    # 核心修改：包裹相对定位的父容器，实现图片和按钮叠加
                                     st.markdown(f"""
-                                    <style>
-                                        /* 强制1:1正方形图片容器 */
-                                        .img-container-{current_page}-{idx} {{
-                                            position: relative;
-                                            width: 100%;
-                                            aspect-ratio: 1/1;   /* 核心：1:1比例 */
-                                            overflow: hidden;
-                                            border-radius: 6px;
-                                            margin-bottom: 8px;
-                                        }}
-                                        /* 图片居中裁剪，不拉伸 */
-                                        .img-container-{current_page}-{idx} img {{
-                                            position: absolute;
-                                            top: 50%;
-                                            left: 50%;
-                                            transform: translate(-50%, -50%);
-                                            width: 100%;
-                                            height: 100%;
-                                            object-fit: cover;   /* 居中裁剪，保持比例 */
-                                        }}
-                                    </style>
-                                    <div class="img-container-{current_page}-{idx}">
-                                        <img src="{img_url}" alt="Unsplash图片">
+                                    <div style="position: relative; width: 100%; margin-bottom: 10px;">
+                                        <div class="{img_container_class}">
+                                            <img src="{img_url}" alt="Unsplash图片">
+                                        </div>
+                                        <!-- 按钮容器：通过CSS绝对定位覆盖图片 -->
+                                        <div data-testid="stButton" data-key="{btn_key}" class="unsplash-btn-wrapper"></div>
                                     </div>
                                     """, unsafe_allow_html=True)
                                     
-                                    # 单个选择按钮（与图片等宽 + 选中变绿 + 小字体 + 无emoji）
-                                    # 检查是否已选择当前图片（增加容错判断，避免报错）
-                                    is_selected = False
-                                    if st.session_state.get('unsplash_selected_bg'):
-                                        selected_idx = getattr(st.session_state.unsplash_selected_bg, 'idx', -1)
-                                        selected_page = getattr(st.session_state.unsplash_selected_bg, 'page', -1)
-                                        # 精准匹配：页码+索引都一致才判定为选中
-                                        is_selected = (selected_page == current_page) and (selected_idx == idx)
+                                # 渲染隐藏按钮（仅保留逻辑，样式由外部CSS控制）
+                                if st.button(
+                                    label="",  # 空标签，无文字
+                                    key=btn_key,
+                                    use_container_width=True,
+                                ):
+                                    # 点击后：1. 更新选中状态到session_state 2. 执行原有下载逻辑
+                                    with st.spinner("下载中..."):
+                                        # 强制更新选中状态（持久化页码和索引，新增非空校验）
+                                        st.session_state.unsplash_selected_page = current_page
+                                        st.session_state.unsplash_selected_idx = idx
+                                        st.session_state.unsplash_selected_bg_flag = True  # 新增：添加选中标记，确保状态不丢失
+                                        
+                                        # 原有下载逻辑（完全保留，确保功能不变）
+                                        img = unsplash_api.download_photo(img_url)
+                                        if img:
+                                            class MockFile:
+                                                def __init__(self, img, idx, page):
+                                                    self.name = f"unsplash_bg_{page}_{idx}.jpg"
+                                                    self.type = "image/jpeg"
+                                                    self.image = img
+                                                    self.idx = idx
+                                                    self.page = page
+                                            
+                                            mock_file = MockFile(img, idx, current_page)
+                                            st.session_state.unsplash_selected_bg = mock_file
+                                            
+                                            # 替换：兼容所有Streamlit版本的刷新方式（替代st.rerun()）
+                                            if hasattr(st, 'rerun'):
+                                                st.rerun()
+                                            else:
+                                                st.experimental_rerun()
 
-                                    # 设置按钮文字（移除✅ emoji）
-                                    button_label = "选择背景图" if is_selected else "选择背景图"
-
-                                    # 核心：提升CSS优先级（必改！解决绿色不生效问题）
+                                    # 优化后的按钮样式：实现覆盖+隐藏容器+小手光标
                                     st.markdown(f"""
                                     <style>
-                                        /* 双层选择器提升优先级，覆盖Streamlit内置样式 */
-                                        div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"] {{
-                                            width: 100% !important;           /* 与图片等宽 */
-                                            font-size: 0.65rem !important;    /* 小字体 */
-                                            padding: 0.25rem 0 !important;    /* 内边距 */
-                                            border-radius: 6px !important;    /* 圆角 */
-                                            border: 1px solid #d1d5db !important;
-                                            transition: all 0.2s ease !important;
-                                            box-sizing: border-box !important;
+                                        /* 父容器相对定位，按钮绝对定位覆盖 */
+                                        div[data-key="{btn_key}"] {{
+                                            position: absolute;
+                                            top: 0;
+                                            left: 0;
+                                            width: 100%;
+                                            height: 100%;
+                                            margin: 0 !important;
+                                            padding: 0 !important;
+                                            background: none !important;
+                                            border: none !important;
                                         }}
-                                        /* 选中状态：强制绿色背景+白色文字 */
-                                        div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"].selected {{
-                                            background-color: #28a745 !important;  /* 标准绿色 */
-                                            color: #ffffff !important;            /* 纯白色 */
-                                            border-color: #28a745 !important;
+                                        /* 按钮本身完全透明，无样式，覆盖整个图片 */
+                                        div[data-key="{btn_key}"] button {{
+                                            width: 100% !important;
+                                            height: 100% !important;
+                                            opacity: 0 !important;
+                                            border: none !important;
+                                            background: none !important;
+                                            padding: 0 !important;
+                                            margin: 0 !important;
+                                            cursor: pointer !important; /* 给按钮添加小手光标 */
                                         }}
-                                        /* 未选中状态 */
-                                        div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"]:not(.selected) {{
-                                            background-color: #f0f2f6 !important;  /* 浅灰色 */
-                                            color: #333333 !important;            /* 深灰色 */
-                                        }}
-                                        /* hover效果 */
-                                        div[data-testid="stButton"] button[data-key="select_{current_page}_{idx}"]:hover {{
-                                            opacity: 0.9 !important;
-                                            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
-                                            transform: none !important;
+                                        /* 隐藏按钮容器的多余间距 */
+                                        .unsplash-btn-wrapper {{
+                                            position: absolute;
+                                            top: 0;
+                                            left: 0;
+                                            width: 100%;
+                                            height: 100%;
                                         }}
                                     </style>
                                     """, unsafe_allow_html=True)
-
-                                    # 渲染按钮（通过动态class控制选中状态）
-                                    btn_kwargs = {
-                                        "key": f"select_{current_page}_{idx}",
-                                        "use_container_width": True,
-                                        "help": ""
-                                    }
-                                    # 动态添加class（核心：让CSS识别选中状态）
-                                    if is_selected:
-                                        btn_kwargs["type"] = "primary"  # 触发Streamlit原生primary样式，辅助生效
-                                        # 强制注入class（备用方案）
-                                        st.markdown(f"""
-                                        <script>
-                                        document.querySelector('button[data-key="select_{current_page}_{idx}"]').classList.add('selected');
-                                        </script>
-                                        """, unsafe_allow_html=True)
-
-                                    if st.button(button_label, **btn_kwargs):
-                                        with st.spinner("下载中..."):
-                                            img = unsplash_api.download_photo(img_url)
-                                            if img:
-                                                class MockFile:
-                                                    def __init__(self, img, idx):
-                                                        self.name = f"unsplash_bg_{current_page}_{idx}.jpg"
-                                                        self.type = "image/jpeg"
-                                                        self.image = img
-                                                        self.idx = idx  # 记录索引
-                                                        self.page = current_page  # 记录页码
-                                                
-                                                mock_file = MockFile(img, idx)
-                                                st.session_state.unsplash_selected_bg = mock_file
-                                                st.rerun()  # 刷新更新状态
 
     with col2:
         # 产品图上传逻辑（保持不变）
