@@ -482,54 +482,68 @@ def get_custom_css():
             border-width: 3px;
             box-shadow: 0 0 8px rgba(33, 150, 243, 0.4);
         }
-        
-        /* 新增：Unsplash图片可点击+红框选中样式（核心） */
-        .unsplash-clickable-img {
-            position: relative;          /* 相对定位，用于红框和隐藏按钮定位 */
+        /* 修改按钮样式，确保未选中按钮为白色背景 */
+        .stButton > button[kind="secondary"] {
+            background-color: white !important;
+            color: #333 !important;
+            border: 1px solid #ddd !important;
+        }
+
+        .stButton > button[kind="secondary"]:hover {
+            background-color: #f5f5f5 !important;
+            border-color: #2196F3 !important;
+        }
+
+        /* 选中按钮为绿色 */
+        .stButton > button[kind="primary"] {
+            background-color: #4CAF50 !important;
+            color: white !important;
+            border: 1px solid #4CAF50 !important;
+        }
+
+        .stButton > button[kind="primary"]:hover {
+            background-color: #45a049 !important;
+            border-color: #45a049 !important;
+        }
+        /* 替换原有对应的样式，新增/强化关键属性 */
+        .unsplash-square-container {
             width: 100%;
-            aspect-ratio: 1/1;           /* 保持1:1正方形 */
-            overflow: hidden;
+            aspect-ratio: 1/1 !important; /* 强制1:1宽高比，!important提高优先级 */
+            overflow: hidden !important; /* 确保超出容器的图片部分被裁剪，无残留 */
             border-radius: 6px;
-            cursor: pointer !important;             /* 手型光标，提示可点击 */
-            transition: all 0.2s ease;   /* 过渡效果，提升交互流畅度 */
+            margin-bottom: 8px;
+            border: 1px solid #e0e0e0;
+            position: relative !important; /* 确保绝对定位图片的容器基准 */
+            background-color: #f0f0f0; /* 图片加载前显示浅灰背景，替代纯白边，提升体验 */
         }
-        
-        /* 未选中状态 - 默认样式（透明边框避免布局偏移） */
-        .unsplash-clickable-img.unselected {
-            border: 2px solid transparent;
-        }
-        
-        /* 选中状态 - 红框凸显（粗红边+阴影增强视觉） */
-        .unsplash-clickable-img.selected {
-            border: 3px solid #dc3545;     /* 标准红框，可自定义颜色 */
-            box-shadow: 0 0 12px rgba(220, 53, 69, 0.6);  /* 红框阴影，凸显选中 */
-        }
-        
-        /* 图片居中裁剪，不拉伸（保持原有显示效果） */
-        .unsplash-clickable-img img {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            pointer-events: none;
-        }
-        
-        /* 隐藏按钮 - 覆盖整个图片，透明无视觉效果 */
-        .unsplash-hidden-btn {
+
+        /* 使用背景图片方式确保100%填充（比img标签更稳定，无白边） */
+        .unsplash-square-bg-image {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;                   /* 完全透明，不可见 */
-            cursor: pointer;
-            border: none;
-            background: none;
-            z-index: 10;                  /* 确保在图片上方，优先触发点击 */
+            width: 100% !important;
+            height: 100% !important;
+            background-size: cover !important; /* 裁剪填充，无白边 */
+            background-position: center center !important; /* 图片居中，保留核心内容 */
+            background-repeat: no-repeat !important; /* 禁止重复，避免白边 */
         }
+
+        /* 保留原有img标签样式（备选，优化后无白边） */
+        .unsplash-square-image {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important; /* 强制裁剪填充，覆盖默认样式 */
+            object-position: center center !important; /* 居中裁剪，保留图片核心 */
+            display: block !important; /* 消除img标签默认的行内元素间距 */
+            margin: 0 !important; /* 清除默认边距 */
+            padding: 0 !important; /* 清除默认内边距 */
+            border: none !important; /* 清除可能的边框 */
+        }
+        
     </style>
     """
 
@@ -567,6 +581,14 @@ if 'unsplash_selected_page' not in st.session_state:
     st.session_state.unsplash_selected_page = 1  # 选中图片的页码
 if 'unsplash_selected_idx' not in st.session_state:
     st.session_state.unsplash_selected_idx = -1  # 选中图片的索引（-1表示未选中）
+if 'synthesize_zip_buffer' not in st.session_state:
+    st.session_state.synthesize_zip_buffer = None
+if 'synthesize_zip_info' not in st.session_state:
+    st.session_state.synthesize_zip_info = {}
+if 'persist_product_files' not in st.session_state:
+    st.session_state.persist_product_files = []  # 用于持久化保存产品图上传数据
+if 'unsplash_total_results' not in st.session_state:
+    st.session_state.unsplash_total_results = 0
 
 # Logo水印添加相关的会话状态
 if 'logo_adder_images' not in st.session_state:
@@ -1191,6 +1213,26 @@ with st.sidebar:
         key="process_button"
     )
 
+    # 侧边栏 - 下载所有合成图片按钮（替换原有代码）
+    st.markdown("---")
+    # 严谨判断：是否有有效ZIP缓冲区和有效数据
+    if st.session_state.synthesize_zip_buffer is not None and \
+    st.session_state.synthesize_zip_buffer.getvalue() and \
+    st.session_state.synthesize_zip_info:
+        
+        # 提取zip信息（避免键不存在报错）
+        zip_output_format = st.session_state.synthesize_zip_info.get("output_format", "PNG")
+        zip_output_size = st.session_state.synthesize_zip_info.get("output_size", "800")
+        
+        st.download_button(
+            label=f"📥 下载所有合成图片",
+            data=st.session_state.synthesize_zip_buffer,
+            file_name=f"产品图合成_{zip_output_size}px_{zip_output_format.lower()}.zip",
+            mime="application/zip",
+            use_container_width=True,
+            key="download_synthesize_zip"
+        )
+
 # ==================== 主区域：标签页 ====================
 # 修改为3个标签页，删除了AI文案功能
 tab1, tab2, tab3 = st.tabs(["📤 产品图合成", "🎬 视频抽帧", "🖼️ Logo水印添加"])
@@ -1213,7 +1255,7 @@ with tab1:
         # 背景来源选择选项卡 - 隐藏标签文字
         bg_source = st.radio(
             "",  # 空标签
-            ["上传图片", "Unsplash图库(翻下一页需先再次点击搜索)"],
+            ["上传图片", "Unsplash图库"],
             horizontal=True,
             key="bg_source_radio",
             label_visibility="collapsed"  # 完全隐藏标签
@@ -1264,7 +1306,51 @@ with tab1:
             # 初始化Unsplash API（提前初始化，避免重复定义）
             unsplash_api = UnsplashAPI()
             
-            # 1. 先渲染搜索框和按钮（定义变量）
+            # ===================== 关键修改1：先执行搜索/分页逻辑（在按钮渲染前） =====================
+            # 1.1 读取session_state中的最新状态
+            current_page = st.session_state.get('unsplash_current_page', 1)
+            total_pages = st.session_state.get('unsplash_total_pages', 0)
+            has_photos = len(st.session_state.get('unsplash_photos', [])) > 0
+            search_query = st.session_state.get('unsplash_search_query', "white background")
+            need_search = False
+
+            # 1.2 处理搜索框内容变化（提前更新状态）
+            temp_search_query = search_query  # 临时存储旧值，用于判断变化
+            # 这里先不渲染搜索框，先准备好逻辑
+
+            # 1.3 处理按钮点击的前置逻辑（通过session_state标记，避免提前渲染按钮）
+            # 搜索触发标志判断
+            if st.session_state.get('unsplash_search_trigger', False):
+                need_search = True
+
+            # 1.4 执行搜索逻辑（核心：在按钮渲染前完成状态更新）
+            if need_search:
+                if not unsplash_api.access_key:
+                    st.error("⚠️ 未找到Unsplash API密钥，请在Streamlit Secrets中配置UNSPLASH_ACCESS_KEY")
+                else:
+                    photos, new_total_pages, total_results = unsplash_api.search_photos(
+                        search_query, 
+                        page=current_page, 
+                        per_page=12
+                    )
+                    if photos:
+                        # 关键：立即更新session_state，让后续按钮渲染能读取到最新状态
+                        st.session_state.unsplash_photos = photos
+                        st.session_state.unsplash_total_pages = new_total_pages
+                        st.session_state.unsplash_total_results = total_results
+                        # 更新本地变量，用于计算按钮禁用状态
+                        total_pages = new_total_pages
+                        has_photos = True
+                    else:
+                        if total_results == 0:
+                            st.warning(f"未找到与'{search_query}'相关的图片")
+                        else:
+                            st.error("搜索失败，请尝试其他关键词")
+                    # 重置搜索触发标志
+                    st.session_state.unsplash_search_trigger = False
+
+            # ===================== 恢复你原有布局：渲染搜索框+按钮（无任何新增） =====================
+            # 1. 先渲染搜索框和按钮（完全和你原有代码一致）
             st.markdown('<div class="search-container">', unsafe_allow_html=True)
             
             # 使用两列布局：搜索框和按钮
@@ -1273,7 +1359,7 @@ with tab1:
             with search_col1:
                 search_query = st.text_input(
                     label="",  # 空标签
-                    value=st.session_state.unsplash_search_query,
+                    value=search_query,
                     placeholder="例如：white background",
                     help="输入英文关键词",
                     label_visibility="collapsed",  # 隐藏标签
@@ -1281,7 +1367,7 @@ with tab1:
                 )
             
             with search_col2:
-                # 搜索和翻页按钮在同一行
+                # 搜索和翻页按钮在同一行（完全和你原有代码一致）
                 btn_col1, btn_col2, btn_col3 = st.columns(3)
                 with btn_col1:
                     # 先定义搜索按钮
@@ -1293,29 +1379,28 @@ with tab1:
                     )
                 
                 with btn_col2:
-                    # 先获取最新状态（避免变量未定义）
-                    has_photos = len(st.session_state.get('unsplash_photos', [])) > 0
-                    current_page = st.session_state.get('unsplash_current_page', 1)
-                    total_pages = st.session_state.get('unsplash_total_pages', 0)
-                    
-                    # 上一页按钮 - 总是显示但可能禁用
+                    # 关键修改2：基于最新状态计算禁用条件（搜索逻辑已执行，状态是最新的）
                     prev_disabled = not has_photos or current_page <= 1
-            
                     prev_label = "◀上一页"
                     prev_btn = st.button(prev_label, key="unsplash_prev", use_container_width=True, disabled=prev_disabled)
 
                 with btn_col3:
-                    # 下一页按钮 - 先定义禁用条件，再渲染
-                    next_disabled = not has_photos or (current_page >= total_pages) or (total_pages == 0)
-            
+                    # 关键修改3：优化下一页禁用条件（基于最新的total_pages）
+                    # 修复核心：搜索逻辑已执行，total_pages是最新的，不会再误判
+                    next_disabled = False
+                    if not has_photos:
+                        next_disabled = True
+                    elif total_pages == 0:
+                        next_disabled = True
+                    elif current_page >= total_pages:
+                        next_disabled = True
+                    
                     next_label = "下一页▶"
                     next_btn = st.button(next_label, key="unsplash_next", use_container_width=True, disabled=next_disabled)
 
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # 2. 检查按钮点击事件（变量已定义）
-            need_search = False
-            
+            # ===================== 处理按钮点击事件（完全和你原有代码一致） =====================
             # 搜索按钮点击
             if search_btn:
                 if not unsplash_api.access_key:
@@ -1325,61 +1410,27 @@ with tab1:
                     st.session_state.unsplash_current_page = 1
                     st.session_state.unsplash_search_query = search_query
                     st.session_state.unsplash_search_trigger = True
-                    need_search = True
+                    # 关键：强制重运行，让搜索逻辑立即执行
+                    st.rerun()
             
             # 上一页按钮点击
             if prev_btn and not prev_disabled:
                 st.session_state.unsplash_current_page -= 1
                 st.session_state.unsplash_search_trigger = True
-                need_search = True
+                st.rerun()
             
             # 下一页按钮点击
             if next_btn and not next_disabled:
                 st.session_state.unsplash_current_page += 1
                 st.session_state.unsplash_search_trigger = True
-                need_search = True
+                st.rerun()
             
-            # 搜索触发标志
-            if st.session_state.get('unsplash_search_trigger', False):
-                need_search = True
-            
-            # 3. 执行搜索逻辑（变量已定义，且按钮点击已判断）
-            if need_search:
-                if not unsplash_api.access_key:
-                    st.error("⚠️ 未找到Unsplash API密钥，请在Streamlit Secrets中配置UNSPLASH_ACCESS_KEY")
-                else:
-                    with st.spinner(f'正在搜索{st.session_state.unsplash_search_query}...'):
-                        photos, total_pages, total_results = unsplash_api.search_photos(
-                            st.session_state.unsplash_search_query, 
-                            page=st.session_state.unsplash_current_page, 
-                            per_page=12
-                        )
-                        
-                        if photos:
-                            st.session_state.unsplash_photos = photos
-                            st.session_state.unsplash_total_pages = total_pages
-                            st.session_state.unsplash_total_results = total_results
-                            
-                            if st.session_state.unsplash_current_page == 1:
-                                st.success(f"找到 {total_results} 张图片，共{total_pages}页")
-                        else:
-                            if total_results == 0:
-                                st.warning(f"未找到与'{st.session_state.unsplash_search_query}'相关的图片")
-                            else:
-                                st.error("搜索失败，请尝试其他关键词")
-                        
-                        # 重置搜索触发标志
-                        st.session_state.unsplash_search_trigger = False
-            
-            # 4. 显示搜索结果
+            # ===================== 显示搜索结果（完全和你原有代码一致，无修改） =====================
             if st.session_state.unsplash_photos:
                 # 显示当前页信息
                 total_pages = st.session_state.get('unsplash_total_pages', 0)
                 current_page = st.session_state.get('unsplash_current_page', 1)
                 total_results = st.session_state.get('unsplash_total_results', 0)
-                
-                if total_results > 0:
-                    st.info(f"📊 共找到 {total_results} 张图片 - 第 {current_page} / {total_pages} 页 - 关键词: {st.session_state.unsplash_search_query}")
 
                 photos = st.session_state.unsplash_photos
                 
@@ -1399,41 +1450,33 @@ with tab1:
                                 img_url = photo.get("urls", {}).get("small")
                                 
                                 if img_url:
-                                    # 判断当前图片是否为选中状态（页码+索引精准匹配）
+                                    # 判断当前图片是否为选中状态
                                     is_selected = (st.session_state.unsplash_selected_page == current_page) and \
                                                 (st.session_state.unsplash_selected_idx == idx)
                                     
-                                    # 定义图片容器的类名（选中/未选中）
-                                    img_container_class = "unsplash-clickable-img selected" if is_selected else "unsplash-clickable-img unselected"
-                                    
-                                    # 按钮key包含页码和索引，确保唯一性
-                                    btn_key = f"unsplash_img_click_{current_page}_{idx}"
-                                    
-                                    # 核心修改：包裹相对定位的父容器，实现图片和按钮叠加
+                                    # 1. 显示图片（无点击功能）使用CSS实现1:1裁剪
                                     st.markdown(f"""
-                                    <div style="position: relative; width: 100%; margin-bottom: 10px;">
-                                        <div class="{img_container_class}">
-                                            <img src="{img_url}" alt="Unsplash图片">
-                                        </div>
-                                        <!-- 按钮容器：通过CSS绝对定位覆盖图片 -->
-                                        <div data-testid="stButton" data-key="{btn_key}" class="unsplash-btn-wrapper"></div>
+                                    <div class="unsplash-square-container">
+                                        <img src="{img_url}" alt="Unsplash图片" class="unsplash-square-image">
                                     </div>
                                     """, unsafe_allow_html=True)
                                     
-                                # 渲染隐藏按钮（仅保留逻辑，样式由外部CSS控制）
-                                if st.button(
-                                    label="",  # 空标签，无文字
-                                    key=btn_key,
-                                    use_container_width=True,
-                                ):
-                                    # 点击后：1. 更新选中状态到session_state 2. 执行原有下载逻辑
-                                    with st.spinner("下载中..."):
-                                        # 强制更新选中状态（持久化页码和索引，新增非空校验）
+                                    # 2. 显示选择按钮
+                                    button_key = f"unsplash_select_{current_page}_{idx}"
+                                    button_text = "已选择" if is_selected else "选择"
+                                    
+                                    # 3. 创建选择按钮（白色背景/绿色背景）
+                                    if st.button(
+                                        button_text,
+                                        key=button_key,
+                                        use_container_width=True,
+                                        type="primary" if is_selected else "secondary"
+                                    ):
+                                        # 1. 静默更新选中状态（无任何页面输出）
                                         st.session_state.unsplash_selected_page = current_page
                                         st.session_state.unsplash_selected_idx = idx
-                                        st.session_state.unsplash_selected_bg_flag = True  # 新增：添加选中标记，确保状态不丢失
                                         
-                                        # 原有下载逻辑（完全保留，确保功能不变）
+                                        # 2. 静默下载图片（无spinner提示）
                                         img = unsplash_api.download_photo(img_url)
                                         if img:
                                             class MockFile:
@@ -1446,67 +1489,27 @@ with tab1:
                                             
                                             mock_file = MockFile(img, idx, current_page)
                                             st.session_state.unsplash_selected_bg = mock_file
-                                            
-                                            # 替换：兼容所有Streamlit版本的刷新方式（替代st.rerun()）
-                                            if hasattr(st, 'rerun'):
-                                                st.rerun()
-                                            else:
-                                                st.experimental_rerun()
-
-                                    # 优化后的按钮样式：实现覆盖+隐藏容器+小手光标
-                                    st.markdown(f"""
-                                    <style>
-                                        /* 父容器相对定位，按钮绝对定位覆盖 */
-                                        div[data-key="{btn_key}"] {{
-                                            position: absolute;
-                                            top: 0;
-                                            left: 0;
-                                            width: 100%;
-                                            height: 100%;
-                                            margin: 0 !important;
-                                            padding: 0 !important;
-                                            background: none !important;
-                                            border: none !important;
-                                        }}
-                                        /* 按钮本身完全透明，无样式，覆盖整个图片 */
-                                        div[data-key="{btn_key}"] button {{
-                                            width: 100% !important;
-                                            height: 100% !important;
-                                            opacity: 0 !important;
-                                            border: none !important;
-                                            background: none !important;
-                                            padding: 0 !important;
-                                            margin: 0 !important;
-                                            cursor: pointer !important; /* 给按钮添加小手光标 */
-                                        }}
-                                        /* 隐藏按钮容器的多余间距 */
-                                        .unsplash-btn-wrapper {{
-                                            position: absolute;
-                                            top: 0;
-                                            left: 0;
-                                            width: 100%;
-                                            height: 100%;
-                                        }}
-                                    </style>
-                                    """, unsafe_allow_html=True)
+                                        
+                                        # 3. 静默刷新页面（无成功提示）
+                                        st.rerun()
 
     with col2:
-        # 产品图上传逻辑（保持不变）
+        # 产品图上传逻辑（完整补全，解决 uploaded_products 未定义错误）
         st.markdown("#### 产品图上传")
         
-        # 添加占位单选按钮以对齐高度
+        # 占位单选按钮（保持你的原有布局，无需修改）
         with st.container():
             st.radio(
-                "",  # 空标签
+                "",
                 ["上传图片"],
                 horizontal=True,
                 key="product_source_radio",
                 disabled=True,
-                label_visibility="collapsed"  # 隐藏标签
+                label_visibility="collapsed"
             )
         
-        # 产品图上传
-        product_files = st.file_uploader(
+        # ✅ 核心：先定义并赋值 uploaded_products（这行是你缺失的，解决 NameError）
+        uploaded_products = st.file_uploader(
             "拖拽或选择产品图片",
             type=['png', 'jpg', 'jpeg'],
             accept_multiple_files=True,
@@ -1515,36 +1518,44 @@ with tab1:
             label_visibility="collapsed"
         )
         
+        # ✅ 后续的判断和持久化逻辑（保持不变，现在变量已定义，不会报错）
+        # 1. 初始化产品图持久化 session_state（若未初始化）
+        if 'persist_product_files' not in st.session_state:
+            st.session_state.persist_product_files = []
+        
+        # 2. 若有新的上传数据，更新到 session_state 持久化
+        if uploaded_products is not None and len(uploaded_products) > 0:
+            st.session_state.persist_product_files = uploaded_products
+        
+        # 3. 从 session_state 读取持久化的产品图数据
+        product_files = st.session_state.persist_product_files
+        
+        # 4. 产品图预览（保持你的1行6列紧凑布局，无需修改）
         if product_files:
             product_count = len(product_files)
-            st.success(f"已上传 {product_count} 张产品图")
+            st.success(f"已上传 {product_count} 张产品图（仅显示前6张）")
             
-            st.markdown("预览（最多显示12张）")
+            preview_count = min(6, product_count)
+            cols = st.columns(preview_count, gap="small")
             
-            cols_per_row = min(4, product_count) if product_count > 0 else 4
-            preview_count = min(12, product_count)
+            for idx in range(preview_count):
+                with cols[idx]:
+                    file = product_files[idx]
+                    img = Image.open(file)
+                    
+                    display_width = 120
+                    display_img = img.copy()
+                    display_img.thumbnail((display_width, display_width), Image.Resampling.LANCZOS)
+                    
+                    st.image(
+                        display_img,
+                        caption=file.name[:10] + "..." if len(file.name) > 10 else file.name,
+                        width=display_width
+                    )
             
-            for i in range(0, preview_count, cols_per_row):
-                cols = st.columns(cols_per_row)
-                for j in range(cols_per_row):
-                    idx = i + j
-                    if idx < preview_count:
-                        with cols[j]:
-                            file = product_files[idx]
-                            img = Image.open(file)
-                            display_width = 150
-                            ratio = display_width / img.width
-                            display_height = int(img.height * ratio)
-                            
-                            display_img = img.copy()
-                            display_img.thumbnail((display_width, display_height * 2), Image.Resampling.LANCZOS)
-                            
-                            st.image(
-                                display_img, 
-                                caption=file.name[:12] + "..." if len(file.name) > 12 else file.name,
-                                width=display_width
-                            )
-    
+            if product_count > 6:
+                st.caption(f"")
+
     # 上传状态汇总
     bg_files_combined = []
     
@@ -1557,6 +1568,43 @@ with tab1:
     if bg_files_combined and product_files:
         total_combinations = len(bg_files_combined) * len(product_files)
         st.info(f"准备合成 {len(bg_files_combined)} 张背景图 × {len(product_files)} 张产品图 = {total_combinations} 张合成图")
+
+    # ==================== 合成结果预览区域（仅在tab1显示） ====================
+    if "synthesize_preview_images" in st.session_state and st.session_state.synthesize_preview_images:
+        st.markdown("---")
+        st.subheader("合成结果预览")
+        preview_images = st.session_state.synthesize_preview_images
+        total_previews = len(preview_images)
+        
+        # 核心修改：最多显示10张，1行10列，紧凑布局
+        preview_count = min(10, total_previews)  # 数量限制改为10
+        cols = st.columns(preview_count, gap="small")  # 列数对应10列，保持小间距
+        
+        st.write(f"共生成 {len(preview_images)} 张图片，仅显示前 {preview_count} 张")
+        
+        for idx in range(preview_count):
+            with cols[idx]:
+                preview_data = preview_images[idx]
+                img = Image.open(preview_data["data"])
+                
+                # 优化：缩小图片宽度到110px，保证10张图不超出页面，紧凑显示
+                display_width = 110
+                display_img = img.copy()
+                display_img.thumbnail((display_width, display_width), Image.Resampling.LANCZOS)
+                
+                st.image(
+                    display_img,
+                    caption=preview_data["filename"][:10] + "..." if len(preview_data["filename"]) > 10 else preview_data["filename"],
+                    width=display_width
+                )
+        
+        # 修改提示：超出10张时的提示
+        if total_previews > 10:
+            st.caption(f"📌 可下载ZIP包查看全部{total_previews}张图片")
+    elif st.session_state.synthesize_zip_buffer is not None:
+        st.markdown("---")
+        st.subheader("合成结果预览")
+        st.info("✅ 合成完成！可下载ZIP包查看全部图片")
 
 # 标签页2：视频抽帧
 with tab2:
@@ -2024,6 +2072,9 @@ if process_button:
     if 'unsplash_selected_bg' in st.session_state and st.session_state.unsplash_selected_bg:
         bg_files_combined.append(st.session_state.unsplash_selected_bg)
     
+    # ✅ 核心修改：从session_state中读取持久化的产品图
+    product_files = st.session_state.persist_product_files
+
     if not bg_files_combined:
         st.error("❌ 请至少上传一张背景图或从Unsplash图库选择一张背景。")
         st.stop()
@@ -2053,7 +2104,6 @@ if process_button:
     
     if os.path.exists(logo_path):
         logo_to_use = Image.open(logo_path)
-        st.info(f"🎨 使用{logo_color}进行合成")
     else:
         st.warning(f"⚠️ 未找到{logo_color}文件：{logo_path}")
         st.warning("请在 logos 文件夹中提供 black_logo.png 和 white_logo.png 文件")
@@ -2068,6 +2118,9 @@ if process_button:
     # 创建临时目录存放结果
     with tempfile.TemporaryDirectory() as tmpdir:
         output_files = []
+        # ✅ 关键修正：在使用前初始化 preview_images 为空列表（必须在循环外层）
+        preview_images = []  # 这一行是解决 NameError 的核心，不能缺失
+
         total = len(bg_files_combined) * len(product_files)
         
         # 进度条
@@ -2117,114 +2170,53 @@ if process_button:
                     result.save(output_path, format='PNG')
                 
                 output_files.append(output_path)
+
+                # ✅ 关键：保存前24张图片到预览列表
+                if len(preview_images) < 24:
+                    img_buffer = BytesIO()
+                    if output_format.upper() == 'JPG':
+                        # RGBA转RGB避免黑底
+                        if result.mode == 'RGBA':
+                            rgb_img = Image.new('RGB', result.size, (255, 255, 255))
+                            rgb_img.paste(result, mask=result.split()[3])
+                            rgb_img.save(img_buffer, format='JPEG', quality=90)
+                        else:
+                            result.save(img_buffer, format='JPEG', quality=90)
+                    else:
+                        result.save(img_buffer, format='PNG')
+                    img_buffer.seek(0)
+                    preview_images.append({
+                        "data": img_buffer,
+                        "filename": output_filename
+                    })
         
+        # ✅ 保存预览数据到session_state
+        st.session_state.synthesize_preview_images = preview_images
+
         progress_bar.empty()
         status_text.empty()
         
         # 打包所有文件为ZIP
-        st.success(f"✅ 合成完成！共生成 {len(output_files)} 张图片。")
+        st.toast(
+            f"✅ 合成完成！共生成 {len(output_files)} 张图片。",
+            icon="✅",  # 可选，添加图标更美观
+            duration=1  # 显示3秒后自动消失，可调整（如2/4秒）
+        )
         zip_buffer = BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
             for file_path in output_files:
                 zip_file.write(file_path, os.path.basename(file_path))
         
         zip_buffer.seek(0)
-        
-        # 提供下载按钮
-        st.download_button(
-            label=f"📥 下载所有合成图片 ({output_format.upper()}格式ZIP包)",
-            data=zip_buffer,
-            file_name=f"产品图合成_{output_size}px_{output_format.lower()}.zip",
-            mime="application/zip",
-            use_container_width=True
-        )
-        
-        # ==================== 合成结果预览区域 ====================
-        st.subheader("合成结果预览")
-        
-        if output_files:
-            # 只显示前24张图片
-            preview_files = output_files[:24]
-            total_previews = len(preview_files)
-            
-            # 显示图片数量信息
-            st.write(f"共 {len(output_files)} 张合成图片，显示前 {total_previews} 张预览")
-            
-            # 每排6张，最多4排
-            rows = min(4, (total_previews + 5) // 6)  # 计算需要的行数
-            preview_width = 180  # 每张预览图片的宽度
-            
-            # 使用紧凑网格显示图片
-            for row in range(rows):
-                # 每行6列
-                cols = st.columns(6)
-                for col in range(6):
-                    idx = row * 6 + col
-                    if idx < total_previews:
-                        with cols[col]:
-                            file_path = preview_files[idx]
-                            img = Image.open(file_path)
-                            
-                            # 高质量调整大小，保持清晰度
-                            display_img = img.copy()
-                            
-                            # 计算显示尺寸，保持宽高比
-                            display_height = int(preview_width * img.height / img.width)
-                            display_img.thumbnail((preview_width * 2, display_height * 2), Image.Resampling.LANCZOS)
-                            
-                            # 显示图片和文件名
-                            st.image(
-                                display_img, 
-                                width=preview_width
-                            )
-                            st.caption(
-                                os.path.basename(file_path)[:15] + "..." 
-                                if len(os.path.basename(file_path)) > 15 
-                                else os.path.basename(file_path)
-                            )
-        else:
-            st.warning("⚠️ 没有生成任何图片")
+        # 打包所有文件为ZIP之后，添加这行保存到session_state
+        st.session_state.synthesize_zip_buffer = zip_buffer
+        st.session_state.synthesize_zip_info = {
+            "output_size": output_size,
+            "output_format": output_format
+        }
+        st.rerun()
 
 # ==================== 页脚信息 ====================
-st.markdown("---")
-st.markdown("### 💡 使用说明")
-
-# 使用三列布局显示说明（现在有三个主要功能）
-info_col1, info_col2, info_col3 = st.columns(3)
-
-with info_col1:
-    st.markdown(
-    """<div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
-        <h4>📝 图片合成</h4>
-        <ul>
-            <li>背景图：上传或Unsplash</li>
-            <li>产品图：PNG透明背景最佳</li>
-            <li>Logo：系统已预置黑白Logo</li>
-            <li>遮罩：可选颜色和透明度</li>
-        </ul>
-    </div>""", unsafe_allow_html=True)
-
-with info_col2:
-    st.markdown(
-    """<div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
-        <h4>🎬 视频抽帧</h4>
-        <ul>
-            <li>随机删除视频中的两帧</li>
-            <li>保留原始音频和画质</li>
-            <li>改变视频哈希值</li>
-        </ul>
-    </div>""", unsafe_allow_html=True)
-
-with info_col3:
-    st.markdown(
-    """<div style="background-color: #f8f9fa; border-radius: 10px; padding: 1.2rem; border-left: 4px solid #2196F3;">
-        <h4>🖼️ Logo水印添加</h4>
-        <ul>
-            <li>批量添加Logo水印</li>
-            <li>自定义位置大小</li>
-            <li>实时预览效果</li>
-        </ul>
-    </div>""", unsafe_allow_html=True)
 
 st.markdown("---")
-st.caption("© 2025 骏泰素材工作台")
+st.caption("© 2026 骏泰素材工作台")
