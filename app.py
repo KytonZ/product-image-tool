@@ -16,7 +16,7 @@ import requests
 # 设置页面配置
 st.set_page_config(
     page_title="骏泰素材工作台", 
-    page_icon="assets/company_logo.png", 
+    page_icon="🎨", 
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -663,7 +663,7 @@ st.markdown(get_custom_css(), unsafe_allow_html=True)
 
 # 页面标题
 # 原代码：st.markdown('<h1 class="main-header">🎨 骏泰素材工作台</h1>', unsafe_allow_html=True)
-st.markdown('<h1 class="main-header">骏泰素材工作台</h1>', unsafe_allow_html=True)  # 移除emoji，或替换为logo图片
+st.markdown('<h1 class="main-header">🎨 骏泰素材工作台</h1>', unsafe_allow_html=True)  # 移除emoji，或替换为logo图片
 
 # 初始化会话状态
 if 'current_page' not in st.session_state:
