@@ -1188,7 +1188,6 @@ with st.sidebar:
             "输出尺寸", 
             [400, 600, 800, 1000, 1200, 1500, 2000],
             index=2,
-            help="选择输出图片的尺寸",
             key="output_size_select"
         )
         st.session_state.output_size = output_size
@@ -1197,7 +1196,6 @@ with st.sidebar:
             "输出格式", 
             ['JPG', 'PNG'],
             horizontal=True,
-            help="JPG适用于照片，PNG适用于需要透明背景的图片",
             key="output_format_radio"
         )
         st.session_state.output_format = output_format
@@ -1209,7 +1207,7 @@ with st.sidebar:
         "🚀 开始智能批量合成", 
         type="primary", 
         use_container_width=True,
-        help="点击开始处理所有图片",
+
         key="process_button"
     )
 
