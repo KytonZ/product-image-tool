@@ -1143,7 +1143,7 @@ with st.sidebar:
     st.markdown('<div class="settings-title">🖼️ LOGO选择</div>', unsafe_allow_html=True)
     logo_color = st.radio(
         "",
-        ["黑色LOGO", "白色LOGO"],
+        ["黑色Logo", "白色Logo"],
         horizontal=True,
         key="logo_color_select"
     )
