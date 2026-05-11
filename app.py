@@ -284,36 +284,37 @@ def get_custom_css():
             border-color: var(--primary) !important;
             background: var(--primary-muted) !important;
         }
-        /* ===== 中文化上传提示 ===== */
-        /* dropzone flex 居中 */
         [data-testid="stFileUploaderDropzone"] {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            min-height: 88px !important;
-            padding: 1rem !important;
+            padding: 1.5rem !important;
+            text-align: center !important;
         }
-        /* 内部容器也居中 */
-        [data-testid="stFileUploaderDropzone"] > div {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            gap: 8px !important;
-            width: 100% !important;
+
+        /* ===== 中文化上传提示 ===== */
+        [data-testid="stFileUploaderDropzone"] * {
+            visibility: hidden !important;
+            position: relative !important;
         }
-        /* 只隐藏按钮以外的直接子元素（拖拽提示文字、文件大小限制等） */
-        [data-testid="stFileUploaderDropzone"] > div > *:not(button) {
-            display: none !important;
+        [data-testid="stFileUploaderDropzone"]::before {
+            content: "拖拽文件到此处，或点击选择文件" !important;
+            visibility: visible !important;
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            white-space: nowrap !important;
+            color: var(--text-muted) !important;
+            font-size: 0.88rem !important;
         }
-        /* 按钮本身：原文字置零，用 ::after 注入中文，不动内部 span */
         [data-testid="stFileUploaderDropzone"] button {
+            visibility: visible !important;
+            font-size: 0 !important;
+        }
+        [data-testid="stFileUploaderDropzone"] button span {
             font-size: 0 !important;
         }
         [data-testid="stFileUploaderDropzone"] button::after {
-            content: "点击上传 / 拖拽文件至此" !important;
-            font-size: 13px !important;
-            font-weight: 500 !important;
-            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif !important;
+            content: "选择文件" !important;
+            font-size: 14px !important;
         }
 
         /* ===== 进度条 ===== */
