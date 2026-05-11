@@ -307,18 +307,14 @@ def get_custom_css():
         }
         [data-testid="stFileUploaderDropzone"] button {
             visibility: visible !important;
+            font-size: 0 !important;
         }
         [data-testid="stFileUploaderDropzone"] button span {
-            visibility: hidden !important;
-            position: relative !important;
+            font-size: 0 !important;
         }
-        [data-testid="stFileUploaderDropzone"] button span::after {
+        [data-testid="stFileUploaderDropzone"] button::after {
             content: "选择文件" !important;
-            visibility: visible !important;
-            position: absolute !important;
-            top: 0 !important;
-            left: 50% !important;
-            transform: translateX(-50%) !important;
+            font-size: 14px !important;
         }
 
         /* ===== 进度条 ===== */
