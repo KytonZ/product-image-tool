@@ -898,7 +898,7 @@ with tab1:
                         total_pages = new_total
                         has_photos = True
                     elif total_results == 0:
-                        st.warning(f"未找到与"{search_query}"相关的图片")
+                        st.warning(f'未找到与「{search_query}」相关的图片')
                     st.session_state.unsplash_search_trigger = False
 
             # 搜索栏
