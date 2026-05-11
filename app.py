@@ -285,36 +285,34 @@ def get_custom_css():
             background: var(--primary-muted) !important;
         }
         /* ===== 中文化上传提示 ===== */
+        /* dropzone flex 居中 */
         [data-testid="stFileUploaderDropzone"] {
             display: flex !important;
-            flex-direction: column !important;
             align-items: center !important;
             justify-content: center !important;
-            min-height: 90px !important;
-            padding: 1.25rem !important;
+            min-height: 88px !important;
+            padding: 1rem !important;
         }
+        /* 内部容器也居中 */
         [data-testid="stFileUploaderDropzone"] > div {
             display: flex !important;
-            flex-direction: column !important;
             align-items: center !important;
-            gap: 6px !important;
+            justify-content: center !important;
+            gap: 8px !important;
             width: 100% !important;
         }
-        [data-testid="stFileUploaderDropzone"] span,
-        [data-testid="stFileUploaderDropzone"] p,
-        [data-testid="stFileUploaderDropzone"] small {
+        /* 只隐藏按钮以外的直接子元素（拖拽提示文字、文件大小限制等） */
+        [data-testid="stFileUploaderDropzone"] > div > *:not(button) {
             display: none !important;
         }
+        /* 按钮本身：原文字置零，用 ::after 注入中文，不动内部 span */
         [data-testid="stFileUploaderDropzone"] button {
-            font-size: 0 !important;
-            margin: 0 auto !important;
-        }
-        [data-testid="stFileUploaderDropzone"] button span {
             font-size: 0 !important;
         }
         [data-testid="stFileUploaderDropzone"] button::after {
-            content: "选择文件" !important;
-            font-size: 14px !important;
+            content: "点击上传 / 拖拽文件至此" !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
             font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif !important;
         }
 
