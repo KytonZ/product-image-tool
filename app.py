@@ -284,30 +284,30 @@ def get_custom_css():
             border-color: var(--primary) !important;
             background: var(--primary-muted) !important;
         }
-        [data-testid="stFileUploaderDropzone"] {
-            padding: 1.5rem !important;
-            text-align: center !important;
-        }
-
         /* ===== 中文化上传提示 ===== */
-        [data-testid="stFileUploaderDropzone"] * {
-            visibility: hidden !important;
-            position: relative !important;
+        [data-testid="stFileUploaderDropzone"] {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-height: 90px !important;
+            padding: 1.25rem !important;
         }
-        [data-testid="stFileUploaderDropzone"]::before {
-            content: "拖拽文件到此处，或点击选择文件" !important;
-            visibility: visible !important;
-            position: absolute !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            white-space: nowrap !important;
-            color: var(--text-muted) !important;
-            font-size: 0.88rem !important;
+        [data-testid="stFileUploaderDropzone"] > div {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 6px !important;
+            width: 100% !important;
+        }
+        [data-testid="stFileUploaderDropzone"] span,
+        [data-testid="stFileUploaderDropzone"] p,
+        [data-testid="stFileUploaderDropzone"] small {
+            display: none !important;
         }
         [data-testid="stFileUploaderDropzone"] button {
-            visibility: visible !important;
             font-size: 0 !important;
+            margin: 0 auto !important;
         }
         [data-testid="stFileUploaderDropzone"] button span {
             font-size: 0 !important;
@@ -315,6 +315,7 @@ def get_custom_css():
         [data-testid="stFileUploaderDropzone"] button::after {
             content: "选择文件" !important;
             font-size: 14px !important;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif !important;
         }
 
         /* ===== 进度条 ===== */
